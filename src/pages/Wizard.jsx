@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PROJECT_TYPES, PERMIT_DATA, PROFESSIONALS, INSPECTIONS } from '../data/raleigh'
+import Concierge from '../components/Concierge'
 
 const STEPS = ['Address', 'Buildability', 'Project', 'Permits', 'Professionals']
 
@@ -327,6 +328,29 @@ export default function Wizard() {
               <span className="text-sm text-gray-700">{ins}</span>
             </div>
           ))}
+
+          {/* AI Concierge */}
+          <div className="mt-8">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex-1 h-px bg-gray-100" />
+              <span className="text-xs font-medium text-gray-400 uppercase tracking-wider px-2">Ask the AI Concierge</span>
+              <div className="flex-1 h-px bg-gray-100" />
+            </div>
+            <Concierge
+              projectData={{
+                addr: state.addr,
+                proj: state.proj,
+                cost: state.cost,
+                historic: state.historic,
+                septic: state.septic,
+                flood: state.flood,
+                corner: state.corner,
+                permitCount,
+                timeline: data.timeline,
+                fees: data.fees,
+              }}
+            />
+          </div>
 
           <div className="mt-6 grid grid-cols-2 gap-2">
             <button onClick={back} className="py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← Back</button>
