@@ -1,15 +1,23 @@
 // api/flood.js — Vercel Serverless Function
-// Proxies geocoding + FEMA NFHL requests server-side to bypass CORS restrictions
-// Deployed automatically by Vercel from /api directory
+// Uses ArcGIS World Geocoding Service (no key required, server-friendly)
+// + FEMA NFHL ArcGIS REST API for flood zone data
 
-const NOMINATIM = 'https://nominatim.openstreetmap.org/search'
+const ARCGIS_GEOCODE = 'https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates'
 const FEMA_NFHL = 'https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28/query'
 
 const HIGH_RISK_ZONES = ['A', 'AE', 'AH', 'AO', 'AR', 'A99', 'V', 'VE']
-const MODERATE_RISK_ZONES = ['X500']
 
-function classifyFloodZone(zone) {
-  if (!zone) return { risk: 'unknown', label: 'Unknown', zone: 'N/A', requiresElevationCert: false, requiresFloodInsurance: false, desc: 'Flood zone data unavailable.' }
+function classifyFloodZone(zone, unmapped) {
+  if (unmapped || !zone) {
+    return {
+      risk: 'unmapped',
+      label: 'Not in mapped flood hazard area',
+      zone: zone || 'X',
+      requiresElevationCert: false,
+      requiresFloodInsurance: false,
+      desc: 'No flood hazard data found for this parcel in the FEMA National Flood Hazard Layer. This typically means the area is outside a Special Flood Hazard Area or has not yet been mapped. Verify at msc.fema.gov before submitting permits.',
+    }
+  }
   const z = zone.trim().toUpperCase()
   if (HIGH_RISK_ZONES.some(h => z === h || z.startsWith(h))) {
     return {
@@ -21,7 +29,7 @@ function classifyFloodZone(zone) {
       desc: `Zone ${z} — 1% or greater annual chance of flooding (100-year flood zone). FEMA elevation certificate required before permits are issued. Flood insurance mandatory for federally-backed mortgages.`,
     }
   }
-  if (z === 'X500' || MODERATE_RISK_ZONES.includes(z)) {
+  if (z === 'X500') {
     return {
       risk: 'moderate',
       label: 'Moderate risk flood zone',
@@ -41,27 +49,32 @@ function classifyFloodZone(zone) {
   }
 }
 
-async function geocode(address) {
+async function geocodeArcGIS(address) {
   const params = new URLSearchParams({
-    q: address,
-    format: 'json',
-    limit: '1',
-    countrycodes: 'us',
+    SingleLine: address,
+    outFields: 'Match_addr',
+    f: 'json',
+    maxLocations: '1',
+    countryCode: 'USA',
+    searchExtent: '-85,33,-75,38', // Bounding box for NC/Triangle area
   })
-  const res = await fetch(`${NOMINATIM}?${params}`, {
-    headers: { 'User-Agent': 'Parcoria/1.0 (parcoria.com)' },
-  })
-  if (!res.ok) throw new Error('Geocoding failed')
+  const url = `${ARCGIS_GEOCODE}?${params}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`ArcGIS geocode failed: ${res.status}`)
   const data = await res.json()
-  if (!data || data.length === 0) return null
+  const candidates = data?.candidates
+  if (!candidates || candidates.length === 0) return null
+  const best = candidates[0]
+  if (best.score < 70) return null // Low confidence match
   return {
-    lat: parseFloat(data[0].lat),
-    lng: parseFloat(data[0].lon),
-    matchedAddress: data[0].display_name,
+    lat: best.location.y,
+    lng: best.location.x,
+    matchedAddress: best.address,
+    score: best.score,
   }
 }
 
-async function queryFEMA(lat, lng) {
+async function queryFEMANFHL(lat, lng) {
   const params = new URLSearchParams({
     geometry: `${lng},${lat}`,
     geometryType: 'esriGeometryPoint',
@@ -71,11 +84,14 @@ async function queryFEMA(lat, lng) {
     returnGeometry: 'false',
     f: 'json',
   })
-  const res = await fetch(`${FEMA_NFHL}?${params}`)
-  if (!res.ok) throw new Error('FEMA query failed')
+  const url = `${FEMA_NFHL}?${params}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`FEMA query failed: ${res.status}`)
   const data = await res.json()
   const features = data?.features
-  if (!features || features.length === 0) return { zone: 'X', source: 'no_data' }
+  if (!features || features.length === 0) {
+    return { zone: 'X', source: 'no_data', unmapped: true }
+  }
   const attrs = features[0].attributes
   return {
     zone: attrs.FLD_ZONE || 'X',
@@ -83,42 +99,37 @@ async function queryFEMA(lat, lng) {
     sfha: attrs.SFHA_TF === 'T',
     firmId: attrs.DFIRM_ID,
     source: 'fema_nfhl',
+    unmapped: false,
   }
 }
 
 export default async function handler(req, res) {
-  // CORS headers so browser can call this endpoint
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end()
 
   const { address } = req.query
-  if (!address) {
-    return res.status(400).json({ error: 'Address parameter required' })
-  }
+  if (!address) return res.status(400).json({ error: 'Address parameter required' })
 
   try {
-    // Step 1 — Geocode
-    const geo = await geocode(address)
+    // Step 1 — Geocode via ArcGIS World Geocoding (server-friendly, no key needed)
+    const geo = await geocodeArcGIS(address)
     if (!geo) {
       return res.status(200).json({
         status: 'geocode_failed',
-        message: 'Could not locate this address. Please verify and try again.',
+        message: `Could not locate "${address}". Try simplifying — use street number, street name, and city only.`,
         floodData: null,
         classification: null,
       })
     }
 
-    // Step 2 — Query FEMA
-    const floodData = await queryFEMA(geo.lat, geo.lng)
+    // Step 2 — Query FEMA NFHL
+    const floodData = await queryFEMANFHL(geo.lat, geo.lng)
     if (!floodData) {
       return res.status(200).json({
         status: 'fema_failed',
-        message: 'Could not retrieve flood data. Verify manually at msc.fema.gov.',
+        message: 'Could not retrieve FEMA flood data. Verify manually at msc.fema.gov.',
         matchedAddress: geo.matchedAddress,
         floodData: null,
         classification: null,
@@ -126,19 +137,20 @@ export default async function handler(req, res) {
     }
 
     // Step 3 — Classify and return
-    const classification = classifyFloodZone(floodData.zone)
+    const classification = classifyFloodZone(floodData.zone, floodData.unmapped)
     return res.status(200).json({
       status: 'success',
       matchedAddress: geo.matchedAddress,
+      geocodeScore: geo.score,
       coordinates: { lat: geo.lat, lng: geo.lng },
       floodData,
       classification,
     })
   } catch (err) {
-    console.error('Flood API error:', err)
+    console.error('Flood API error:', err.message)
     return res.status(200).json({
       status: 'error',
-      message: 'Flood check failed. Verify manually at msc.fema.gov.',
+      message: `Flood check failed: ${err.message}. Verify manually at msc.fema.gov.`,
       floodData: null,
       classification: null,
     })

@@ -197,24 +197,33 @@ export default function BuildabilityChecker({ address, jurisdiction, flags, onFl
             })()}
 
             {floodStatus === 'failed' && (
-              <div className="mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3">
-                <div className="text-xs font-semibold text-blue-800 mb-1">Manual verification required</div>
-                <div className="text-xs text-blue-700 leading-relaxed mb-2">
-                  Live FEMA lookup is being moved to our secure server connection. In the meantime, verify your flood zone directly — it takes under 60 seconds.
-                </div>
-                <ol className="text-xs text-blue-700 space-y-1 list-decimal pl-4 mb-2">
-                  <li>Go to <strong>msc.fema.gov</strong></li>
-                  <li>Enter your property address</li>
-                  <li>Look for your flood zone — Zone X is minimal risk, Zone A or AE means high risk and an elevation certificate is required</li>
-                </ol>
-                <a
-                  href="https://msc.fema.gov/portal/search"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-brand-600 hover:text-brand-700 font-medium inline-flex items-center gap-1"
-                >
-                  Open FEMA flood map ↗
-                </a>
+              <div className="mt-2 rounded-lg p-3">
+                {floodResult?.message?.includes('vercel dev') ? (
+                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
+                    <div className="text-xs font-semibold text-amber-800 mb-1">⚠️ Run vercel dev for local FEMA testing</div>
+                    <div className="text-xs text-amber-700 leading-relaxed mb-2">
+                      The FEMA flood check requires the serverless function. Stop npm run dev and run:
+                    </div>
+                    <code className="block text-xs bg-amber-100 text-amber-900 px-3 py-2 rounded mb-2 font-mono">vercel dev</code>
+                    <div className="text-xs text-amber-600">This serves both your app and the /api/flood function together.</div>
+                  </div>
+                ) : (
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                    <div className="text-xs font-semibold text-blue-800 mb-1">Verify flood zone manually</div>
+                    <div className="text-xs text-blue-700 leading-relaxed mb-2">
+                      Live lookup unavailable — verify directly at msc.fema.gov. Takes under 60 seconds.
+                    </div>
+                    <ol className="text-xs text-blue-700 space-y-1 list-decimal pl-4 mb-2">
+                      <li>Go to <strong>msc.fema.gov</strong></li>
+                      <li>Enter your property address</li>
+                      <li>Zone X = minimal risk · Zone A or AE = high risk, elevation cert required</li>
+                    </ol>
+                    <a href="https://msc.fema.gov/portal/search" target="_blank" rel="noreferrer"
+                      className="text-xs text-brand-600 hover:text-brand-700 font-medium inline-flex items-center gap-1">
+                      Open FEMA flood map ↗
+                    </a>
+                  </div>
+                )}
               </div>
             )}
 
