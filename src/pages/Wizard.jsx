@@ -73,6 +73,7 @@ export default function Wizard() {
   function next() { setStep(s => s + 1) }
   function back() { setStep(s => s - 1) }
 
+  const isRaleigh = state.jurisdiction === 'raleigh' || state.jurisdiction === ''
   const isDurham = state.jurisdiction === 'durham'
   const isChapelHill = state.jurisdiction === 'chapelhill'
   const isApex = state.jurisdiction === 'apex'
@@ -123,6 +124,23 @@ export default function Wizard() {
     if (isApex) return 'Schedule by 2:00 PM the day before via online form or call (919) 249-3388. Wake County performs all field inspections.'
     if (isHollySprings) return 'Request through CityView Portal or call 311. Before 4 PM = next day. After 4 PM = second business day. Wake County performs all field inspections.'
     return 'Schedule all inspections through Wake County'
+  }
+
+  function shareRoadmap() {
+    const params = new URLSearchParams({
+      j: state.jurisdiction,
+      p: state.proj,
+      a: state.addr,
+      h: state.historic ? '1' : '0',
+      s: state.septic ? '1' : '0',
+      f: state.flood ? '1' : '0',
+    })
+    const url = `${window.location.origin}/roadmap?${params.toString()}`
+    navigator.clipboard.writeText(url).then(() => {
+      alert('Shareable roadmap link copied! Send it to your contractor, lender, or co-owner.')
+    }).catch(() => {
+      window.open(url, '_blank')
+    })
   }
 
   return (
@@ -311,55 +329,13 @@ export default function Wizard() {
             </div>
           )}
 
-          {isDurham ? (
-            <div>
-              {(() => {
-                const checks = [
-                  { ok: true, title: 'Durham City-County jurisdiction confirmed', desc: 'Durham City and County share one unified building department. All permits processed through 101 City Hall Plaza.' },
-                  { ok: true, title: 'Dual portal system — Dplans + LDO', desc: 'Building permits → Dplans. Trade permits, fees & inspections → LDO portal. Both accounts needed.' },
-                  { ok: !state.historic, title: state.historic ? 'Historic district — flagged by you' : 'No historic district reported', desc: state.historic ? 'Durham HPC approval required before building permit. Verify at durhamnc.gov.' : 'You indicated no historic district. Verify at durhamnc.gov before submitting.', verifyUrl: 'https://www.durhamnc.gov/292/Planning', verifyLabel: 'Verify historic status' },
-                  { ok: !state.septic, title: state.septic ? 'Private septic — Durham County EH approval needed' : 'City utilities reported', desc: state.septic ? 'Durham County Environmental Health (919) 560-7600 must approve before city accepts application.' : 'You indicated city utilities. Confirm with Durham One Call at (919) 560-1200.' },
-                  { ok: !state.corner, title: state.corner ? 'Corner lot — dual setbacks apply' : 'Standard lot reported', desc: state.corner ? 'Dual setback requirements on both street frontages per Durham UDO.' : 'Confirm setbacks for your zoning district in Durham UDO.' },
-                ]
-                const hasWarn = checks.some(c => !c.ok)
-                return (
-                  <div>
-                    <div className={`flex gap-3 items-start rounded-xl p-4 mb-5 ${hasWarn ? 'bg-amber-50 border border-amber-100' : 'bg-green-50 border border-green-100'}`}>
-                      <span className="text-lg">{hasWarn ? '⚠️' : '✅'}</span>
-                      <div>
-                        <div className={`text-sm font-semibold ${hasWarn ? 'text-amber-800' : 'text-green-800'}`}>{hasWarn ? 'Buildable with conditions' : 'No major parcel blockers detected'}</div>
-                        <div className={`text-xs mt-1 ${hasWarn ? 'text-amber-700' : 'text-green-700'}`}>{hasWarn ? 'Review flagged items before submitting.' : 'Continue to select your project type.'}</div>
-                      </div>
-                    </div>
-                    {checks.map((c, i) => (
-                      <div key={i} className="flex gap-3 items-start py-3 border-b border-gray-100 last:border-none">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs ${c.ok ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{c.ok ? '✓' : '!'}</div>
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <div className="text-sm font-medium text-gray-800">{c.title}</div>
-                            {!c.ok && <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-400">Self-reported</span>}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">{c.desc}</div>
-                          {c.verifyUrl && <a href={c.verifyUrl} target="_blank" rel="noreferrer" className="text-xs text-brand-600 mt-1 inline-block">{c.verifyLabel} ↗</a>}
-                        </div>
-                      </div>
-                    ))}
-                    <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-xs text-blue-700 leading-relaxed">
-                      <strong>Flood zone:</strong> Durham has significant floodplain areas along the Eno and Little Rivers. Verify at <a href="https://msc.fema.gov/portal/search" target="_blank" rel="noreferrer" className="underline">msc.fema.gov</a> before submitting.
-                    </div>
-                  </div>
-                )
-              })()}
-            </div>
-          ) : (
-            <BuildabilityChecker
-              address={state.addr}
-              jurisdiction={state.jurisdiction}
-              flags={{ historic: state.historic, septic: state.septic, flood: state.flood, corner: state.corner }}
-              onFloodDetected={(isHighRisk) => { if (isHighRisk) update('flood', true) }}
-              customChecks={isChapelHill ? getBuildabilityChecks() : undefined}
-            />
-          )}
+          <BuildabilityChecker
+            address={state.addr}
+            jurisdiction={state.jurisdiction}
+            flags={{ historic: state.historic, septic: state.septic, flood: state.flood, corner: state.corner }}
+            onFloodDetected={(isHighRisk) => { if (isHighRisk) update('flood', true) }}
+            customChecks={!isDurham && !isRaleigh ? getBuildabilityChecks() : undefined}
+          />
 
           <div className="flex gap-2 mt-6">
             <button onClick={back} className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← Back</button>
@@ -615,6 +591,15 @@ export default function Wizard() {
               Get my action plan ↗
             </button>
           </div>
+          <button
+            onClick={shareRoadmap}
+            className="w-full mt-2 py-2.5 border border-brand-200 text-brand-700 bg-brand-50 text-sm font-medium rounded-lg hover:bg-brand-100 transition-colors flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            Share this roadmap with my contractor
+          </button>
           <button
             onClick={() => window.location.href = '/'}
             className="w-full mt-2 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors"

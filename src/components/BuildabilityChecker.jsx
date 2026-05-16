@@ -24,7 +24,7 @@ export default function BuildabilityChecker({ address, jurisdiction, flags, onFl
     setFloodStatus('loading')
     const result = await getParcelFloodData(address)
     setFloodResult(result)
-    setFloodStatus(result.status === 'success' ? 'success' : 'failed')
+    setFloodStatus(['success'].includes(result.status) ? 'success' : result.status === 'dev_cors' ? 'dev' : 'failed')
 
     // Notify parent if high risk detected
     if (result.status === 'success' && result.classification?.risk === 'high') {
@@ -34,66 +34,75 @@ export default function BuildabilityChecker({ address, jurisdiction, flags, onFl
     }
   }
 
-  const isDurham = jurisdiction === 'durham'
+
+  // Use custom checks if provided (Chapel Hill, Apex, Holly Springs)
+  // Otherwise build checks based on jurisdiction
+  const isRaleigh = jurisdiction === 'raleigh' || !jurisdiction
+  const isDurhamJur = jurisdiction === 'durham'
+  const isApexJur = jurisdiction === 'apex'
+  const isHSJur = jurisdiction === 'hollysprings'
+
+  function getJurisdictionLabel() {
+    if (isDurhamJur) return 'Durham'
+    if (isApexJur) return 'Apex'
+    if (isHSJur) return 'Holly Springs'
+    return 'Raleigh'
+  }
+
+  function getInspectionNote() {
+    if (isDurhamJur) return 'Durham City-County Building & Safety handles all inspections — same department as permits.'
+    if (isApexJur || isHSJur) return 'Wake County performs all field inspections.'
+    return 'Wake County performs all field inspections — separate from city permit applications.'
+  }
+
+  function getPortalNote() {
+    if (isDurhamJur) return 'Building permits → Dplans portal. Trade permits, fees & inspections → LDO portal. Both accounts required.'
+    if (isApexJur) return 'Submit plans via IDT Plans portal. Pay fees via ePermits portal. Permit not active until fees are paid in ePermits.'
+    if (isHSJur) return 'Single CityView Portal for applications, payments, inspections, and status tracking.'
+    return 'All permits through City of Raleigh permit portal. Inspections via Wake County.'
+  }
 
   // Build checks array
   const checks = [
     {
       ok: true,
-      title: isDurham ? 'Durham City-County jurisdiction confirmed' : 'City jurisdiction confirmed',
-      desc: isDurham
-        ? 'Durham City and County share one unified building department. All permits processed through 101 City Hall Plaza.'
-        : 'Raleigh city limits confirmed. All building permits through City of Raleigh Planning & Development.',
+      title: isDurhamJur ? 'Durham City-County jurisdiction confirmed' : `${getJurisdictionLabel()} jurisdiction confirmed`,
+      desc: `${getPortalNote()}`,
       source: 'system',
     },
     {
       ok: true,
-      title: isDurham ? 'Dual portal system noted' : 'Wake County inspection district',
-      desc: isDurham
-        ? 'Building permits → Dplans. Trade permits, fees & inspections → LDO portal. You will need accounts on both.'
-        : 'Construction inspections scheduled through Wake County — separate from city permit applications.',
+      title: isDurhamJur ? 'Dual portal system — Dplans + LDO' : `${getJurisdictionLabel()} inspection district`,
+      desc: getInspectionNote(),
       source: 'system',
     },
     {
       ok: !flags.historic,
-      title: flags.historic
-        ? (isDurham ? 'Historic district overlay — flagged by you' : 'Historic district overlay — flagged by you')
-        : (isDurham ? 'No historic district overlay reported' : 'No historic district overlay reported'),
+      title: flags.historic ? 'Historic district overlay — flagged by you' : 'No historic district overlay reported',
       desc: flags.historic
-        ? (isDurham
-            ? 'Durham Historic Preservation Commission (HPC) approval required before building permit. Verify your district at durhamnc.gov/historic — adds 4–8 weeks.'
-            : 'Certificate of Appropriateness from Raleigh Historic Development Commission required before building permit. Verify your district at raleighnc.gov/historic — adds 4–8 weeks.')
-        : (isDurham
-            ? 'You indicated no historic district. Verify at durhamnc.gov before submitting — Durham has multiple active historic districts.'
-            : 'You indicated no historic district. Verify at raleighnc.gov before submitting — Raleigh has several active historic districts.'),
+        ? `${getJurisdictionLabel()} historic district commission approval required before building permit submission. Verify your district at the ${getJurisdictionLabel()} planning department — adds 4–8 weeks.`
+        : `You indicated no historic district. Verify with ${getJurisdictionLabel()} planning before submitting.`,
       source: 'user_reported',
-      verifyUrl: isDurham
-        ? 'https://www.durhamnc.gov/292/Planning'
+      verifyUrl: isDurhamJur ? 'https://www.durhamnc.gov/292/Planning'
+        : isApexJur ? 'https://www.apexnc.org/215/Applications-Schedules'
+        : isHSJur ? 'https://www.hollyspringsnc.gov'
         : 'https://raleighnc.gov/planning/services/historic-preservation',
-      verifyLabel: 'Verify historic district status',
+      verifyLabel: `Verify historic district — ${getJurisdictionLabel()}`,
     },
     {
       ok: !flags.septic,
-      title: flags.septic
-        ? 'Private well/septic — flagged by you'
-        : 'City water & sewer reported',
+      title: flags.septic ? 'Private well/septic — flagged by you' : 'City water & sewer reported',
       desc: flags.septic
-        ? (isDurham
-            ? 'Durham County Environmental Health must approve septic/well design before city accepts permit application. Contact (919) 560-7600.'
-            : 'Wake County Environmental Services must approve septic/well design before city accepts permit application. Contact (919) 856-7400.')
-        : (isDurham
-            ? 'You indicated city utilities. Confirm water/sewer availability with Durham One Call at (919) 560-1200 before applying.'
-            : 'You indicated city utilities. Confirm water/sewer availability with Raleigh Water at water.review@raleighnc.gov before applying.'),
+        ? `${isDurhamJur ? 'Durham County Environmental Health (919) 560-7600' : 'Wake County Environmental Services'} must approve septic/well design before the city accepts your permit application.`
+        : `You indicated city utilities. Confirm availability with ${isDurhamJur ? 'Durham One Call at (919) 560-1200' : isHSJur ? 'Holly Springs Public Utilities at (919) 557-2591' : isApexJur ? 'Apex Utilities' : 'Raleigh Water at water.review@raleighnc.gov'} before applying.`,
       source: 'user_reported',
     },
     {
       ok: !flags.corner,
-      title: flags.corner
-        ? 'Corner lot — flagged by you'
-        : 'Standard lot configuration reported',
+      title: flags.corner ? 'Corner lot — flagged by you' : 'Standard lot configuration reported',
       desc: flags.corner
-        ? `Corner lots in ${isDurham ? 'Durham' : 'Raleigh'} have setback requirements on both street frontages. Verify exact setback distances with your licensed surveyor before finalizing plans.`
-        : `You indicated a standard lot. Confirm lot configuration with your surveyor — setbacks vary by zoning district in ${isDurham ? 'Durham UDO' : 'Raleigh UDO'}.`,
+        ? `Corner lots in ${getJurisdictionLabel()} have setback requirements on both street frontages. Verify exact setback distances with your licensed surveyor.`
+        : `You indicated a standard lot. Confirm setbacks for your zoning district in ${getJurisdictionLabel()} UDO.`,
       source: 'user_reported',
     },
   ]
@@ -124,7 +133,7 @@ export default function BuildabilityChecker({ address, jurisdiction, flags, onFl
       <div className="mb-1">
         <div className="flex gap-3 items-start py-3 border-b border-gray-100">
           <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs
-            ${floodStatus === 'loading' ? 'bg-gray-100 text-gray-400'
+            ${floodStatus === 'loading' || floodStatus === 'dev' ? 'bg-gray-100 text-gray-400'
             : floodStatus === 'success' && floodResult?.classification?.risk === 'high' ? 'bg-red-100 text-red-700'
             : floodStatus === 'success' && floodResult?.classification?.risk === 'moderate' ? 'bg-amber-100 text-amber-700'
             : floodStatus === 'success' ? 'bg-green-100 text-green-700'
@@ -201,6 +210,12 @@ export default function BuildabilityChecker({ address, jurisdiction, flags, onFl
                 >
                   Open FEMA flood map ↗
                 </a>
+              </div>
+            )}
+
+            {floodStatus === 'dev' && (
+              <div className="mt-2 bg-gray-50 rounded-lg p-3 text-xs text-gray-500 leading-relaxed">
+                Live FEMA flood data is active on <strong>parcoria.com</strong>. Local dev environment uses direct API calls which are blocked by CORS. Push to Vercel to test live flood detection.
               </div>
             )}
 

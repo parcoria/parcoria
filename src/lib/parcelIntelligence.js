@@ -1,52 +1,12 @@
 // Parcoria Parcel Intelligence Service
-// Geocoding: Nominatim (OpenStreetMap) — CORS friendly, free, no key required
-// Flood zone: FEMA National Flood Hazard Layer ArcGIS REST API — free, no key required
+// Production: calls /api/flood Vercel serverless function
+// Development: falls back to direct FEMA call with graceful error handling
 
-const NOMINATIM = 'https://nominatim.openstreetmap.org/search'
-const FEMA_NFHL = 'https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28/query'
+const IS_DEV = import.meta.env.DEV
 
-// Flood zone classifications
-const HIGH_RISK_ZONES = ['A', 'AE', 'AH', 'AO', 'AR', 'A99', 'V', 'VE']
-const MODERATE_RISK_ZONES = ['X500', '0.2 PCT ANNUAL CHANCE FLOOD HAZARD']
-
-export function classifyFloodZone(zone) {
-  if (!zone) return null
-  const z = zone.trim().toUpperCase()
-
-  if (HIGH_RISK_ZONES.some(h => z === h || z.startsWith(h + ' '))) {
-    return {
-      risk: 'high',
-      label: 'High risk flood zone',
-      zone: z,
-      requiresElevationCert: true,
-      requiresFloodInsurance: true,
-      desc: `Zone ${z} — 1% or greater annual chance of flooding (100-year flood zone). FEMA elevation certificate required before permits are issued. Flood insurance mandatory for federally-backed mortgages.`,
-    }
-  }
-
-  if (z === 'X500' || MODERATE_RISK_ZONES.some(m => z.includes(m))) {
-    return {
-      risk: 'moderate',
-      label: 'Moderate risk flood zone',
-      zone: z,
-      requiresElevationCert: false,
-      requiresFloodInsurance: false,
-      desc: `Zone ${z} — 0.2% annual chance of flooding. Elevation certificate not required but flood insurance is strongly recommended.`,
-    }
-  }
-
-  return {
-    risk: 'minimal',
-    label: 'Minimal flood risk',
-    zone: z,
-    requiresElevationCert: false,
-    requiresFloodInsurance: false,
-    desc: `Zone ${z} — Minimal flood hazard area. No FEMA elevation certificate required for this parcel based on current FIRM data.`,
-  }
-}
-
-// Step 1 — Geocode address using Nominatim (OpenStreetMap) — full CORS support
-export async function geocodeAddress(address) {
+async function getFloodDataDev(address) {
+  // In dev, call FEMA directly — will likely fail due to CORS
+  // but shows the right UI state for testing
   try {
     const params = new URLSearchParams({
       q: address,
@@ -54,100 +14,107 @@ export async function geocodeAddress(address) {
       limit: '1',
       countrycodes: 'us',
     })
-
-    const res = await fetch(`${NOMINATIM}?${params}`, {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Parcoria/1.0 (parcoria.com)',
-      },
+    const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
+      headers: { 'User-Agent': 'Parcoria/1.0 (parcoria.com)' },
     })
-
-    if (!res.ok) throw new Error('Geocoding failed')
-    const data = await res.json()
-
-    if (!data || data.length === 0) return null
-
-    return {
-      lat: parseFloat(data[0].lat),
-      lng: parseFloat(data[0].lon),
-      matchedAddress: data[0].display_name,
+    if (!geoRes.ok) throw new Error('Geocoding failed')
+    const geoData = await geoRes.json()
+    if (!geoData || geoData.length === 0) {
+      return { status: 'geocode_failed', message: 'Address not found.', floodData: null, classification: null }
     }
-  } catch (err) {
-    console.error('Geocoding error:', err)
-    return null
-  }
-}
+    const lat = parseFloat(geoData[0].lat)
+    const lng = parseFloat(geoData[0].lon)
+    const matchedAddress = geoData[0].display_name
 
-// Step 2 — Query FEMA NFHL ArcGIS REST API — full CORS support, free, no key
-export async function queryFloodZone(lat, lng) {
-  try {
-    const params = new URLSearchParams({
+    const femaParams = new URLSearchParams({
       geometry: `${lng},${lat}`,
       geometryType: 'esriGeometryPoint',
       inSR: '4326',
       spatialRel: 'esriSpatialRelIntersects',
-      outFields: 'FLD_ZONE,ZONE_SUBTY,SFHA_TF,DFIRM_ID,EFF_DATE',
+      outFields: 'FLD_ZONE,ZONE_SUBTY,SFHA_TF',
       returnGeometry: 'false',
       f: 'json',
     })
-
-    const res = await fetch(`${FEMA_NFHL}?${params}`)
-    if (!res.ok) throw new Error('FEMA query failed')
-
-    const data = await res.json()
-    const features = data?.features
-
-    if (!features || features.length === 0) {
-      return { zone: 'X', source: 'no_data' }
-    }
-
-    const attrs = features[0].attributes
+    const femaRes = await fetch(`https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28/query?${femaParams}`)
+    if (!femaRes.ok) throw new Error('FEMA failed')
+    const femaData = await femaRes.json()
+    const features = femaData?.features
+    const zone = features?.length > 0 ? (features[0].attributes.FLD_ZONE || 'X') : 'X'
     return {
-      zone: attrs.FLD_ZONE || 'X',
-      subtype: attrs.ZONE_SUBTY,
-      sfha: attrs.SFHA_TF === 'T',
-      firmId: attrs.DFIRM_ID,
-      effectiveDate: attrs.EFF_DATE,
-      source: 'fema_nfhl',
+      status: 'success',
+      matchedAddress,
+      coordinates: { lat, lng },
+      floodData: { zone, source: 'fema_nfhl' },
+      classification: classifyZone(zone),
     }
-  } catch (err) {
-    console.error('FEMA flood query error:', err)
-    return null
+  } catch {
+    return {
+      status: 'dev_cors',
+      message: 'Live FEMA data available on parcoria.com — CORS blocks direct calls in local dev.',
+      floodData: null,
+      classification: null,
+    }
   }
 }
 
-// Main entry — address string → full flood intelligence
-export async function getParcelFloodData(address) {
-  const geo = await geocodeAddress(address)
-
-  if (!geo) {
+function classifyZone(zone) {
+  if (!zone) return null
+  const z = zone.trim().toUpperCase()
+  const HIGH = ['A', 'AE', 'AH', 'AO', 'AR', 'A99', 'V', 'VE']
+  if (HIGH.some(h => z === h || z.startsWith(h))) {
     return {
-      status: 'geocode_failed',
-      message: 'Could not locate this address. Please verify the address and try again.',
-      floodData: null,
-      classification: null,
+      risk: 'high', label: 'High risk flood zone', zone: z,
+      requiresElevationCert: true, requiresFloodInsurance: true,
+      desc: `Zone ${z} — 1% or greater annual chance of flooding. FEMA elevation certificate required before permits are issued.`,
     }
   }
-
-  const floodData = await queryFloodZone(geo.lat, geo.lng)
-
-  if (!floodData) {
+  if (z === 'X500') {
     return {
-      status: 'fema_failed',
-      message: 'Could not retrieve flood data. Verify manually at msc.fema.gov.',
-      matchedAddress: geo.matchedAddress,
-      floodData: null,
-      classification: null,
+      risk: 'moderate', label: 'Moderate risk flood zone', zone: z,
+      requiresElevationCert: false, requiresFloodInsurance: false,
+      desc: `Zone ${z} — 0.2% annual chance of flooding. Elevation certificate not required but flood insurance strongly recommended.`,
     }
   }
-
-  const classification = classifyFloodZone(floodData.zone)
-
   return {
-    status: 'success',
-    matchedAddress: geo.matchedAddress,
-    coordinates: { lat: geo.lat, lng: geo.lng },
-    floodData,
-    classification,
+    risk: 'minimal', label: 'Minimal flood risk', zone: z,
+    requiresElevationCert: false, requiresFloodInsurance: false,
+    desc: `Zone ${z} — Minimal flood hazard. No FEMA elevation certificate required based on current FIRM data.`,
+  }
+}
+
+export async function getParcelFloodData(address) {
+  if (!address || address.trim().length < 5) {
+    return { status: 'skipped', message: 'Enter a full address to enable flood zone detection.', floodData: null, classification: null }
+  }
+
+  // Development — try direct call, expect CORS failure, show dev message
+  if (IS_DEV) {
+    return getFloodDataDev(address)
+  }
+
+  // Production — call Vercel serverless function at /api/flood
+  try {
+    const params = new URLSearchParams({ address: address.trim() })
+    const res = await fetch(`/api/flood?${params}`)
+
+    // Guard: check content type before parsing
+    const contentType = res.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) {
+      throw new Error('API returned non-JSON response')
+    }
+
+    if (!res.ok) {
+      throw new Error(`API responded with ${res.status}`)
+    }
+
+    return await res.json()
+  } catch (err) {
+    console.error('Parcel intelligence error:', err)
+    return {
+      status: 'error',
+      message: 'Flood check unavailable. Verify manually at msc.fema.gov.',
+      floodData: null,
+      classification: null,
+    }
   }
 }

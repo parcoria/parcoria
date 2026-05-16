@@ -5,6 +5,8 @@ import Home from './pages/Home'
 import Wizard from './pages/Wizard'
 import ActionPlan from './pages/ActionPlan'
 import PreCheck from './pages/PreCheck'
+import Roadmap from './pages/Roadmap'
+import Success from './pages/Success'
 
 export default function App() {
   return (
@@ -17,6 +19,8 @@ export default function App() {
             <Route path="/wizard" element={<Wizard />} />
             <Route path="/action-plan" element={<ActionPlan />} />
             <Route path="/pre-check" element={<PreCheck />} />
+            <Route path="/roadmap" element={<Roadmap />} />
+            <Route path="/success" element={<Success />} />
           </Routes>
         </main>
         <Footer />
