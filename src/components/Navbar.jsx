@@ -1,6 +1,12 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 
+const NAV_LINKS = [
+  { to: '/', label: 'Home' },
+  { to: '/wizard', label: 'Permit Wizard' },
+  { to: '/pre-check', label: 'Plan Pre-Check' },
+]
+
 export default function Navbar() {
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
@@ -19,18 +25,15 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <div className="hidden sm:flex items-center gap-6">
-          <Link
-            to="/"
-            className={`text-sm transition-colors ${pathname === '/' ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-900'}`}
-          >
-            Home
-          </Link>
-          <Link
-            to="/wizard"
-            className={`text-sm transition-colors ${pathname === '/wizard' ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-900'}`}
-          >
-            Permit Wizard
-          </Link>
+          {NAV_LINKS.map(link => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={`text-sm transition-colors ${pathname === link.to ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-900'}`}
+            >
+              {link.label}
+            </Link>
+          ))}
           <Link
             to="/wizard"
             className="text-sm bg-brand-600 text-white px-4 py-1.5 rounded-lg hover:bg-brand-700 transition-colors font-medium"
@@ -56,9 +59,21 @@ export default function Navbar() {
       {/* Mobile menu */}
       {open && (
         <div className="sm:hidden border-t border-gray-100 bg-white px-4 py-3 flex flex-col gap-3">
-          <Link to="/" className="text-sm text-gray-700" onClick={() => setOpen(false)}>Home</Link>
-          <Link to="/wizard" className="text-sm text-gray-700" onClick={() => setOpen(false)}>Permit Wizard</Link>
-          <Link to="/wizard" className="text-sm bg-brand-600 text-white px-4 py-2 rounded-lg text-center font-medium" onClick={() => setOpen(false)}>
+          {NAV_LINKS.map(link => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="text-sm text-gray-700"
+              onClick={() => setOpen(false)}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <Link
+            to="/wizard"
+            className="text-sm bg-brand-600 text-white px-4 py-2 rounded-lg text-center font-medium"
+            onClick={() => setOpen(false)}
+          >
             Get started
           </Link>
         </div>

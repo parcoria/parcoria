@@ -4,6 +4,7 @@ import Footer from './components/Footer'
 import Home from './pages/Home'
 import Wizard from './pages/Wizard'
 import ActionPlan from './pages/ActionPlan'
+import PreCheck from './pages/PreCheck'
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/wizard" element={<Wizard />} />
             <Route path="/action-plan" element={<ActionPlan />} />
+            <Route path="/pre-check" element={<PreCheck />} />
           </Routes>
         </main>
         <Footer />
