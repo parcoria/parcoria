@@ -2,40 +2,20 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PROJECT_TYPES, PERMIT_DATA, PROFESSIONALS, INSPECTIONS } from '../data/raleigh'
 import { DURHAM_PERMIT_DATA, DURHAM_PROFESSIONALS, DURHAM_INSPECTIONS } from '../data/durham'
-import {
-  CHAPEL_HILL_PERMIT_DATA, CHAPEL_HILL_PROFESSIONALS,
-  CHAPEL_HILL_INSPECTIONS, CHAPEL_HILL_BUILDABILITY_CHECKS
-} from '../data/chapelhill'
+import { CHAPEL_HILL_PERMIT_DATA, CHAPEL_HILL_PROFESSIONALS, CHAPEL_HILL_INSPECTIONS, CHAPEL_HILL_BUILDABILITY_CHECKS } from '../data/chapelhill'
+import { APEX_PERMIT_DATA, APEX_PROFESSIONALS, APEX_INSPECTIONS, APEX_BUILDABILITY_CHECKS } from '../data/apex'
+import { HOLLY_SPRINGS_PERMIT_DATA, HOLLY_SPRINGS_PROFESSIONALS, HOLLY_SPRINGS_INSPECTIONS, HOLLY_SPRINGS_BUILDABILITY_CHECKS } from '../data/hollysprings'
 import Concierge from '../components/Concierge'
 import BuildabilityChecker from '../components/BuildabilityChecker'
 
 const STEPS = ['Jurisdiction', 'Address', 'Buildability', 'Project', 'Permits', 'Professionals']
 
 const JURISDICTIONS = [
-  {
-    id: 'raleigh',
-    name: 'Raleigh',
-    county: 'Wake County',
-    desc: 'City of Raleigh permit portal + Wake County inspections',
-    badge: 'Most active',
-    badgeColor: 'bg-brand-50 text-brand-700 border-brand-100',
-  },
-  {
-    id: 'durham',
-    name: 'Durham',
-    county: 'Durham County',
-    desc: 'Dplans (building) + LDO portal (trade permits & inspections)',
-    badge: 'Dual portal',
-    badgeColor: 'bg-amber-50 text-amber-700 border-amber-100',
-  },
-  {
-    id: 'chapelhill',
-    name: 'Chapel Hill',
-    county: 'Orange County',
-    desc: 'Online Permit Center (OpenGov) · OWASA utilities · CAPS required',
-    badge: 'UNC district',
-    badgeColor: 'bg-blue-50 text-blue-700 border-blue-100',
-  },
+  { id: 'raleigh', name: 'Raleigh', county: 'Wake County', desc: 'City of Raleigh permit portal + Wake County inspections', badge: 'Most active', badgeColor: 'bg-brand-50 text-brand-700 border-brand-100' },
+  { id: 'durham', name: 'Durham', county: 'Durham County', desc: 'Dplans (building) + LDO portal (trade permits & inspections)', badge: 'Dual portal', badgeColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+  { id: 'chapelhill', name: 'Chapel Hill', county: 'Orange County', desc: 'Online Permit Center · OWASA utilities · CAPS required', badge: 'UNC district', badgeColor: 'bg-blue-50 text-blue-700 border-blue-100' },
+  { id: 'apex', name: 'Apex', county: 'Wake County', desc: 'IDT Plans (submissions) + ePermits (payments) · Wake County inspections', badge: 'Fast growing', badgeColor: 'bg-green-50 text-green-700 border-green-100' },
+  { id: 'hollysprings', name: 'Holly Springs', county: 'Wake County', desc: 'CityView Portal · Wake County inspections · One of fastest growing US towns', badge: 'High volume', badgeColor: 'bg-purple-50 text-purple-700 border-purple-100' },
 ]
 
 const JURISDICTION_STYLES = {
@@ -45,9 +25,11 @@ const JURISDICTION_STYLES = {
 }
 
 const JURISDICTION_LABELS = {
-  raleigh:    { city: 'City of Raleigh',   county: 'Wake County',    state: 'NC State' },
-  durham:     { city: 'City of Durham',    county: 'Durham County',  state: 'NC State' },
-  chapelhill: { city: 'Town of Chapel Hill', county: 'Orange County', state: 'NC State' },
+  raleigh:     { city: 'City of Raleigh',     county: 'Wake County',    state: 'NC State' },
+  durham:      { city: 'City of Durham',      county: 'Durham County',  state: 'NC State' },
+  chapelhill:  { city: 'Town of Chapel Hill', county: 'Orange County',  state: 'NC State' },
+  apex:        { city: 'Town of Apex',        county: 'Wake County',    state: 'NC State' },
+  hollysprings:{ city: 'Town of Holly Springs', county: 'Wake County', state: 'NC State' },
 }
 
 const PRO_STYLES = {
@@ -93,28 +75,38 @@ export default function Wizard() {
 
   const isDurham = state.jurisdiction === 'durham'
   const isChapelHill = state.jurisdiction === 'chapelhill'
+  const isApex = state.jurisdiction === 'apex'
+  const isHollySprings = state.jurisdiction === 'hollysprings'
 
   function getPermitData() {
     if (isDurham) return DURHAM_PERMIT_DATA[state.proj] || DURHAM_PERMIT_DATA.sfh
     if (isChapelHill) return CHAPEL_HILL_PERMIT_DATA[state.proj] || CHAPEL_HILL_PERMIT_DATA.sfh
+    if (isApex) return APEX_PERMIT_DATA[state.proj] || APEX_PERMIT_DATA.sfh
+    if (isHollySprings) return HOLLY_SPRINGS_PERMIT_DATA[state.proj] || HOLLY_SPRINGS_PERMIT_DATA.sfh
     return PERMIT_DATA[state.proj] || PERMIT_DATA.sfh
   }
 
   function getPros() {
     if (isDurham) return DURHAM_PROFESSIONALS[state.proj] || DURHAM_PROFESSIONALS.sfh
     if (isChapelHill) return CHAPEL_HILL_PROFESSIONALS[state.proj] || CHAPEL_HILL_PROFESSIONALS.sfh
+    if (isApex) return APEX_PROFESSIONALS[state.proj] || APEX_PROFESSIONALS.sfh
+    if (isHollySprings) return HOLLY_SPRINGS_PROFESSIONALS[state.proj] || HOLLY_SPRINGS_PROFESSIONALS.sfh
     return PROFESSIONALS[state.proj] || PROFESSIONALS.sfh
   }
 
   function getInsps() {
     if (isDurham) return DURHAM_INSPECTIONS[state.proj] || DURHAM_INSPECTIONS.sfh
     if (isChapelHill) return CHAPEL_HILL_INSPECTIONS[state.proj] || CHAPEL_HILL_INSPECTIONS.sfh
+    if (isApex) return APEX_INSPECTIONS[state.proj] || APEX_INSPECTIONS.sfh
+    if (isHollySprings) return HOLLY_SPRINGS_INSPECTIONS[state.proj] || HOLLY_SPRINGS_INSPECTIONS.sfh
     return INSPECTIONS[state.proj] || INSPECTIONS.sfh
   }
 
   function getBuildabilityChecks() {
     const flags = { historic: state.historic, septic: state.septic, flood: state.flood, corner: state.corner }
     if (isChapelHill) return CHAPEL_HILL_BUILDABILITY_CHECKS(flags)
+    if (isApex) return APEX_BUILDABILITY_CHECKS(flags)
+    if (isHollySprings) return HOLLY_SPRINGS_BUILDABILITY_CHECKS(flags)
     return getRaleighBuildabilityChecks(flags)
   }
 
@@ -128,6 +120,8 @@ export default function Wizard() {
   function getInspectionNote() {
     if (isDurham) return 'Schedule all inspections through the LDO portal at ldo4.durhamnc.gov'
     if (isChapelHill) return 'Schedule via Online Permit Center, call (919) 968-2718, or email permits@townofchapelhill.org. Cancel by 9:30 AM day-of to avoid $60 re-inspection fee.'
+    if (isApex) return 'Schedule by 2:00 PM the day before via online form or call (919) 249-3388. Wake County performs all field inspections.'
+    if (isHollySprings) return 'Request through CityView Portal or call 311. Before 4 PM = next day. After 4 PM = second business day. Wake County performs all field inspections.'
     return 'Schedule all inspections through Wake County'
   }
 
@@ -163,7 +157,7 @@ export default function Wizard() {
           <p className="text-xs text-gray-400 mb-1">Step 1 of 6</p>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Where are you building?</h2>
           <p className="text-sm text-gray-500 mb-6">Select your jurisdiction. Each city has different permit portals, requirements, and review timelines.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-6">
             {JURISDICTIONS.map(j => (
               <button
                 key={j.id}
@@ -174,13 +168,11 @@ export default function Wizard() {
                     : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}
               >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className={`text-base font-semibold ${state.jurisdiction === j.id ? 'text-brand-700' : 'text-gray-900'}`}>
-                    {j.name}
-                  </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full border font-medium flex-shrink-0 ${j.badgeColor}`}>
-                    {j.badge}
-                  </span>
+                <span className={`text-xs px-2 py-0.5 rounded-full border font-medium inline-block mb-2 ${j.badgeColor}`}>
+                  {j.badge}
+                </span>
+                <div className={`text-base font-semibold mb-1 ${state.jurisdiction === j.id ? 'text-brand-700' : 'text-gray-900'}`}>
+                  {j.name}
                 </div>
                 <div className={`text-xs mb-1 font-medium ${state.jurisdiction === j.id ? 'text-brand-600' : 'text-gray-500'}`}>
                   {j.county}
@@ -211,6 +203,30 @@ export default function Wizard() {
                 <div className="text-sm font-semibold text-blue-800 mb-1">Chapel Hill has a unique school certificate requirement</div>
                 <div className="text-xs text-blue-700 leading-relaxed">
                   All new residential units in Orange County require a <strong>Certificate of Adequate Public Schools (CAPS)</strong> from Chapel Hill-Carrboro City Schools before any Zoning Compliance Permit is issued. This is unique to Chapel Hill — we will surface this at every step.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isApex && (
+            <div className="bg-green-50 border border-green-100 rounded-xl p-4 mb-5 flex gap-3">
+              <span className="text-base flex-shrink-0">ℹ️</span>
+              <div>
+                <div className="text-sm font-semibold text-green-800 mb-1">Apex uses two portals — IDT Plans and ePermits</div>
+                <div className="text-xs text-green-700 leading-relaxed">
+                  Submit all plans through <strong>IDT Plans portal</strong>. Pay all fees through the <strong>ePermits portal</strong>. Your permit is not active until fees are paid in ePermits. Parcoria will tell you exactly which portal to use for each step.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isHollySprings && (
+            <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 mb-5 flex gap-3">
+              <span className="text-base flex-shrink-0">ℹ️</span>
+              <div>
+                <div className="text-sm font-semibold text-purple-800 mb-1">Holly Springs — single CityView Portal for everything</div>
+                <div className="text-xs text-purple-700 leading-relaxed">
+                  Holly Springs uses one <strong>CityView Portal</strong> for applications, payments, inspection requests, and status tracking. Also obtain your <strong>Progress Energy premise number</strong> early — required for electrical inspection reporting.
                 </div>
               </div>
             </div>
@@ -257,9 +273,9 @@ export default function Wizard() {
               </div>
               <button
                 onClick={() => update(t.key, !state[t.key])}
-                className={`relative w-9 h-5 rounded-full transition-colors ${state[t.key] ? 'bg-brand-600' : 'bg-gray-200'}`}
+                className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors ${state[t.key] ? 'bg-brand-600' : 'bg-gray-200'}`}
               >
-                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${state[t.key] ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${state[t.key] ? 'translate-x-5' : 'translate-x-0'}`} />
               </button>
             </div>
           ))}

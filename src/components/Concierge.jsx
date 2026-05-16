@@ -1,11 +1,43 @@
 import { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 
-const SYSTEM_PROMPT = `You are the Parcoria AI Concierge — an expert guide for residential construction permitting in Raleigh, NC and Wake County.
+// Post-processor: converts any inline bullet patterns to proper markdown lists
+// This runs on every Claude response regardless of jurisdiction
+function cleanMarkdown(text) {
+  if (!text) return text
+  const lines = text.split('\n')
+  const result = []
+  for (const line of lines) {
+    // Line starts with a bullet character — convert to markdown list item
+    if (/^[•·▪▸➤◦‣]\s+/.test(line)) {
+      result.push(line.replace(/^[•·▪▸➤◦‣]\s+/, '- '))
+      continue
+    }
+    // Line contains inline bullets — split into header + separate list items
+    if (/[•·▪▸]/.test(line) && !line.startsWith('#') && !line.startsWith('-')) {
+      const parts = line.split(/\s*[•·▪▸]\s+/)
+      if (parts.length > 1) {
+        if (parts[0].trim()) result.push(parts[0].trim())
+        parts.slice(1).forEach(part => {
+          if (part.trim()) result.push('- ' + part.trim())
+        })
+        continue
+      }
+    }
+    result.push(line)
+  }
+  return result.join('\n')
+}
+
+const SYSTEM_PROMPT = `You are the Parcoria AI Concierge — an expert guide for residential construction permitting across the Research Triangle: Raleigh, Durham, Chapel Hill, Apex, and Holly Springs, NC.
 
 You have deep knowledge of:
-- City of Raleigh permit requirements, processes, and portals
-- Wake County inspection scheduling and requirements
+- Raleigh: City permit portal + Wake County inspections
+- Durham: Dual portal system — Dplans (building) + LDO (trade permits, fees, inspections)
+- Chapel Hill: Online Permit Center + OWASA utilities + CAPS certificate requirement unique to Orange County
+- Apex: Dual portal — IDT Plans (submissions) + ePermits (payments)
+- Holly Springs: CityView Portal + Wake County inspections + Progress Energy premise number requirement
+- Wake County inspection scheduling and requirements (Raleigh, Apex, Holly Springs)
 - NC State building codes and licensing laws
 - The exact sequence permits must be obtained
 - Which licensed professionals are legally required for each project type
@@ -14,49 +46,54 @@ You have deep knowledge of:
 
 Your personality:
 - You are direct, warm, and specific — never vague or generic
-- You speak like a trusted expert friend who has built 100 homes in Raleigh
+- You speak like a trusted expert friend who has built 100 homes across the Triangle
 - You give real actionable guidance, not disclaimers
 - You are encouraging but honest about complexity and risk
 - You never say "consult a professional" as your only answer — you give real information first
 
-Your formatting rules:
-- ALWAYS use proper markdown lists — never write bullets inline in a paragraph
-- For grouped items, use a header followed by a proper markdown list like this:
+Your formatting rules — STRICT, apply to every response regardless of jurisdiction:
+- ALWAYS use proper markdown list syntax — a hyphen and space at the start of its own line
+- NEVER write bullet points inline inside a paragraph using bullet characters
+- For grouped items, always use this exact pattern:
 
-**Property Documents:**
-- Item one with description
-- Item two with description
+**Group Header:**
+- First item — explanation
+- Second item — explanation
+- Third item — explanation
 
-- Use bold for important terms or warnings
-- Keep paragraphs short — 2 sentences max
-- Never write bullets as "• item" inline — always use "- item" on its own line
-- Every bullet point must be on its own line, indented under its header
+- Every single bullet point must be on its own separate line
+- Headers use double asterisks for bold
+- Keep paragraphs to 2 sentences max
+- This formatting rule applies permanently for ALL jurisdictions
 
 Your constraints:
-- You only answer questions related to construction, permits, zoning, contractors, inspections, and related topics
-- If asked about something unrelated, politely redirect to construction topics
-- Always reference Raleigh/Wake County specifics when relevant
+- Only answer questions related to construction, permits, zoning, contractors, inspections, and related topics
+- Always reference the user's specific jurisdiction when relevant — each city has different portals and requirements
 - Keep responses focused and actionable
 - Use plain language, avoid jargon unless you explain it`
 
 function buildContextMessage(projectData) {
   if (!projectData) return ''
-  const { addr, proj, cost, historic, septic, flood, corner, permitCount, timeline, fees } = projectData
+  const { addr, proj, cost, historic, septic, flood, corner, jurisdiction, permitCount, timeline, fees } = projectData
   const projLabels = {
     sfh: 'new single-family home', adu: 'accessory dwelling unit (ADU)',
     addition: 'addition or expansion', deck: 'deck or porch',
     reno: 'major renovation', pool: 'pool or spa',
     shed: 'shed or detached garage', townhouse: 'townhouse or duplex',
   }
+  const jurLabels = {
+    raleigh: 'Raleigh, NC', durham: 'Durham, NC',
+    chapelhill: 'Chapel Hill, NC', apex: 'Apex, NC', hollysprings: 'Holly Springs, NC',
+  }
   const flags = []
-  if (historic) flags.push('historic district overlay — Certificate of Appropriateness required')
-  if (septic)   flags.push('private well/septic — Wake County approval required before city permits')
-  if (flood)    flags.push('floodplain overlay — FEMA elevation certificate required')
-  if (corner)   flags.push('corner lot — dual street setbacks apply')
-
+  if (historic) flags.push('historic district overlay')
+  if (septic) flags.push('private well/septic')
+  if (flood) flags.push('floodplain overlay')
+  if (corner) flags.push('corner lot')
   return `
 PROJECT CONTEXT FOR THIS USER:
-- Address: ${addr || 'Raleigh, NC'}
+- Jurisdiction: ${jurLabels[jurisdiction] || 'Raleigh, NC'}
+- Address: ${addr || 'Not provided'}
 - Project type: ${projLabels[proj] || proj}
 - Estimated cost: ${cost || 'not provided'}
 - Permits required: ${permitCount || 'varies'}
@@ -64,7 +101,7 @@ PROJECT CONTEXT FOR THIS USER:
 - Estimated permit fees: ${fees || 'varies'}
 - Special conditions: ${flags.length > 0 ? flags.join('; ') : 'none'}
 
-Use this context to personalize every response. Reference their specific project type, address conditions, and timeline when relevant.
+Use this context to personalize every response. Reference their specific jurisdiction, project type, and conditions.
   `.trim()
 }
 
@@ -84,8 +121,8 @@ export default function Concierge({ projectData }) {
     {
       role: 'assistant',
       content: projectData?.proj
-        ? `I've reviewed your ${projectData.proj === 'sfh' ? 'new home' : projectData.proj} project${projectData.addr ? ` at **${projectData.addr}**` : ' in Raleigh'}. You have **${projectData.permitCount || 'several'} permits** ahead with an estimated timeline of **${projectData.timeline || 'a few months'}**. What would you like to know first?`
-        : "Hi — I'm your Parcoria AI Concierge. I know Raleigh's permit process inside and out. Ask me anything about your project — permits, contractors, inspections, timelines, or NC law.",
+        ? `I have reviewed your ${projectData.proj === 'sfh' ? 'new home' : projectData.proj} project${projectData.addr ? ` at **${projectData.addr}**` : ''}. You have **${projectData.permitCount || 'several'} permits** ahead with an estimated timeline of **${projectData.timeline || 'a few months'}**. What would you like to know first?`
+        : "Hi — I am your Parcoria AI Concierge. I know the Triangle permit process inside and out. Ask me anything about your project — permits, contractors, inspections, timelines, or NC law.",
     },
   ])
   const [input, setInput] = useState('')
@@ -101,26 +138,18 @@ export default function Concierge({ projectData }) {
   async function send(text) {
     const question = text || input.trim()
     if (!question || loading) return
-
     setInput('')
     setError('')
-
     const userMessage = { role: 'user', content: question }
     const updatedMessages = [...messages, userMessage]
     setMessages(updatedMessages)
     setLoading(true)
-
     try {
       const contextMessage = buildContextMessage(projectData)
       const apiMessages = updatedMessages.map(m => ({ role: m.role, content: m.content }))
-
       if (contextMessage && apiMessages.length === 1) {
-        apiMessages[0] = {
-          role: 'user',
-          content: `${contextMessage}\n\nUSER QUESTION: ${question}`,
-        }
+        apiMessages[0] = { role: 'user', content: `${contextMessage}\n\nUSER QUESTION: ${question}` }
       }
-
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -136,15 +165,13 @@ export default function Concierge({ projectData }) {
           messages: apiMessages,
         }),
       })
-
       if (!response.ok) {
         const err = await response.json()
         throw new Error(err.error?.message || 'API error')
       }
-
       const data = await response.json()
-      const reply = data.content?.[0]?.text || 'Sorry, I could not generate a response.'
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      const raw = data.content?.[0]?.text || 'Sorry, I could not generate a response.'
+      setMessages(prev => [...prev, { role: 'assistant', content: cleanMarkdown(raw) }])
     } catch (err) {
       console.error('Concierge error:', err)
       setError('Something went wrong. Please try again.')
@@ -164,7 +191,6 @@ export default function Concierge({ projectData }) {
 
   return (
     <div className="border border-gray-100 rounded-2xl overflow-hidden bg-white shadow-sm">
-
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-gray-50">
         <div className="w-7 h-7 rounded-full bg-brand-600 flex items-center justify-center flex-shrink-0">
@@ -172,7 +198,7 @@ export default function Concierge({ projectData }) {
         </div>
         <div>
           <div className="text-sm font-semibold text-gray-900">Parcoria AI Concierge</div>
-          <div className="text-xs text-gray-400">Expert guidance for your Raleigh build</div>
+          <div className="text-xs text-gray-400">Expert guidance for your build</div>
         </div>
         <div className="ml-auto flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
@@ -195,12 +221,10 @@ export default function Concierge({ projectData }) {
                 : 'bg-gray-100 text-gray-800 rounded-bl-sm'
             }`}>
               {m.role === 'assistant' ? (
-                <div className="prose prose-sm max-w-none [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:pl-5 [&_li]:my-1.5 [&_li]:leading-snug [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-gray-900 [&_h3]:mt-3 [&_h3]:mb-1 [&_strong]:font-semibold [&_strong]:text-gray-900">
+                <div className="prose prose-sm max-w-none [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_ol]:my-2 [&_ol]:pl-5 [&_ol]:space-y-1.5 [&_li]:my-0 [&_li]:leading-relaxed [&_li]:pl-1 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-gray-900 [&_h3]:mt-3 [&_h3]:mb-1 [&_strong]:font-semibold [&_strong]:text-gray-900">
                   <ReactMarkdown>{m.content}</ReactMarkdown>
                 </div>
-              ) : (
-                m.content
-              )}
+              ) : m.content}
             </div>
           </div>
         ))}

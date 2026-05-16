@@ -69,7 +69,7 @@ export default function Home() {
       <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-16 text-center">
         <div className="inline-flex items-center gap-2 text-xs text-brand-700 bg-brand-50 border border-brand-100 rounded-full px-3 py-1 mb-6">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-600 animate-pulse"></span>
-          Research Triangle — Early access open
+          Raleigh · Durham · Chapel Hill · Apex · Holly Springs
         </div>
         <h1 className="text-4xl sm:text-5xl font-semibold text-gray-900 leading-tight mb-4 tracking-tight">
           Build your home without<br className="hidden sm:block" /> the permit headache
@@ -103,7 +103,7 @@ export default function Home() {
         )}
 
         {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
-        <p className="text-xs text-gray-400 mt-3">Free during beta · Raleigh homeowners only right now</p>
+        <p className="text-xs text-gray-400 mt-3">Free during beta · Research Triangle + Wake County</p>
 
         <div className="mt-8">
           <Link

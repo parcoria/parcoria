@@ -2,6 +2,29 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 
+function cleanMarkdown(text) {
+  if (!text) return text
+  let lines = text.split('\n')
+  let result = []
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i]
+    if (/^[•·▪▸]\s+/.test(line)) {
+      result.push(line.replace(/^[•·▪▸]\s+/, '- '))
+      continue
+    }
+    if (/[•·]/.test(line) && !line.startsWith('#') && !line.startsWith('-')) {
+      const parts = line.split(/\s*[•·]\s+/)
+      if (parts.length > 1) {
+        if (parts[0].trim()) result.push(parts[0].trim())
+        parts.slice(1).forEach(part => { if (part.trim()) result.push('- ' + part.trim()) })
+        continue
+      }
+    }
+    result.push(line)
+  }
+  return result.join('\n')
+}
+
 const SYSTEM_PROMPT = `You are Parcoria's AI Plan Pre-Check Engine — an expert at reviewing residential construction plans for compliance with the 2024 NC Residential Building Code and City of Raleigh requirements.
 
 Your job is to analyze the project details provided and return a structured pre-submission compliance report.
@@ -219,7 +242,7 @@ export default function PreCheck() {
       }
 
       const data = await response.json()
-      setReport(data.content?.[0]?.text || 'Unable to generate report.')
+      setReport(cleanMarkdown(data.content?.[0]?.text || 'Unable to generate report.'))
     } catch (err) {
       console.error('Pre-check error:', err)
       setError('Something went wrong generating your report. Please try again.')
@@ -364,7 +387,7 @@ export default function PreCheck() {
               </div>
             </div>
             <div className="px-5 py-5">
-              <div className="prose prose-sm max-w-none [&_p]:my-2 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-2 [&_ol]:my-3 [&_ol]:pl-5 [&_ol]:space-y-2 [&_li]:my-0 [&_li]:leading-relaxed [&_li]:pl-1 [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:text-gray-900 [&_h2]:mt-5 [&_h2]:mb-3 [&_h2]:pb-1 [&_h2]:border-b [&_h2]:border-gray-100 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-gray-900 [&_h3]:mt-4 [&_h3]:mb-2 [&_strong]:font-semibold [&_strong]:text-gray-900 [&_em]:text-gray-400 [&_em]:text-xs [&_em]:not-italic">
+              <div className="prose prose-sm max-w-none [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:pl-5 [&_li]:my-1.5 [&_li]:leading-snug [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:text-gray-900 [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-gray-900 [&_h3]:mt-3 [&_h3]:mb-1 [&_strong]:font-semibold [&_strong]:text-gray-900 [&_em]:text-gray-500 [&_em]:text-xs">
                 <ReactMarkdown>{report}</ReactMarkdown>
               </div>
             </div>
