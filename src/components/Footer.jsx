@@ -9,7 +9,7 @@ export default function Footer() {
             <span className="text-white text-xs font-semibold">P</span>
           </div>
           <span className="text-sm font-medium text-gray-900">Parcoria</span>
-          <span className="text-sm text-gray-400">· Raleigh, NC pilot · Est. 2026</span>
+          <span className="text-sm text-gray-400">· Raleigh · Durham · Chapel Hill · Est. 2026</span>
         </div>
         <div className="flex items-center gap-6">
           <Link to="/" className="text-sm text-gray-400 hover:text-gray-700 transition-colors">Home</Link>
