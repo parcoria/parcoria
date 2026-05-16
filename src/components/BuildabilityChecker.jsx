@@ -162,16 +162,21 @@ export default function BuildabilityChecker({ address, jurisdiction, flags, onFl
 
             {floodStatus === 'success' && floodResult?.classification && (() => {
               const cls = floodResult.classification
+              const isUnmapped = floodResult.floodData?.source === 'no_data' || floodResult.floodData?.unmapped
               const style = FLOOD_RISK_STYLES[cls.risk] || FLOOD_RISK_STYLES.unknown
               return (
                 <div className={`mt-2 rounded-lg border p-3 ${style.bg}`}>
                   <div className={`text-xs font-semibold mb-1 ${style.text}`}>
-                    {style.icon} {cls.label} — Zone {cls.zone}
+                    {style.icon} {isUnmapped ? 'Parcel not in FEMA flood hazard area' : `${cls.label} — Zone ${cls.zone}`}
                   </div>
-                  <div className={`text-xs leading-relaxed ${style.sub}`}>{cls.desc}</div>
+                  <div className={`text-xs leading-relaxed ${style.sub}`}>
+                    {isUnmapped
+                      ? 'No flood hazard data found for this parcel in the FEMA National Flood Hazard Layer. This typically means the area has not been mapped or is outside a Special Flood Hazard Area. Verify at msc.fema.gov before submitting permits.'
+                      : cls.desc}
+                  </div>
                   {floodResult.matchedAddress && (
                     <div className="text-xs text-gray-400 mt-1.5">
-                      Matched address: {floodResult.matchedAddress}
+                      Matched: {floodResult.matchedAddress}
                     </div>
                   )}
                   {cls.requiresElevationCert && (
@@ -180,7 +185,7 @@ export default function BuildabilityChecker({ address, jurisdiction, flags, onFl
                     </div>
                   )}
                   <a
-                    href={`https://msc.fema.gov/portal/search#searchresultsanchor`}
+                    href="https://msc.fema.gov/portal/search"
                     target="_blank"
                     rel="noreferrer"
                     className="text-xs text-brand-600 hover:text-brand-700 mt-2 inline-block"
