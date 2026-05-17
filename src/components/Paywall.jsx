@@ -102,7 +102,7 @@ export default function Paywall({ jurisdiction, proj, addr }) {
         <div className="border-t border-gray-100 mt-4 pt-4 text-center">
           <p className="text-xs text-gray-400">
             Already paid on another device?{' '}
-            <Link to="/pricing" className="text-brand-600 hover:text-brand-700">
+            <Link to="/restore" className="text-brand-600 hover:text-brand-700">
               Restore access ↗
             </Link>
           </p>
