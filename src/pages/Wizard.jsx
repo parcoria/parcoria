@@ -9,6 +9,8 @@ import Concierge from '../components/Concierge'
 import BuildabilityChecker from '../components/BuildabilityChecker'
 import { startCheckout } from '../lib/checkout'
 import { hasAccess } from '../lib/access'
+import { saveProject, getUser } from '../lib/supabase'
+import SaveToDashboard from '../components/SaveToDashboard'
 import Paywall from '../components/Paywall'
 
 const STEPS = ['Jurisdiction', 'Address', 'Buildability', 'Project', 'Permits', 'Professionals']
@@ -70,9 +72,38 @@ export default function Wizard() {
     jurisdiction: '', addr: '', proj: '', cost: '',
     historic: false, septic: false, flood: false, corner: false,
   })
+  const [saveStatus, setSaveStatus] = useState('idle') // idle | saving | saved | error
 
   function update(key, val) { setState(s => ({ ...s, [key]: val })) }
-  function next() { setStep(s => s + 1) }
+  async function next() {
+    // When moving from step 4 to step 5 and user has access, save project
+    if (step === 4 && hasAccess() && state.proj && state.jurisdiction) {
+      try {
+        const user = await getUser()
+        if (user) {
+          await saveProject({
+            name: `${state.proj === 'sfh' ? 'New Home' : state.proj} — ${state.addr || state.jurisdiction}`,
+            jurisdiction: state.jurisdiction,
+            addr: state.addr,
+            proj: state.proj,
+            cost: state.cost,
+            historic: state.historic,
+            septic: state.septic,
+            flood: state.flood,
+            corner: state.corner,
+            permitCount: (data?.count || 0) + (state.historic ? 1 : 0) + (state.septic ? 1 : 0) + (state.flood ? 1 : 0),
+            timeline: data?.timeline,
+            fees: data?.fees,
+            status: 'planning',
+          })
+        }
+      } catch (err) {
+        // Silent fail — don't block the wizard if save fails
+        console.error('Project save error:', err.message)
+      }
+    }
+    setStep(s => s + 1)
+  }
   function back() { setStep(s => s - 1) }
 
   const isRaleigh = state.jurisdiction === 'raleigh' || state.jurisdiction === ''
@@ -509,6 +540,14 @@ export default function Wizard() {
               Get my action plan ↗
             </button>
           </div>
+          {/* Save to dashboard button — only shown when authenticated */}
+          <SaveToDashboard
+            state={state}
+            data={data}
+            saveStatus={saveStatus}
+            setSaveStatus={setSaveStatus}
+          />
+
           <button onClick={shareRoadmap}
             className="w-full mt-2 py-2.5 border border-brand-200 text-brand-700 bg-brand-50 text-sm font-medium rounded-lg hover:bg-brand-100 transition-colors flex items-center justify-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
