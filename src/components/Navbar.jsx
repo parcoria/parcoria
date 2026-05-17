@@ -5,6 +5,7 @@ const NAV_LINKS = [
   { to: '/', label: 'Home' },
   { to: '/wizard', label: 'Permit Wizard' },
   { to: '/pre-check', label: 'Plan Pre-Check' },
+  { to: '/pricing', label: 'Pricing' },
 ]
 
 export default function Navbar() {
@@ -15,7 +16,6 @@ export default function Navbar() {
     <nav className="border-b border-gray-100 bg-white sticky top-0 z-50">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
 
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center">
             <span className="text-white text-xs font-semibold">P</span>
@@ -23,7 +23,6 @@ export default function Navbar() {
           <span className="font-semibold text-gray-900 text-sm tracking-tight">Parcoria</span>
         </Link>
 
-        {/* Desktop nav */}
         <div className="hidden sm:flex items-center gap-6">
           {NAV_LINKS.map(link => (
             <Link
@@ -35,14 +34,13 @@ export default function Navbar() {
             </Link>
           ))}
           <Link
-            to="/wizard"
+            to="/pricing"
             className="text-sm bg-brand-600 text-white px-4 py-1.5 rounded-lg hover:bg-brand-700 transition-colors font-medium"
           >
-            Get started
+            Get started — $79
           </Link>
         </div>
 
-        {/* Mobile menu button */}
         <button
           className="sm:hidden text-gray-500 hover:text-gray-900"
           onClick={() => setOpen(!open)}
@@ -56,25 +54,19 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile menu */}
       {open && (
         <div className="sm:hidden border-t border-gray-100 bg-white px-4 py-3 flex flex-col gap-3">
           {NAV_LINKS.map(link => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className="text-sm text-gray-700"
-              onClick={() => setOpen(false)}
-            >
+            <Link key={link.to} to={link.to} className="text-sm text-gray-700" onClick={() => setOpen(false)}>
               {link.label}
             </Link>
           ))}
           <Link
-            to="/wizard"
+            to="/pricing"
             className="text-sm bg-brand-600 text-white px-4 py-2 rounded-lg text-center font-medium"
             onClick={() => setOpen(false)}
           >
-            Get started
+            Get started — $79
           </Link>
         </div>
       )}
