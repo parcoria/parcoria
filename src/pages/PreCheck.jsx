@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
+import { hasAccess } from '../lib/access'
+import { startCheckout } from '../lib/checkout'
 
 function cleanMarkdown(text) {
   if (!text) return text
@@ -345,24 +347,34 @@ export default function PreCheck() {
               >
                 Continue — {STEPS[step + 1].label}
               </button>
+            ) : hasAccess() ? (
+                <button
+                  onClick={generateReport}
+                  disabled={loading}
+                  className="flex-1 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                      Analyzing your project...
+                    </span>
+                  ) : (
+                    'Generate pre-check report ↗'
+                  )}
+                </button>
             ) : (
-              <button
-                onClick={generateReport}
-                disabled={loading}
-                className="flex-1 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                    </svg>
-                    Analyzing your project...
-                  </span>
-                ) : (
-                  'Generate pre-check report ↗'
-                )}
-              </button>
+                <button
+                  onClick={async () => {
+                    try { await startCheckout({}) }
+                    catch { alert('Checkout unavailable. Please try again.') }
+                  }}
+                  className="flex-1 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
+                >
+                  Unlock report — $79 ↗
+                </button>
             )}
           </div>
 

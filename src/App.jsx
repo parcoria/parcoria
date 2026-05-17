@@ -8,6 +8,7 @@ import PreCheck from './pages/PreCheck'
 import Roadmap from './pages/Roadmap'
 import Success from './pages/Success'
 import Pricing from './pages/Pricing'
+import Restore from './pages/Restore'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="/roadmap" element={<Roadmap />} />
             <Route path="/success" element={<Success />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/restore" element={<Restore />} />
           </Routes>
         </main>
         <Footer />
