@@ -94,7 +94,7 @@ export default function Wizard() {
             permitCount: (data?.count || 0) + (state.historic ? 1 : 0) + (state.septic ? 1 : 0) + (state.flood ? 1 : 0),
             timeline: data?.timeline,
             fees: data?.fees,
-            status: 'planning',
+            status: 'active',
           })
         }
       } catch (err) {

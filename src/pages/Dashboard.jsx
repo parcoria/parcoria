@@ -102,6 +102,19 @@ export default function Dashboard() {
     }
   }
 
+  async function handleStatusChange(id, newStatus) {
+    // Optimistic update
+    setProjects(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p))
+    try {
+      const { supabase } = await import('../lib/supabase')
+      await supabase.from('projects').update({ status: newStatus }).eq('id', id)
+    } catch (err) {
+      console.error('Status update error:', err)
+      // Revert on error
+      loadProjects()
+    }
+  }
+
   async function handleSignOut() {
     await signOut()
     setUser(null)
@@ -259,9 +272,17 @@ export default function Dashboard() {
                     <h3 className="text-sm font-semibold text-gray-900 truncate">
                       {project.name || project.address || 'Untitled project'}
                     </h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${STATUS_STYLES[project.status] || STATUS_STYLES.active}`}>
-                      {project.status || 'active'}
-                    </span>
+                    <select
+                      value={project.status || 'active'}
+                      onChange={e => handleStatusChange(project.id, e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      className={`text-xs px-2 py-0.5 rounded-full border font-medium cursor-pointer focus:outline-none ${STATUS_STYLES[project.status] || STATUS_STYLES.active}`}
+                    >
+                      <option value="active">Active</option>
+                      <option value="planning">Planning</option>
+                      <option value="submitted">Submitted</option>
+                      <option value="complete">Complete</option>
+                    </select>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${JUR_COLORS[project.jurisdiction] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>

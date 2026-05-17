@@ -64,7 +64,7 @@ export default function SaveToDashboard({ state, data, saveStatus, setSaveStatus
         permitCount,
         timeline: data?.timeline,
         fees: data?.fees,
-        status: 'planning',
+        status: 'active',
       })
       setSaveStatus('saved')
     } catch (err) {
