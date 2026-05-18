@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useState } from 'react'
 import { isDeveloper } from '../lib/access'
+import { useState, useEffect } from 'react'
+import { getUser } from '../lib/supabase'
 
 const NAV_LINKS = [
   { to: '/', label: 'Home' },
@@ -12,7 +13,14 @@ const NAV_LINKS = [
 export default function Navbar() {
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
+  const [supabaseUser, setSupabaseUser] = useState(null)
   const devUser = isDeveloper()
+
+  useEffect(() => {
+    if (devUser) {
+      getUser().then(u => setSupabaseUser(u))
+    }
+  }, [devUser])
 
   return (
     <nav className="border-b border-gray-100 bg-white sticky top-0 z-50">
@@ -38,7 +46,7 @@ export default function Navbar() {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
               </svg>
-              Dashboard
+              {supabaseUser ? 'Dashboard' : 'My Projects'}
             </Link>
           ) : (
             <Link to="/pricing"

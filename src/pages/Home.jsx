@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { hasAccess, isDeveloper } from '../lib/access'
 
 const PAIN_STATS = [
   { n: '11+', label: 'Permits for a single new home in Raleigh' },
@@ -29,12 +30,22 @@ const PERMIT_SAMPLES = [
 ]
 
 export default function Home() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [email2, setEmail2] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [submitted2, setSubmitted2] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const userIsDeveloper = isDeveloper()
+  const userHasAccess = hasAccess()
+
+  // Redirect developer users straight to dashboard
+  useEffect(() => {
+    if (userIsDeveloper) {
+      navigate('/dashboard')
+    }
+  }, [userIsDeveloper])
 
   async function handleSubmit(e, which) {
     e.preventDefault()
@@ -78,7 +89,32 @@ export default function Home() {
           Know exactly which permits you need, in the right order, before you spend a dollar on construction. No lawyers, no guesswork, no wasted months.
         </p>
 
-        {submitted ? (
+        {userHasAccess ? (
+          /* Homeowner with active access — show continue CTA */
+          <div className="flex flex-col items-center gap-4">
+            <div className="bg-green-50 border border-green-100 rounded-xl px-6 py-4 text-center max-w-md mx-auto">
+              <div className="text-sm font-semibold text-green-800 mb-1">✓ Your Parcoria access is active</div>
+              <div className="text-xs text-green-700 mb-4">Pick up where you left off or start a new project.</div>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Link
+                  to="/wizard"
+                  className="px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors"
+                >
+                  Continue permit wizard ↗
+                </Link>
+                <Link
+                  to="/pre-check"
+                  className="px-5 py-2.5 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:border-gray-300 transition-colors"
+                >
+                  Run plan pre-check
+                </Link>
+              </div>
+            </div>
+            <Link to="/restore" className="text-xs text-gray-400 hover:text-gray-600">
+              Different device? Restore access ↗
+            </Link>
+          </div>
+        ) : submitted ? (
           <div className="inline-flex items-center gap-2 text-green-700 bg-green-50 border border-green-100 rounded-lg px-5 py-3 text-sm font-medium">
             ✓ You're on the list — we'll be in touch soon
           </div>
@@ -103,19 +139,23 @@ export default function Home() {
         )}
 
         {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
-        <p className="text-xs text-gray-400 mt-3">Free during beta · Research Triangle + Wake County</p>
 
-        <div className="mt-8">
-          <Link
-            to="/wizard"
-            className="inline-flex items-center gap-2 text-sm text-brand-600 font-medium hover:text-brand-700 transition-colors"
-          >
-            Try the permit wizard now
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
+        {!userHasAccess && (
+          <>
+            <p className="text-xs text-gray-400 mt-3">Free during beta · Research Triangle + Wake County</p>
+            <div className="mt-8">
+              <Link
+                to="/wizard"
+                className="inline-flex items-center gap-2 text-sm text-brand-600 font-medium hover:text-brand-700 transition-colors"
+              >
+                Try the permit wizard now
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+          </>
+        )}
       </section>
 
       {/* Pain stats */}

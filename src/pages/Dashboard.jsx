@@ -151,9 +151,9 @@ export default function Dashboard() {
           <div className="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-lg font-semibold">P</span>
           </div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Developer dashboard</h1>
-          <p className="text-sm text-gray-500">
-            Enter your email to receive a secure login link. No password required.
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">One more step</h1>
+          <p className="text-sm text-gray-500 leading-relaxed">
+            Enter the email you used when you signed up for Parcoria. We'll send you a secure login link to access your projects — no password needed.
           </p>
         </div>
 
