@@ -28,10 +28,10 @@ export default function Restore() {
       const data = await res.json()
 
       if (data.success) {
-        grantAccess()
+        grantAccess(data.tier || 'homeowner')
         setStatus('success')
-        setMessage('Access restored successfully.')
-        setTimeout(() => navigate('/wizard'), 2000)
+        setMessage(data.tier === 'developer' ? 'Developer access restored — redirecting to dashboard...' : 'Access restored successfully.')
+        setTimeout(() => navigate(data.tier === 'developer' ? '/dashboard' : '/wizard'), 2000)
       } else {
         setStatus('notfound')
         setMessage(data.message || 'No payment found for this email.')
@@ -66,7 +66,7 @@ export default function Restore() {
             </svg>
           </div>
           <div className="text-sm font-semibold text-green-800 mb-1">Access restored</div>
-          <div className="text-xs text-green-700">Redirecting you to the wizard...</div>
+          <div className="text-xs text-green-700">{message}</div>
         </div>
       ) : (
         <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
