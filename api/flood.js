@@ -52,7 +52,7 @@ function classifyFloodZone(zone, unmapped) {
 async function geocodeArcGIS(address) {
   const params = new URLSearchParams({
     SingleLine: address,
-    outFields: 'Match_addr',
+    outFields: 'Match_addr,City,Region,Postal',
     f: 'json',
     maxLocations: '1',
     countryCode: 'USA',
@@ -143,6 +143,7 @@ export default async function handler(req, res) {
       matchedAddress: geo.matchedAddress,
       geocodeScore: geo.score,
       coordinates: { lat: geo.lat, lng: geo.lng },
+      city: geo.city || null,
       floodData,
       classification,
     })

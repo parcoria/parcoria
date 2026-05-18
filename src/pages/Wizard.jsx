@@ -5,15 +5,19 @@ import { DURHAM_PERMIT_DATA, DURHAM_PROFESSIONALS, DURHAM_INSPECTIONS } from '..
 import { CHAPEL_HILL_PERMIT_DATA, CHAPEL_HILL_PROFESSIONALS, CHAPEL_HILL_INSPECTIONS, CHAPEL_HILL_BUILDABILITY_CHECKS } from '../data/chapelhill'
 import { APEX_PERMIT_DATA, APEX_PROFESSIONALS, APEX_INSPECTIONS, APEX_BUILDABILITY_CHECKS } from '../data/apex'
 import { HOLLY_SPRINGS_PERMIT_DATA, HOLLY_SPRINGS_PROFESSIONALS, HOLLY_SPRINGS_INSPECTIONS, HOLLY_SPRINGS_BUILDABILITY_CHECKS } from '../data/hollysprings'
+import { WAKE_FOREST_PERMIT_DATA, WAKE_FOREST_PROFESSIONALS, WAKE_FOREST_INSPECTIONS, WAKE_FOREST_BUILDABILITY_CHECKS } from '../data/wakeforest'
+import { MORRISVILLE_PERMIT_DATA, MORRISVILLE_PROFESSIONALS, MORRISVILLE_INSPECTIONS, MORRISVILLE_BUILDABILITY_CHECKS } from '../data/morrisville'
+import { GARNER_PERMIT_DATA, GARNER_PROFESSIONALS, GARNER_INSPECTIONS, GARNER_BUILDABILITY_CHECKS } from '../data/garner'
 import Concierge from '../components/Concierge'
 import BuildabilityChecker from '../components/BuildabilityChecker'
+import AddressDetector from '../components/AddressDetector'
 import { startCheckout } from '../lib/checkout'
 import { hasAccess } from '../lib/access'
 import { saveProject, getUser } from '../lib/supabase'
 import SaveToDashboard from '../components/SaveToDashboard'
 import Paywall from '../components/Paywall'
 
-const STEPS = ['Jurisdiction', 'Address', 'Buildability', 'Project', 'Permits', 'Professionals']
+const STEPS = ['Address', 'Buildability', 'Project', 'Permits', 'Professionals']
 
 const JURISDICTIONS = [
   { id: 'raleigh', name: 'Raleigh', county: 'Wake County', desc: 'City of Raleigh permit portal + Wake County inspections', badge: 'Most active', badgeColor: 'bg-brand-50 text-brand-700 border-brand-100' },
@@ -21,6 +25,9 @@ const JURISDICTIONS = [
   { id: 'chapelhill', name: 'Chapel Hill', county: 'Orange County', desc: 'Online Permit Center · OWASA utilities · CAPS required', badge: 'UNC district', badgeColor: 'bg-blue-50 text-blue-700 border-blue-100' },
   { id: 'apex', name: 'Apex', county: 'Wake County', desc: 'IDT Plans (submissions) + ePermits (payments) · Wake County inspections', badge: 'Fast growing', badgeColor: 'bg-green-50 text-green-700 border-green-100' },
   { id: 'hollysprings', name: 'Holly Springs', county: 'Wake County', desc: 'CityView Portal · Wake County inspections · One of fastest growing US towns', badge: 'High volume', badgeColor: 'bg-purple-50 text-purple-700 border-purple-100' },
+  { id: 'wakeforest', name: 'Wake Forest', county: 'Wake County', desc: 'IDT Plans portal · Wake County inspections · Request inspections before 3 PM', badge: 'Growing fast', badgeColor: 'bg-orange-50 text-orange-700 border-orange-100' },
+  { id: 'morrisville', name: 'Morrisville', county: 'Wake County', desc: 'CSS Portal · Wake County inspections · No phone inspection requests', badge: 'Tech corridor', badgeColor: 'bg-teal-50 text-teal-700 border-teal-100' },
+  { id: 'garner', name: 'Garner', county: 'Wake County', desc: 'SmartGov Portal · Garner self-inspects · 24-hour notice required for all inspections', badge: 'SmartGov', badgeColor: 'bg-rose-50 text-rose-700 border-rose-100' },
 ]
 
 const JURISDICTION_STYLES = {
@@ -77,7 +84,7 @@ export default function Wizard() {
   function update(key, val) { setState(s => ({ ...s, [key]: val })) }
   async function next() {
     // When moving from step 4 to step 5 and user has access, save project
-    if (step === 4 && hasAccess() && state.proj && state.jurisdiction) {
+    if (step === 3 && hasAccess() && state.proj && state.jurisdiction) {
       try {
         const user = await getUser()
         if (user) {
@@ -111,12 +118,18 @@ export default function Wizard() {
   const isChapelHill = state.jurisdiction === 'chapelhill'
   const isApex = state.jurisdiction === 'apex'
   const isHollySprings = state.jurisdiction === 'hollysprings'
+  const isWakeForest = state.jurisdiction === 'wakeforest'
+  const isMorrisville = state.jurisdiction === 'morrisville'
+  const isGarner = state.jurisdiction === 'garner'
 
   function getPermitData() {
     if (isDurham) return DURHAM_PERMIT_DATA[state.proj] || DURHAM_PERMIT_DATA.sfh
     if (isChapelHill) return CHAPEL_HILL_PERMIT_DATA[state.proj] || CHAPEL_HILL_PERMIT_DATA.sfh
     if (isApex) return APEX_PERMIT_DATA[state.proj] || APEX_PERMIT_DATA.sfh
     if (isHollySprings) return HOLLY_SPRINGS_PERMIT_DATA[state.proj] || HOLLY_SPRINGS_PERMIT_DATA.sfh
+    if (isWakeForest) return WAKE_FOREST_PERMIT_DATA[state.proj] || WAKE_FOREST_PERMIT_DATA.sfh
+    if (isMorrisville) return MORRISVILLE_PERMIT_DATA[state.proj] || MORRISVILLE_PERMIT_DATA.sfh
+    if (isGarner) return GARNER_PERMIT_DATA[state.proj] || GARNER_PERMIT_DATA.sfh
     return PERMIT_DATA[state.proj] || PERMIT_DATA.sfh
   }
 
@@ -125,6 +138,9 @@ export default function Wizard() {
     if (isChapelHill) return CHAPEL_HILL_PROFESSIONALS[state.proj] || CHAPEL_HILL_PROFESSIONALS.sfh
     if (isApex) return APEX_PROFESSIONALS[state.proj] || APEX_PROFESSIONALS.sfh
     if (isHollySprings) return HOLLY_SPRINGS_PROFESSIONALS[state.proj] || HOLLY_SPRINGS_PROFESSIONALS.sfh
+    if (isWakeForest) return WAKE_FOREST_PROFESSIONALS[state.proj] || WAKE_FOREST_PROFESSIONALS.sfh
+    if (isMorrisville) return MORRISVILLE_PROFESSIONALS[state.proj] || MORRISVILLE_PROFESSIONALS.sfh
+    if (isGarner) return GARNER_PROFESSIONALS[state.proj] || GARNER_PROFESSIONALS.sfh
     return PROFESSIONALS[state.proj] || PROFESSIONALS.sfh
   }
 
@@ -133,6 +149,9 @@ export default function Wizard() {
     if (isChapelHill) return CHAPEL_HILL_INSPECTIONS[state.proj] || CHAPEL_HILL_INSPECTIONS.sfh
     if (isApex) return APEX_INSPECTIONS[state.proj] || APEX_INSPECTIONS.sfh
     if (isHollySprings) return HOLLY_SPRINGS_INSPECTIONS[state.proj] || HOLLY_SPRINGS_INSPECTIONS.sfh
+    if (isWakeForest) return WAKE_FOREST_INSPECTIONS[state.proj] || WAKE_FOREST_INSPECTIONS.sfh
+    if (isMorrisville) return MORRISVILLE_INSPECTIONS[state.proj] || MORRISVILLE_INSPECTIONS.sfh
+    if (isGarner) return GARNER_INSPECTIONS[state.proj] || GARNER_INSPECTIONS.sfh
     return INSPECTIONS[state.proj] || INSPECTIONS.sfh
   }
 
@@ -141,6 +160,9 @@ export default function Wizard() {
     if (isChapelHill) return CHAPEL_HILL_BUILDABILITY_CHECKS(flags)
     if (isApex) return APEX_BUILDABILITY_CHECKS(flags)
     if (isHollySprings) return HOLLY_SPRINGS_BUILDABILITY_CHECKS(flags)
+    if (isWakeForest) return WAKE_FOREST_BUILDABILITY_CHECKS(flags)
+    if (isMorrisville) return MORRISVILLE_BUILDABILITY_CHECKS(flags)
+    if (isGarner) return GARNER_BUILDABILITY_CHECKS(flags)
     return getRaleighBuildabilityChecks(flags)
   }
 
@@ -149,6 +171,9 @@ export default function Wizard() {
     if (isChapelHill) return 'Schedule via Online Permit Center, call (919) 968-2718, or email permits@townofchapelhill.org. Cancel by 9:30 AM day-of to avoid $60 re-inspection fee.'
     if (isApex) return 'Schedule by 2:00 PM the day before via online form or call (919) 249-3388. Wake County performs all field inspections.'
     if (isHollySprings) return 'Request through CityView Portal or call 311. Before 4 PM = next day. After 4 PM = second business day. Wake County performs all field inspections.'
+    if (isWakeForest) return 'Request through IDT Plans portal before 3 PM for next business day. Call (919) 435-9531 at 8:30 AM day-of for inspector ETA. Wake County performs all field inspections.'
+    if (isMorrisville) return 'All inspections scheduled through CSS Portal only — no phone requests accepted. Wake County performs all field inspections.'
+    if (isGarner) return 'Schedule through SmartGov Portal only — no phone or email. 24-hour notice required for ALL inspections. No same-day inspections. Garner Inspections Department performs its own field inspections.'
     return 'Schedule all inspections through Wake County'
   }
 
@@ -169,7 +194,7 @@ export default function Wizard() {
   const permitCount = (data?.count || 0) + (state.historic ? 1 : 0) + (state.septic ? 1 : 0) + (state.flood ? 1 : 0)
   const over40k = parseInt((state.cost || '0').replace(/[^0-9]/g, '')) >= 40000 || ['sfh', 'adu', 'townhouse'].includes(state.proj)
   const jLabels = JURISDICTION_LABELS[state.jurisdiction] || JURISDICTION_LABELS.raleigh
-  const cityName = isChapelHill ? 'Chapel Hill' : isDurham ? 'Durham' : isApex ? 'Apex' : isHollySprings ? 'Holly Springs' : 'Raleigh'
+  const cityName = isChapelHill ? 'Chapel Hill' : isDurham ? 'Durham' : isApex ? 'Apex' : isHollySprings ? 'Holly Springs' : isWakeForest ? 'Wake Forest' : isMorrisville ? 'Morrisville' : isGarner ? 'Garner' : 'Raleigh'
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
@@ -194,8 +219,32 @@ export default function Wizard() {
         })}
       </div>
 
-      {/* ── Step 1 — Jurisdiction ── */}
+      {/* ── Step 1 — Smart Address + Jurisdiction Detection ── */}
       {step === 1 && (
+        <AddressDetector
+          onComplete={(result) => {
+            update('addr', result.addr)
+            update('jurisdiction', result.jurisdiction)
+            update('historic', result.historic)
+            update('septic', result.septic)
+            update('corner', result.corner)
+            update('flood', result.flood)
+            setState(s => ({ ...s,
+              addr: result.addr,
+              jurisdiction: result.jurisdiction,
+              historic: result.historic,
+              septic: result.septic,
+              corner: result.corner,
+              flood: result.flood,
+              detectedFloodResult: result.floodResult,
+            }))
+            next()
+          }}
+        />
+      )}
+
+      {/* ── Step 1 — Jurisdiction (REPLACED by AddressDetector) ── */}
+      {false && step === 99 && (
         <div>
           <p className="text-xs text-gray-400 mb-1">Step 1 of 6</p>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Where are you building?</h2>
@@ -257,8 +306,8 @@ export default function Wizard() {
         </div>
       )}
 
-      {/* ── Step 2 — Address ── */}
-      {step === 2 && (
+      {/* ── Step 2 — Address (REPLACED by AddressDetector) ── */}
+      {false && step === 98 && (
         <div>
           <p className="text-xs text-gray-400 mb-1">Step 2 of 6</p>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Where is your property?</h2>
@@ -305,10 +354,10 @@ export default function Wizard() {
         </div>
       )}
 
-      {/* ── Step 3 — Buildability ── */}
-      {step === 3 && (
+      {/* ── Step 2 — Buildability ── */}
+      {step === 2 && (
         <div>
-          <p className="text-xs text-gray-400 mb-1">Step 3 of 6</p>
+          <p className="text-xs text-gray-400 mb-1">Step 2 of 5</p>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Buildability check</h2>
           <p className="text-sm text-gray-500 mb-5">We run a live FEMA flood zone check on your address alongside your reported parcel conditions.</p>
 
@@ -328,16 +377,16 @@ export default function Wizard() {
           />
 
           <div className="flex gap-2 mt-6">
-            <button onClick={back} className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← Back</button>
+            <button onClick={() => setStep(1)} className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← Back</button>
             <button onClick={next} className="flex-1 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors">Continue to project type</button>
           </div>
         </div>
       )}
 
-      {/* ── Step 4 — Project type ── */}
-      {step === 4 && (
+      {/* ── Step 3 — Project type ── */}
+      {step === 3 && (
         <div>
-          <p className="text-xs text-gray-400 mb-1">Step 4 of 6</p>
+          <p className="text-xs text-gray-400 mb-1">Step 3 of 5</p>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">What are you building?</h2>
           <p className="text-sm text-gray-500 mb-5">Your project type determines every permit and professional required.</p>
 
@@ -368,12 +417,12 @@ export default function Wizard() {
         </div>
       )}
 
-      {/* ── Step 5 — Permits (GATED) ── */}
-      {step === 5 && (
+      {/* ── Step 4 — Permits (GATED) ── */}
+      {step === 4 && (
         <div>
           {!hasAccess() ? (
             <>
-              <p className="text-xs text-gray-400 mb-1">Step 5 of 6</p>
+              <p className="text-xs text-gray-400 mb-1">Step 4 of 5</p>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Your permit roadmap is ready</h2>
               <Paywall jurisdiction={state.jurisdiction} proj={state.proj} addr={state.addr} />
               <button onClick={back} className="w-full mt-3 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">
@@ -382,7 +431,7 @@ export default function Wizard() {
             </>
           ) : (
             <>
-              <p className="text-xs text-gray-400 mb-1">Step 5 of 6</p>
+              <p className="text-xs text-gray-400 mb-1">Step 4 of 5</p>
               <h2 className="text-xl font-semibold text-gray-900 mb-1">Permit roadmap — {PROJ_LABELS[state.proj] || 'your project'}</h2>
               <p className="text-xs text-gray-400 mb-5">{state.addr || `${cityName}, NC`}</p>
 
@@ -468,10 +517,10 @@ export default function Wizard() {
         </div>
       )}
 
-      {/* ── Step 6 — Professionals ── */}
-      {step === 6 && (
+      {/* ── Step 5 — Professionals ── */}
+      {step === 5 && (
         <div>
-          <p className="text-xs text-gray-400 mb-1">Step 6 of 6</p>
+          <p className="text-xs text-gray-400 mb-1">Step 5 of 5</p>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Licensed professionals required</h2>
           <p className="text-sm text-gray-500 mb-5">Based on your project, location, and cost — exactly who NC law requires and why.</p>
 
