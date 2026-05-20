@@ -508,7 +508,19 @@ export default function Wizard() {
                 </div>
               )}
 
-              <div className="flex gap-2 mt-6">
+              {/* Contractor directory CTA — shown on every run */}
+              <div className="mt-5 bg-brand-50 border border-brand-100 rounded-xl px-4 py-4 flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-sm font-semibold text-brand-900">Find verified contractors</div>
+                  <div className="text-xs text-brand-700 mt-0.5">Browse NC license-verified professionals in the Triangle.</div>
+                </div>
+                <a href="/directory"
+                  className="flex-shrink-0 text-xs px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors font-medium whitespace-nowrap">
+                  Browse directory ↗
+                </a>
+              </div>
+
+              <div className="flex gap-2 mt-4">
                 <button onClick={back} className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← Back</button>
                 <button onClick={next} className="flex-1 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors">See required professionals</button>
               </div>
@@ -556,6 +568,20 @@ export default function Wizard() {
               </div>
             )
           })}
+
+          {/* Contractor directory CTA */}
+          <div className="my-5 bg-brand-50 border border-brand-100 rounded-xl px-4 py-4 flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-semibold text-brand-900">Find verified contractors</div>
+              <div className="text-xs text-brand-700 mt-0.5">Browse Parcoria's directory of NC license-verified professionals in the Triangle.</div>
+            </div>
+            <a
+              href="/directory"
+              className="flex-shrink-0 text-xs px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors font-medium whitespace-nowrap"
+            >
+              Browse directory ↗
+            </a>
+          </div>
 
           <div className="h-px bg-gray-100 my-5" />
 

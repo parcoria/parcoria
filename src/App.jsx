@@ -10,6 +10,9 @@ import Success from './pages/Success'
 import Pricing from './pages/Pricing'
 import Restore from './pages/Restore'
 import Dashboard from './pages/Dashboard'
+import Vault from './pages/Vault'
+import Contractors from './pages/Contractors'
+import Directory from './pages/Directory'
 
 export default function App() {
   return (
@@ -27,6 +30,9 @@ export default function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/restore" element={<Restore />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/vault/:projectId" element={<Vault />} />
+            <Route path="/contractors" element={<Contractors />} />
+            <Route path="/directory" element={<Directory />} />
           </Routes>
         </main>
         <Footer />

@@ -1,12 +1,13 @@
 import { Link, useLocation } from 'react-router-dom'
-import { isDeveloper } from '../lib/access'
 import { useState, useEffect } from 'react'
+import { isDeveloper } from '../lib/access'
 import { getUser } from '../lib/supabase'
 
 const NAV_LINKS = [
   { to: '/', label: 'Home' },
   { to: '/wizard', label: 'Permit Wizard' },
   { to: '/pre-check', label: 'Plan Pre-Check' },
+  { to: '/directory', label: 'Find Contractors' },
   { to: '/pricing', label: 'Pricing' },
 ]
 

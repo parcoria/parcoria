@@ -217,6 +217,12 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-3">
           <Link
+            to="/contractors"
+            className="px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-gray-300 transition-colors"
+          >
+            👷 My contractors
+          </Link>
+          <Link
             to="/wizard"
             className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-2"
           >
@@ -266,40 +272,23 @@ export default function Dashboard() {
         <div className="space-y-3">
           {projects.map(project => (
             <div key={project.id} className="bg-white border border-gray-100 rounded-xl p-4 hover:border-gray-200 transition-colors">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <h3 className="text-sm font-semibold text-gray-900 truncate">
-                      {project.name || project.address || 'Untitled project'}
-                    </h3>
-                    <select
-                      value={project.status || 'active'}
-                      onChange={e => handleStatusChange(project.id, e.target.value)}
-                      onClick={e => e.stopPropagation()}
-                      className={`text-xs px-2 py-0.5 rounded-full border font-medium cursor-pointer focus:outline-none ${STATUS_STYLES[project.status] || STATUS_STYLES.active}`}
-                    >
-                      <option value="active">Active</option>
-                      <option value="planning">Planning</option>
-                      <option value="submitted">Submitted</option>
-                      <option value="complete">Complete</option>
-                    </select>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${JUR_COLORS[project.jurisdiction] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
-                      {JUR_LABELS[project.jurisdiction] || project.jurisdiction}
-                    </span>
-                    {project.project_type && (
-                      <span className="text-xs text-gray-400">{PROJ_LABELS[project.project_type] || project.project_type}</span>
-                    )}
-                    {project.address && (
-                      <span className="text-xs text-gray-400 truncate">{project.address}</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4 mt-2">
-                    {project.permit_count && <span className="text-xs text-gray-400">{project.permit_count} permits</span>}
-                    {project.timeline && <span className="text-xs text-gray-400">{project.timeline}</span>}
-                    {project.fees && <span className="text-xs text-gray-400">{project.fees}</span>}
-                  </div>
+              {/* Row 1 — title + status + actions always locked to same line */}
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <h3 className="text-sm font-semibold text-gray-900 truncate">
+                    {project.name || project.address || 'Untitled project'}
+                  </h3>
+                  <select
+                    value={project.status || 'active'}
+                    onChange={e => handleStatusChange(project.id, e.target.value)}
+                    onClick={e => e.stopPropagation()}
+                    className={`flex-shrink-0 text-xs px-2 py-0.5 rounded-full border font-medium cursor-pointer focus:outline-none ${STATUS_STYLES[project.status] || STATUS_STYLES.active}`}
+                  >
+                    <option value="active">Active</option>
+                    <option value="planning">Planning</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="complete">Complete</option>
+                  </select>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <Link
@@ -307,6 +296,13 @@ export default function Dashboard() {
                     className="text-xs px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:border-gray-300 transition-colors"
                   >
                     View roadmap
+                  </Link>
+                  <Link
+                    to={`/vault/${project.id}`}
+                    className="text-xs px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:border-gray-300 transition-colors flex items-center gap-1"
+                    title="Evidence Vault"
+                  >
+                    🔒 Vault
                   </Link>
                   <Link
                     to={`/wizard?project=${project.id}`}
@@ -324,6 +320,22 @@ export default function Dashboard() {
                     </svg>
                   </button>
                 </div>
+              </div>
+              {/* Row 2 — metadata: jurisdiction, type, address, stats */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${JUR_COLORS[project.jurisdiction] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                  {JUR_LABELS[project.jurisdiction] || project.jurisdiction}
+                </span>
+                {project.project_type && (
+                  <span className="text-xs text-gray-400">{PROJ_LABELS[project.project_type] || project.project_type}</span>
+                )}
+                {project.address && (
+                  <span className="text-xs text-gray-400 truncate max-w-xs">{project.address}</span>
+                )}
+                {project.permit_count && <span className="text-xs text-gray-300">·</span>}
+                {project.permit_count && <span className="text-xs text-gray-400">{project.permit_count} permits</span>}
+                {project.timeline && <span className="text-xs text-gray-400">{project.timeline}</span>}
+                {project.fees && <span className="text-xs text-gray-400">{project.fees}</span>}
               </div>
             </div>
           ))}
