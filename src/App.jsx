@@ -13,6 +13,8 @@ import Dashboard from './pages/Dashboard'
 import Vault from './pages/Vault'
 import Contractors from './pages/Contractors'
 import Directory from './pages/Directory'
+import Learn from './pages/Learn'
+import Guide from './pages/Guide'
 
 export default function App() {
   return (
@@ -33,6 +35,8 @@ export default function App() {
             <Route path="/vault/:projectId" element={<Vault />} />
             <Route path="/contractors" element={<Contractors />} />
             <Route path="/directory" element={<Directory />} />
+            <Route path="/learn" element={<Learn />} />
+            <Route path="/learn/:slug" element={<Guide />} />
           </Routes>
         </main>
         <Footer />

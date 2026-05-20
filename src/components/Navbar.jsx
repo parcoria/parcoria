@@ -1,13 +1,13 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { isDeveloper } from '../lib/access'
+import { isDeveloper, hasAccess } from '../lib/access'
 import { getUser } from '../lib/supabase'
 
 const NAV_LINKS = [
   { to: '/', label: 'Home' },
   { to: '/wizard', label: 'Permit Wizard' },
-  { to: '/pre-check', label: 'Plan Pre-Check' },
-  { to: '/directory', label: 'Find Contractors' },
+  { to: '/learn', label: 'Learn' },
+  { to: '/directory', label: 'Contractors' },
   { to: '/pricing', label: 'Pricing' },
 ]
 
@@ -34,13 +34,19 @@ export default function Navbar() {
           <span className="font-semibold text-gray-900 text-sm tracking-tight">Parcoria</span>
         </Link>
 
-        <div className="hidden sm:flex items-center gap-6">
+        <div className="hidden sm:flex items-center gap-4">
           {NAV_LINKS.map(link => (
             <Link key={link.to} to={link.to}
               className={`text-sm transition-colors ${pathname === link.to ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-900'}`}>
               {link.label}
             </Link>
           ))}
+          {(hasAccess() || isDeveloper()) && (
+            <Link to="/pre-check"
+              className={`text-sm transition-colors ${pathname === '/pre-check' ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-900'}`}>
+              Plan Pre-Check
+            </Link>
+          )}
           {devUser ? (
             <Link to="/dashboard"
               className="text-sm bg-brand-600 text-white px-4 py-1.5 rounded-lg hover:bg-brand-700 transition-colors font-medium flex items-center gap-1.5">
@@ -73,6 +79,11 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+          {(hasAccess() || isDeveloper()) && (
+            <Link to="/pre-check" className="text-sm text-gray-700" onClick={() => setOpen(false)}>
+              Plan Pre-Check
+            </Link>
+          )}
           {devUser ? (
             <Link to="/dashboard" className="text-sm bg-brand-600 text-white px-4 py-2 rounded-lg text-center font-medium" onClick={() => setOpen(false)}>
               My Dashboard

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { hasAccess } from '../lib/access'
 import { startCheckout } from '../lib/checkout'
+import { useNavigate } from 'react-router-dom'
 
 function cleanMarkdown(text) {
   if (!text) return text
@@ -189,6 +190,38 @@ const STEPS = [
 ]
 
 export default function PreCheck() {
+  const navigate = useNavigate()
+
+  // Gate entire page — redirect unpaid users to pricing with context
+  if (!hasAccess()) {
+    return (
+      <div className="max-w-md mx-auto px-4 sm:px-6 py-20 text-center">
+        <div className="text-4xl mb-4">📋</div>
+        <h1 className="text-xl font-semibold text-gray-900 mb-2">Plan Pre-Check</h1>
+        <p className="text-sm text-gray-500 leading-relaxed mb-6">
+          The Plan Pre-Check Engine reviews your project details against NC Building Code requirements — catching issues before you submit to the permit office.
+          Available to Homeowner and Developer accounts.
+        </p>
+        <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left space-y-2">
+          {['AI compliance review against NC Building Code', 'Flags missing documents before submission', 'Identifies common rejection reasons for your project type', 'Saves weeks of back-and-forth with reviewers'].map((f, i) => (
+            <div key={i} className="flex items-center gap-2.5 text-xs text-gray-600">
+              <svg className="w-4 h-4 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+              {f}
+            </div>
+          ))}
+        </div>
+        <a href="/pricing" className="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors">
+          Unlock Plan Pre-Check — $79 ↗
+        </a>
+        <div className="mt-4">
+          <a href="/restore" className="text-xs text-gray-400 hover:text-gray-600">Already paid? Restore access ↗</a>
+        </div>
+      </div>
+    )
+  }
+
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState({})
   const [report, setReport] = useState('')
