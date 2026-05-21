@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { hasAccess } from '../lib/access'
 import { startCheckout } from '../lib/checkout'
-import { useNavigate } from 'react-router-dom'
 
 function cleanMarkdown(text) {
   if (!text) return text
@@ -190,7 +189,11 @@ const STEPS = [
 ]
 
 export default function PreCheck() {
-  const navigate = useNavigate()
+  const [step, setStep] = useState(0)
+  const [answers, setAnswers] = useState({})
+  const [report, setReport] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   // Gate entire page — redirect unpaid users to pricing with context
   if (!hasAccess()) {
@@ -222,11 +225,6 @@ export default function PreCheck() {
     )
   }
 
-  const [step, setStep] = useState(0)
-  const [answers, setAnswers] = useState({})
-  const [report, setReport] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
 
   function update(id, val) {
     setAnswers(a => ({ ...a, [id]: val }))

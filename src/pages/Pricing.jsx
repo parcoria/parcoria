@@ -4,10 +4,10 @@ import { startCheckout } from '../lib/checkout'
 import { isDeveloper, hasAccess } from '../lib/access'
 
 const FEATURES_HOMEOWNER = [
-  'Full permit wizard — one project',
+  'Full permit wizard - one project',
   'Buildability check + live FEMA flood data',
-  'AI Concierge — 30 days access',
-  'Plan Pre-Check — one submission',
+  'AI Concierge - 30 days access',
+  'Plan Pre-Check - one submission',
   'Shareable roadmap URL',
   'Week-by-week action plan',
   'Email support',
@@ -15,12 +15,12 @@ const FEATURES_HOMEOWNER = [
 
 const FEATURES_DEVELOPER = [
   'Everything in Homeowner',
-  'Unlimited projects — all 5 jurisdictions',
+  'Unlimited projects - all 5 jurisdictions',
   'Multi-project dashboard',
-  'AI Concierge — permanent access',
-  'Plan Pre-Check — unlimited submissions',
-  'Project history vault — permanent',
-  'Priority support — 24hr response',
+  'AI Concierge - permanent access',
+  'Plan Pre-Check - unlimited submissions',
+  'Project history vault - permanent',
+  'Priority support - 24hr response',
 ]
 
 async function startDeveloperCheckout(email, billing = 'monthly') {
@@ -110,7 +110,7 @@ export default function Pricing() {
 
           <button onClick={handleHomeowner} disabled={homeownerLoading}
             className="w-full py-3 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 mb-4">
-            {homeownerLoading ? 'Redirecting...' : 'Get started — $79 ↗'}
+            {homeownerLoading ? 'Redirecting...' : 'Get started - $79 ↗'}
           </button>
 
           <div className="border-t border-gray-100 pt-4">
@@ -175,7 +175,7 @@ export default function Pricing() {
 
           <button onClick={handleDeveloper} disabled={developerLoading}
             className="w-full py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50 mb-4">
-            {developerLoading ? 'Redirecting...' : billing === 'annual' ? 'Start Developer — $2,990/yr ↗' : 'Start Developer — $299/mo ↗'}
+            {developerLoading ? 'Redirecting...' : billing === 'annual' ? 'Start Developer - $2,990/yr ↗' : 'Start Developer - $299/mo ↗'}
           </button>
 
           <div className="border-t border-gray-100 pt-4">
@@ -199,8 +199,8 @@ export default function Pricing() {
         <h3 className="text-base font-semibold text-gray-900 mb-4 text-center">Common questions</h3>
         {[
           { q: 'What counts as one project?', a: 'One property address and one structure type. An ADU on the same property is a separate project.' },
-          { q: 'What jurisdictions are covered?', a: 'Raleigh, Durham, Chapel Hill, Apex, and Holly Springs — the full Research Triangle plus the fastest-growing Wake County municipalities.' },
-          { q: 'Can I cancel my Developer subscription?', a: 'Yes — cancel anytime from your Stripe billing portal. You retain access until the end of your current billing period.' },
+          { q: 'What jurisdictions are covered?', a: 'Raleigh, Durham, Chapel Hill, Apex, and Holly Springs - the full Research Triangle plus the fastest-growing Wake County municipalities.' },
+          { q: 'Can I cancel my Developer subscription?', a: 'Yes - cancel anytime from your Stripe billing portal. You retain access until the end of your current billing period.' },
           { q: 'What happens to my projects if I cancel Developer?', a: 'Your project data is retained for 90 days after cancellation. You can export or reactivate within that window.' },
           { q: 'Does the Homeowner AI Concierge really expire after 30 days?', a: 'Yes. Most permit processes resolve within 30 days. If you need longer, purchase a second project or upgrade to Developer.' },
           { q: 'Can I get a refund?', a: 'Homeowner: yes within 7 days if unused. Developer: prorated refund within 7 days of first charge. Contact hello@parcoria.com.' },

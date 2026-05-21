@@ -45,7 +45,7 @@ export default function Home() {
     if (userIsDeveloper) {
       navigate('/dashboard')
     }
-  }, [userIsDeveloper])
+  }, [userIsDeveloper, navigate])
 
   async function handleSubmit(e, which) {
     e.preventDefault()
