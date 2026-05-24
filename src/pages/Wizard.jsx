@@ -16,6 +16,7 @@ import { hasAccess } from '../lib/access'
 import { saveProject, getUser } from '../lib/supabase'
 import SaveToDashboard from '../components/SaveToDashboard'
 import Paywall from '../components/Paywall'
+import PaywallInline from '../components/PaywallInline'
 
 const STEPS = ['Address', 'Buildability', 'Project', 'Permits', 'Professionals']
 
@@ -42,6 +43,9 @@ const JURISDICTION_LABELS = {
   chapelhill:   { city: 'Town of Chapel Hill',   county: 'Orange County', state: 'NC State' },
   apex:         { city: 'Town of Apex',          county: 'Wake County',   state: 'NC State' },
   hollysprings: { city: 'Town of Holly Springs', county: 'Wake County',   state: 'NC State' },
+  wakeforest:   { city: 'Town of Wake Forest',   county: 'Wake County',   state: 'NC State' },
+  morrisville:  { city: 'Town of Morrisville',   county: 'Wake County',   state: 'NC State' },
+  garner:       { city: 'Town of Garner',        county: 'Wake County',   state: 'NC State' },
 }
 
 const PRO_STYLES = {
@@ -423,9 +427,77 @@ export default function Wizard() {
           {!hasAccess() ? (
             <>
               <p className="text-xs text-gray-400 mb-1">Step 4 of 5</p>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Your permit roadmap is ready</h2>
-              <Paywall jurisdiction={state.jurisdiction} proj={state.proj} addr={state.addr} />
-              <button onClick={back} className="w-full mt-3 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">
+              <h2 className="text-xl font-semibold text-gray-900 mb-1">Permit roadmap — {PROJ_LABELS[state.proj] || 'your project'}</h2>
+              <p className="text-xs text-gray-400 mb-5">{state.addr || `${cityName}, NC`}</p>
+
+              {/* Stats — always visible */}
+              <div className="grid grid-cols-3 gap-3 mb-5">
+                {[{ n: permitCount, l: 'Permits required' }, { n: data.timeline, l: 'Est. timeline' }, { n: data.fees, l: 'Est. permit fees' }].map((s, i) => (
+                  <div key={i} className="bg-gray-50 rounded-xl p-3 text-center">
+                    <div className="text-lg font-semibold text-gray-900">{s.n}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{s.l}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Free preview — first 2 permits visible */}
+              {(() => {
+                const allPermits = data.phases.flatMap(ph => ph.permits.map(pm => ({ ...pm, phaseLabel: ph.label })))
+                const freePermits = allPermits.slice(0, 2)
+                const lockedCount = permitCount - 2
+                return (
+                  <div>
+                    {/* Visible permits */}
+                    {freePermits.map((pm, i) => (
+                      <div key={i} className={`flex gap-3 items-start border rounded-lg p-3 mb-2 ${pm.warn ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-100'}`}>
+                        <div className="flex-1 min-w-0">
+                          <div className={`text-sm font-medium mb-0.5 ${pm.warn ? 'text-amber-800' : 'text-gray-900'}`}>{pm.name}</div>
+                          <div className={`text-xs leading-relaxed mb-2 ${pm.warn ? 'text-amber-700' : 'text-gray-500'}`}>{pm.desc}</div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${JURISDICTION_STYLES[pm.jurisdiction]}`}>{jLabels[pm.jurisdiction]}</span>
+                            <span className="text-xs text-gray-400">⏱ {pm.time}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Blurred locked permits */}
+                    <div className="relative">
+                      {/* Blurred preview cards */}
+                      <div className="blur-sm pointer-events-none select-none">
+                        {[...Array(Math.min(3, lockedCount))].map((_, i) => (
+                          <div key={i} className="flex gap-3 items-start border border-gray-100 rounded-lg p-3 mb-2 bg-white">
+                            <div className="flex-1">
+                              <div className="h-4 bg-gray-200 rounded w-48 mb-2" />
+                              <div className="h-3 bg-gray-100 rounded w-full mb-1" />
+                              <div className="h-3 bg-gray-100 rounded w-3/4 mb-2" />
+                              <div className="flex gap-2">
+                                <div className="h-5 bg-gray-100 rounded-full w-20" />
+                                <div className="h-5 bg-gray-100 rounded-full w-16" />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Paywall overlay */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center" style={{background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.85) 25%, rgba(255,255,255,0.97) 60%)'}}>
+                        <div className="bg-white border-2 border-brand-200 rounded-2xl p-6 mx-4 text-center shadow-sm w-full max-w-sm">
+                          <div className="text-2xl font-semibold text-gray-900 mb-1">
+                            +{lockedCount} more permit{lockedCount !== 1 ? 's' : ''}
+                          </div>
+                          <div className="text-xs text-gray-500 mb-4 leading-relaxed">
+                            Unlock the full roadmap, AI Concierge, licensed professionals guide, and Plan Pre-Check for $79.
+                          </div>
+                          <PaywallInline jurisdiction={state.jurisdiction} proj={state.proj} addr={state.addr} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
+
+              <button onClick={back} className="w-full mt-5 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">
                 ← Back to project type
               </button>
             </>
