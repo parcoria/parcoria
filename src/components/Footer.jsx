@@ -34,7 +34,7 @@ export default function Footer() {
     <footer className="border-t border-gray-100 bg-white mt-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
 
-        {/* Top row — brand + columns */}
+        {/* Top row - brand + columns */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-8 mb-10">
 
           {/* Brand */}
@@ -70,7 +70,7 @@ export default function Footer() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-xs text-gray-400">
-              Covering Raleigh · Durham · Chapel Hill · Apex · Holly Springs · Wake Forest · Morrisville · Garner
+              Covering Raleigh · Durham · Chapel Hill · Apex · Holly Springs · Wake Forest · Morrisville · Garner · Fuquay-Varina · Cary
             </span>
           </div>
         </div>

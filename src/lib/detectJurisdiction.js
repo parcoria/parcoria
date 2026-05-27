@@ -11,6 +11,9 @@ const JURISDICTION_MAP = {
   'wake forest': 'wakeforest',
   'morrisville': 'morrisville',
   'garner': 'garner',
+  'fuquay-varina': 'fuquayvarina',
+  'fuquay varina': 'fuquayvarina',
+  'cary': 'cary',
 }
 
 const JURISDICTION_LABELS = {
@@ -48,7 +51,7 @@ export function getJurisdictionLabel(id) {
   return JURISDICTION_LABELS[id] || id
 }
 
-// Zip codes known to be in each jurisdiction — fallback when city parse fails
+// Zip codes known to be in each jurisdiction - fallback when city parse fails
 const ZIP_MAP = {
   // Raleigh
   '27601': 'raleigh', '27602': 'raleigh', '27603': 'raleigh', '27604': 'raleigh',
@@ -71,6 +74,12 @@ const ZIP_MAP = {
   '27560': 'morrisville',
   // Garner
   '27529': 'garner',
+  '27526': 'fuquayvarina',
+  '27513': 'cary',
+  '27511': 'cary',
+  '27518': 'cary',
+  '27519': 'cary',
+  '27560': 'morrisville',
 }
 
 export function detectJurisdictionFromZip(address) {

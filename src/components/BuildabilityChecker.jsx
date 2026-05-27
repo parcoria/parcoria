@@ -12,13 +12,13 @@ const FLOOD_RISK_STYLES = {
 // All jurisdiction metadata in one place
 const JUR = {
   raleigh:     { label: 'Raleigh',      portal: 'All permits through City of Raleigh permit portal. Inspections via Wake County.',                                                                           inspections: 'Wake County performs all field inspections.',                                                                                   utilities: 'Raleigh Water at water.review@raleighnc.gov', historicUrl: 'https://raleighnc.gov/planning/services/historic-preservation' },
-  durham:      { label: 'Durham',       portal: 'Building permits → Dplans portal. Trade permits, fees & inspections → LDO portal. Both accounts required.',                                                inspections: 'Durham City-County Building & Safety handles all inspections — same department as permits.',                                       utilities: 'Durham One Call at (919) 560-1200',           historicUrl: 'https://www.durhamnc.gov/292/Planning' },
+  durham:      { label: 'Durham',       portal: 'Building permits → Dplans portal. Trade permits, fees & inspections → LDO portal. Both accounts required.',                                                inspections: 'Durham City-County Building & Safety handles all inspections - same department as permits.',                                       utilities: 'Durham One Call at (919) 560-1200',           historicUrl: 'https://www.durhamnc.gov/292/Planning' },
   chapelhill:  { label: 'Chapel Hill',  portal: 'All permits through Online Permit Center (OpenGov). OWASA handles all water and sewer connections.',                                                       inspections: 'Wake County performs all field inspections.',                                                                                   utilities: 'OWASA at (919) 968-4421',                     historicUrl: 'https://www.townofchapelhill.org/government/departments-services/planning-and-zoning-permit-applications' },
   apex:        { label: 'Apex',         portal: 'Submit plans via IDT Plans portal. Pay fees via ePermits portal. Permit not active until fees are paid.',                                                  inspections: 'Wake County performs all field inspections. Schedule by 2 PM day before via IDT Plans portal.',                                  utilities: 'Apex Utilities',                              historicUrl: 'https://www.apexnc.org/215/Applications-Schedules' },
   hollysprings:{ label: 'Holly Springs',portal: 'Single CityView Portal for applications, payments, inspections, and status tracking. Obtain Progress Energy premise number early.',                      inspections: 'Wake County performs all field inspections. Request before 4 PM = next day; after 4 PM = second business day.',                  utilities: 'Holly Springs Public Utilities at (919) 557-2591', historicUrl: 'https://www.hollyspringsnc.gov' },
   wakeforest:  { label: 'Wake Forest',  portal: 'All permit applications through IDT Plans portal at wakeforest.idtplans.com. Same system as Apex, different town account.',                               inspections: 'Wake County performs all field inspections. Request before 3 PM via IDT Plans portal for next business day.',                    utilities: 'Wake Forest Public Works',                    historicUrl: 'https://www.wakeforestnc.gov/planning' },
-  morrisville: { label: 'Morrisville',  portal: 'All permits through CSS (Customer Self Service) Portal. No phone inspection requests accepted — online portal only.',                                     inspections: 'Wake County performs all field inspections. All inspection requests through CSS Portal — no phone requests accepted.',            utilities: 'Morrisville Public Works at (919) 463-6200', historicUrl: 'https://www.morrisvillenc.gov/government/departments-services/planning' },
-  garner:      { label: 'Garner',       portal: 'All permits through SmartGov Permit & Inspection Portal. No paper applications or plan sets accepted — digital only.',                                    inspections: 'Garner Inspections Department performs its own field inspections (NOT Wake County). 24-hour notice required. No same-day inspections.', utilities: 'Garner Public Works at (919) 773-4433',   historicUrl: 'https://www.garnernc.gov/departments/planning' },
+  morrisville: { label: 'Morrisville',  portal: 'All permits through CSS (Customer Self Service) Portal. No phone inspection requests accepted - online portal only.',                                     inspections: 'Wake County performs all field inspections. All inspection requests through CSS Portal - no phone requests accepted.',            utilities: 'Morrisville Public Works at (919) 463-6200', historicUrl: 'https://www.morrisvillenc.gov/government/departments-services/planning' },
+  garner:      { label: 'Garner',       portal: 'All permits through SmartGov Permit & Inspection Portal. No paper applications or plan sets accepted - digital only.',                                    inspections: 'Garner Inspections Department performs its own field inspections (NOT Wake County). 24-hour notice required. No same-day inspections.', utilities: 'Garner Public Works at (919) 773-4433',   historicUrl: 'https://www.garnernc.gov/departments/planning' },
 }
 
 function getJur(jurisdiction) {
@@ -72,17 +72,17 @@ export default function BuildabilityChecker({ address, jurisdiction, flags, onFl
     },
     {
       ok: !flags.historic,
-      title: flags.historic ? 'Historic district overlay — flagged by you' : 'No historic district reported',
+      title: flags.historic ? 'Historic district overlay - flagged by you' : 'No historic district reported',
       desc: flags.historic
-        ? `${jur.label} historic district commission approval required before building permit submission — adds 4–8 weeks.`
+        ? `${jur.label} historic district commission approval required before building permit submission - adds 4–8 weeks.`
         : `You indicated no historic district. Verify with ${jur.label} planning before submitting.`,
       source: 'user_reported',
       verifyUrl: jur.historicUrl,
-      verifyLabel: `Verify historic district — ${jur.label}`,
+      verifyLabel: `Verify historic district - ${jur.label}`,
     },
     {
       ok: !flags.septic,
-      title: flags.septic ? 'Private well/septic — county approval needed' : 'City utilities reported',
+      title: flags.septic ? 'Private well/septic - county approval needed' : 'City utilities reported',
       desc: flags.septic
         ? `${jurisdiction === 'durham' ? 'Durham County Environmental Health (919) 560-7600' : jurisdiction === 'chapelhill' ? 'Orange County Environmental Health (919) 245-2360' : 'Wake County Environmental Services (919) 856-7400'} must approve before ${jur.label} accepts your permit application.`
         : `Confirm utility availability with ${jur.utilities} before applying.`,
@@ -90,7 +90,7 @@ export default function BuildabilityChecker({ address, jurisdiction, flags, onFl
     },
     {
       ok: !flags.corner,
-      title: flags.corner ? 'Corner lot — dual setbacks apply' : 'Standard lot reported',
+      title: flags.corner ? 'Corner lot - dual setbacks apply' : 'Standard lot reported',
       desc: flags.corner
         ? `Corner lots in ${jur.label} have setback requirements on both street frontages. Verify with your licensed surveyor.`
         : `Confirm setbacks for your zoning district in ${jur.label} UDO before finalizing plans.`,
@@ -149,7 +149,7 @@ export default function BuildabilityChecker({ address, jurisdiction, flags, onFl
             return (
               <div className={`mt-2 rounded-lg border p-3 ${style.bg}`}>
                 <div className={`text-xs font-semibold mb-1 ${style.text}`}>
-                  {style.icon} {isUnmapped ? 'Parcel not in FEMA flood hazard area' : `${cls.label} — Zone ${cls.zone}`}
+                  {style.icon} {isUnmapped ? 'Parcel not in FEMA flood hazard area' : `${cls.label} - Zone ${cls.zone}`}
                 </div>
                 <div className={`text-xs leading-relaxed ${style.sub}`}>
                   {isUnmapped ? 'No flood hazard data found in FEMA National Flood Hazard Layer. Verify at msc.fema.gov before submitting permits.' : cls.desc}
