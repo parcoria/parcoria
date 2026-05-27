@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { startCheckout } from '../lib/checkout'
-import { isDeveloper, hasAccess } from '../lib/access'
+import { isDeveloper, hasAccess, isContractor } from '../lib/access'
 
 const FEATURES_HOMEOWNER = [
-  'Full permit wizard - one project',
+  'Full permit wizard — one project',
   'Buildability check + live FEMA flood data',
-  'AI Concierge - 30 days access',
-  'Plan Pre-Check - one submission',
+  'AI Concierge — 30 days access',
+  'Plan Pre-Check — one submission',
   'Shareable roadmap URL',
   'Week-by-week action plan',
   'Email support',
@@ -15,13 +15,25 @@ const FEATURES_HOMEOWNER = [
 
 const FEATURES_DEVELOPER = [
   'Everything in Homeowner',
-  'Unlimited projects - all 5 jurisdictions',
+  'Unlimited projects — all 5 jurisdictions',
   'Multi-project dashboard',
-  'AI Concierge - permanent access',
-  'Plan Pre-Check - unlimited submissions',
-  'Project history vault - permanent',
-  'Priority support - 24hr response',
+  'AI Concierge — permanent access',
+  'Plan Pre-Check — unlimited submissions',
+  'Project history vault — permanent',
+  'Priority support — 24hr response',
 ]
+
+async function startContractorCheckout(email) {
+  const res = await fetch('/api/create-contractor-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
+  if (!data.url) throw new Error('No checkout URL')
+  window.location.href = data.url
+}
 
 async function startDeveloperCheckout(email, billing = 'monthly') {
   const res = await fetch('/api/create-developer-checkout', {
@@ -37,8 +49,10 @@ async function startDeveloperCheckout(email, billing = 'monthly') {
 
 export default function Pricing() {
   const [homeownerLoading, setHomeownerLoading] = useState(false)
+  const [contractorLoading, setContractorLoading] = useState(false)
   const [developerLoading, setDeveloperLoading] = useState(false)
   const [homeownerEmail, setHomeownerEmail] = useState('')
+  const [contractorEmail, setContractorEmail] = useState('')
   const [developerEmail, setDeveloperEmail] = useState('')
   const [billing, setBilling] = useState('monthly') // monthly | annual
   const [error, setError] = useState('')
@@ -51,6 +65,17 @@ export default function Pricing() {
     } catch {
       setError('Something went wrong. Please try again.')
       setHomeownerLoading(false)
+    }
+  }
+
+  async function handleContractor() {
+    setContractorLoading(true)
+    setError('')
+    try {
+      await startContractorCheckout(contractorEmail)
+    } catch {
+      setError('Something went wrong. Please try again.')
+      setContractorLoading(false)
     }
   }
 
@@ -82,14 +107,20 @@ export default function Pricing() {
           <Link to="/dashboard" className="text-sm text-brand-600 font-medium hover:text-brand-700">Open dashboard ↗</Link>
         </div>
       )}
-      {!isDeveloper() && hasAccess() && (
+      {isContractor() && (
+        <div className="bg-green-50 border border-green-100 rounded-xl px-5 py-3 mb-6 flex items-center justify-between">
+          <div className="text-sm text-green-700">✓ You have an active Contractor subscription</div>
+          <a href="/contractor" className="text-sm text-green-600 font-medium hover:text-green-700">Open Contractor Mode ↗</a>
+        </div>
+      )}
+      {!isDeveloper() && !isContractor() && hasAccess() && (
         <div className="bg-green-50 border border-green-100 rounded-xl px-5 py-3 mb-6 flex items-center justify-between">
           <div className="text-sm text-green-700">✓ You have active Homeowner access</div>
           <Link to="/wizard" className="text-sm text-green-600 font-medium hover:text-green-700">Go to wizard ↗</Link>
         </div>
       )}
 
-      <div className="grid sm:grid-cols-2 gap-6 mb-12">
+      <div className="grid sm:grid-cols-3 gap-5 mb-12">
 
         {/* Homeowner */}
         <div className="bg-white border border-gray-200 rounded-2xl p-7">
@@ -110,7 +141,7 @@ export default function Pricing() {
 
           <button onClick={handleHomeowner} disabled={homeownerLoading}
             className="w-full py-3 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 mb-4">
-            {homeownerLoading ? 'Redirecting...' : 'Get started - $79 ↗'}
+            {homeownerLoading ? 'Redirecting...' : 'Get started — $79 ↗'}
           </button>
 
           <div className="border-t border-gray-100 pt-4">
@@ -120,6 +151,40 @@ export default function Pricing() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
                 <span className="text-sm text-gray-600">{f}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Contractor */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">Contractor</h2>
+            <p className="text-sm text-gray-500 leading-relaxed">Licensed NC contractors managing permits across multiple client jobs.</p>
+          </div>
+          <div className="flex items-baseline gap-2 mb-1">
+            <span className="text-3xl font-semibold text-gray-900">$149</span>
+            <span className="text-gray-400 text-sm">/month</span>
+          </div>
+          <p className="text-xs text-gray-400 mb-5">Cancel anytime</p>
+
+          <label className="text-xs font-medium text-gray-600 block mb-1.5">Your email</label>
+          <input type="email" value={contractorEmail} onChange={e => setContractorEmail(e.target.value)}
+            placeholder="you@company.com"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 mb-3" />
+
+          <button onClick={handleContractor} disabled={contractorLoading}
+            className="w-full py-2.5 bg-gray-800 text-white text-sm font-semibold rounded-xl hover:bg-gray-900 transition-colors disabled:opacity-50 mb-4">
+            {contractorLoading ? 'Redirecting...' : 'Start Contractor — $149/mo ↗'}
+          </button>
+
+          <div className="border-t border-gray-100 pt-3">
+            {['Contractor profile — license, insurance, bond saved once', 'Client job tracker — all permits across all jobs', '6 client communication templates', 'Full permit wizard — unlimited jobs', 'AI Concierge — permanent access', 'Plan Pre-Check — unlimited'].map((f, i) => (
+              <div key={i} className="flex items-start gap-2 mb-2">
+                <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-xs text-gray-600">{f}</span>
               </div>
             ))}
           </div>
@@ -175,7 +240,7 @@ export default function Pricing() {
 
           <button onClick={handleDeveloper} disabled={developerLoading}
             className="w-full py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50 mb-4">
-            {developerLoading ? 'Redirecting...' : billing === 'annual' ? 'Start Developer - $2,990/yr ↗' : 'Start Developer - $299/mo ↗'}
+            {developerLoading ? 'Redirecting...' : billing === 'annual' ? 'Start Developer — $2,990/yr ↗' : 'Start Developer — $299/mo ↗'}
           </button>
 
           <div className="border-t border-gray-100 pt-4">
@@ -199,8 +264,8 @@ export default function Pricing() {
         <h3 className="text-base font-semibold text-gray-900 mb-4 text-center">Common questions</h3>
         {[
           { q: 'What counts as one project?', a: 'One property address and one structure type. An ADU on the same property is a separate project.' },
-          { q: 'What jurisdictions are covered?', a: 'Raleigh, Durham, Chapel Hill, Apex, and Holly Springs - the full Research Triangle plus the fastest-growing Wake County municipalities.' },
-          { q: 'Can I cancel my Developer subscription?', a: 'Yes - cancel anytime from your Stripe billing portal. You retain access until the end of your current billing period.' },
+          { q: 'What jurisdictions are covered?', a: 'Raleigh, Durham, Chapel Hill, Apex, and Holly Springs — the full Research Triangle plus the fastest-growing Wake County municipalities.' },
+          { q: 'Can I cancel my Developer subscription?', a: 'Yes — cancel anytime from your Stripe billing portal. You retain access until the end of your current billing period.' },
           { q: 'What happens to my projects if I cancel Developer?', a: 'Your project data is retained for 90 days after cancellation. You can export or reactivate within that window.' },
           { q: 'Does the Homeowner AI Concierge really expire after 30 days?', a: 'Yes. Most permit processes resolve within 30 days. If you need longer, purchase a second project or upgrade to Developer.' },
           { q: 'Can I get a refund?', a: 'Homeowner: yes within 7 days if unused. Developer: prorated refund within 7 days of first charge. Contact hello@parcoria.com.' },

@@ -7,7 +7,9 @@ const ACCESS_VERSION = 'v3' // Bumped to invalidate all old tokens
 
 export function grantAccess(tier = 'homeowner') {
   const duration = tier === 'developer'
-    ? 32 * 24 * 60 * 60 * 1000   // 32 days — covers monthly billing cycle
+    ? 32 * 24 * 60 * 60 * 1000   // 32 days — developer monthly
+    : tier === 'contractor'
+    ? 32 * 24 * 60 * 60 * 1000   // 32 days — contractor monthly
     : 30 * 24 * 60 * 60 * 1000   // 30 days — homeowner
   const token = {
     version: ACCESS_VERSION,
@@ -48,6 +50,19 @@ export function isDeveloper() {
     if (token.version !== ACCESS_VERSION) return false
     if (Date.now() > token.expiresAt) return false
     return token.tier === 'developer'
+  } catch {
+    return false
+  }
+}
+
+export function isContractor() {
+  try {
+    const raw = localStorage.getItem(ACCESS_KEY)
+    if (!raw) return false
+    const token = JSON.parse(raw)
+    if (token.version !== ACCESS_VERSION) return false
+    if (Date.now() > token.expiresAt) return false
+    return token.tier === 'contractor'
   } catch {
     return false
   }

@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { isDeveloper, hasAccess } from '../lib/access'
+import { isDeveloper, hasAccess, isContractor } from '../lib/access'
 import { getUser } from '../lib/supabase'
 import { LogoMark } from './Logo'
 
@@ -17,6 +17,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [supabaseUser, setSupabaseUser] = useState(null)
   const devUser = isDeveloper()
+  const contractorUser = isContractor()
   const userHasAccess = hasAccess()
 
   useEffect(() => {
@@ -47,7 +48,12 @@ export default function Navbar() {
               Plan Pre-Check
             </Link>
           )}
-          {devUser ? (
+          {contractorUser ? (
+            <Link to="/contractor"
+              className="text-sm bg-brand-600 text-white px-4 py-1.5 rounded-lg hover:bg-brand-700 transition-colors font-medium">
+              Contractor Mode
+            </Link>
+          ) : devUser ? (
             <Link to="/dashboard"
               className="text-sm bg-brand-600 text-white px-4 py-1.5 rounded-lg hover:bg-brand-700 transition-colors font-medium flex items-center gap-1.5">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,7 +91,12 @@ export default function Navbar() {
               Plan Pre-Check
             </Link>
           )}
-          {devUser ? (
+          {contractorUser ? (
+            <Link to="/contractor"
+              className="text-sm bg-brand-600 text-white px-4 py-1.5 rounded-lg hover:bg-brand-700 transition-colors font-medium">
+              Contractor Mode
+            </Link>
+          ) : devUser ? (
             <Link to="/dashboard" className="text-sm bg-brand-600 text-white px-4 py-2 rounded-lg text-center font-medium" onClick={() => setOpen(false)}>
               {supabaseUser ? 'Dashboard' : 'My Projects'}
             </Link>

@@ -36,6 +36,7 @@ export default function Success() {
   const jur = params.get('j') || ''
   const tier = params.get('tier') || 'homeowner'
   const isDev = tier === 'developer'
+  const isContr = tier === 'contractor'
 
   useEffect(() => {
     grantAccess(tier)
@@ -51,7 +52,7 @@ export default function Success() {
       </div>
 
       <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-        {isDev ? 'Welcome to Parcoria Developer' : 'Payment confirmed'}
+        {isDev ? 'Welcome to Parcoria Developer' : isContr ? 'Welcome to Contractor Mode' : 'Payment confirmed'}
       </h1>
       <p className="text-gray-500 text-sm mb-2">
         {isDev
@@ -89,6 +90,11 @@ export default function Success() {
           <Link to="/dashboard"
             className="px-6 py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors">
             Open my dashboard ↗
+          </Link>
+        ) : isContr ? (
+          <Link to="/contractor"
+            className="px-6 py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors">
+            Open Contractor Mode ↗
           </Link>
         ) : (
           <Link to="/wizard"

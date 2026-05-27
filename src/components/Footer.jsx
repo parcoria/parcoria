@@ -4,6 +4,7 @@ import { LogoMark } from './Logo'
 const FOOTER_LINKS = {
   Product: [
     { label: 'Permit Wizard', to: '/wizard' },
+    { label: 'Sample Roadmap', to: '/sample' },
     { label: 'Plan Pre-Check', to: '/pre-check' },
     { label: 'Find Contractors', to: '/directory' },
     { label: 'Pricing', to: '/pricing' },

@@ -14,12 +14,16 @@ import Vault from './pages/Vault'
 import Contractors from './pages/Contractors'
 import Directory from './pages/Directory'
 import Learn from './pages/Learn'
+import ContractorMode from './pages/ContractorMode'
+import ScrollToTop from './components/ScrollToTop'
+import SampleRoadmap from './pages/SampleRoadmap'
 import Guide from './pages/Guide'
 
 export default function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen flex flex-col">
+        <ScrollToTop />
         <Navbar />
         <main className="flex-1">
           <Routes>
@@ -36,6 +40,8 @@ export default function App() {
             <Route path="/contractors" element={<Contractors />} />
             <Route path="/directory" element={<Directory />} />
             <Route path="/learn" element={<Learn />} />
+            <Route path="/contractor" element={<ContractorMode />} />
+            <Route path="/sample" element={<SampleRoadmap />} />
             <Route path="/learn/:slug" element={<Guide />} />
           </Routes>
         </main>

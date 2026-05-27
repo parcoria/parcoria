@@ -143,7 +143,7 @@ export default function Home() {
         {!userHasAccess && (
           <>
             <p className="text-xs text-gray-400 mt-3">Free during beta · Research Triangle + Wake County</p>
-            <div className="mt-8">
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 to="/wizard"
                 className="inline-flex items-center gap-2 text-sm text-brand-600 font-medium hover:text-brand-700 transition-colors"
@@ -152,6 +152,9 @@ export default function Home() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
+              </Link>
+              <Link to="/sample" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+                See a sample roadmap ↗
               </Link>
             </div>
           </>
