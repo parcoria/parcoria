@@ -71,22 +71,15 @@ export default function Home() {
             </Link>
           </div>
         ) : (
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link to="/pricing" className="px-6 py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors">
-              Get started - from $79
-            </Link>
-            <Link to="/wizard" className="px-6 py-3 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:border-gray-300 transition-colors">
-              Try the wizard free
+          <div className="flex justify-center">
+            <Link to="/sample" className="px-6 py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors">
+              See a sample roadmap
             </Link>
           </div>
         )}
 
         {!userHasAccess && (
           <div className="mt-4 flex items-center justify-center gap-4">
-            <Link to="/sample" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-              See a sample roadmap
-            </Link>
-            <span className="text-xs text-gray-200">|</span>
             <span className="text-xs text-gray-400">Research Triangle + Wake County</span>
           </div>
         )}
