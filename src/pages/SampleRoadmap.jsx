@@ -1,5 +1,5 @@
 // SampleRoadmap.jsx
-// A fully rendered example permit roadmap — no paywall, no blur
+// A fully rendered example permit roadmap - no paywall, no blur
 // Shows exactly what paying customers see
 // Uses a realistic Raleigh new SFH as the example project
 
@@ -38,11 +38,11 @@ const SAMPLE = {
       ],
     },
     {
-      label: 'Phase 1 — zoning',
+      label: 'Phase 1 - zoning',
       permits: [
         {
           name: 'Zoning compliance permit',
-          desc: 'Confirms your project complies with Raleigh Unified Development Ordinance — setbacks, height limits, lot coverage, and use. Required before building permit is issued.',
+          desc: 'Confirms your project complies with Raleigh Unified Development Ordinance - setbacks, height limits, lot coverage, and use. Required before building permit is issued.',
           jurisdiction: 'city',
           jLabel: 'City of Raleigh',
           jColor: 'bg-blue-50 text-blue-700 border border-blue-100',
@@ -52,7 +52,7 @@ const SAMPLE = {
       ],
     },
     {
-      label: 'Phase 2 — building & trade permits',
+      label: 'Phase 2 - building & trade permits',
       permits: [
         {
           name: 'Residential building permit',
@@ -93,7 +93,7 @@ const SAMPLE = {
       ],
     },
     {
-      label: 'Phase 3 — utilities & compliance',
+      label: 'Phase 3 - utilities & compliance',
       permits: [
         {
           name: 'Water & sewer connection permit',
@@ -116,7 +116,7 @@ const SAMPLE = {
       ],
     },
     {
-      label: 'Phase 4 — inspections',
+      label: 'Phase 4 - inspections',
       permits: [
         {
           name: 'Construction inspections (7 stages)',
@@ -141,25 +141,25 @@ const SAMPLE = {
   ],
   professionals: [
     { level: 'required', name: 'Licensed General Contractor (GC)', why: 'NC law requires a licensed GC for all projects $40,000 or more. Must designate a Mechanics Lien Agent before permits are issued. Verify license at nclbgc.org.' },
-    { level: 'required', name: 'Licensed Electrician', why: 'All electrical work requires an NC licensed electrical contractor. Separate electrical permit required — cannot be pulled by the GC.' },
+    { level: 'required', name: 'Licensed Electrician', why: 'All electrical work requires an NC licensed electrical contractor. Separate electrical permit required - cannot be pulled by the GC.' },
     { level: 'required', name: 'Licensed Plumber', why: 'All plumbing work requires an NC licensed plumbing contractor. Separate plumbing permit required.' },
     { level: 'required', name: 'Licensed HVAC Contractor', why: 'All mechanical systems require an NC licensed mechanical contractor. Separate mechanical permit required.' },
     { level: 'required', name: 'Licensed Land Surveyor', why: 'Site plan drawn to scale is required for permit submission. Must show building footprint, setbacks, impervious surface area, and driveway location.' },
-    { level: 'recommended', name: 'Architect or Residential Designer', why: 'Full construction drawings required for plan review. Experienced architects know what Raleigh reviewers look for — complete drawings on the first submission saves 2–4 weeks.' },
+    { level: 'recommended', name: 'Architect or Residential Designer', why: 'Full construction drawings required for plan review. Experienced architects know what Raleigh reviewers look for - complete drawings on the first submission saves 2–4 weeks.' },
     { level: 'recommended', name: 'Structural Engineer', why: 'Required for any engineered lumber products (LVL beams, trusses). All truss drawings must be sealed by a licensed engineer.' },
   ],
   inspections: [
-    'Footing / foundation — before concrete is poured',
-    'Foundation walls — after forms are set',
-    'Framing — after complete, before insulation or drywall',
-    'Rough-in electrical — before walls are closed',
-    'Rough-in plumbing — before walls are closed',
-    'Rough-in HVAC — before walls are closed',
-    'Insulation — before drywall',
-    'Final building — after all work complete',
-    'Final electrical — after all fixtures installed',
-    'Final plumbing — after all fixtures installed',
-    'Final HVAC — after all equipment installed',
+    'Footing / foundation - before concrete is poured',
+    'Foundation walls - after forms are set',
+    'Framing - after complete, before insulation or drywall',
+    'Rough-in electrical - before walls are closed',
+    'Rough-in plumbing - before walls are closed',
+    'Rough-in HVAC - before walls are closed',
+    'Insulation - before drywall',
+    'Final building - after all work complete',
+    'Final electrical - after all fixtures installed',
+    'Final plumbing - after all fixtures installed',
+    'Final HVAC - after all equipment installed',
     'Certificate of Occupancy walkthrough',
   ],
 }
@@ -179,7 +179,7 @@ export default function SampleRoadmap() {
         <div>
           <div className="text-xs font-semibold text-amber-800">This is a sample roadmap</div>
           <div className="text-xs text-amber-700 leading-relaxed">
-            This shows exactly what paying customers see — a real permit sequence for a real project type. Enter your address to get your specific roadmap.{' '}
+            This shows exactly what paying customers see - a real permit sequence for a real project type. Enter your address to get your specific roadmap.{' '}
             <Link to="/wizard" className="underline font-medium">Try it free ↗</Link>
           </div>
         </div>
@@ -188,7 +188,7 @@ export default function SampleRoadmap() {
       {/* Header */}
       <p className="text-xs text-gray-400 mb-1">Sample permit roadmap</p>
       <h1 className="text-xl font-semibold text-gray-900 mb-1">
-        Permit roadmap — {SAMPLE.proj}
+        Permit roadmap - {SAMPLE.proj}
       </h1>
       <p className="text-xs text-gray-400 mb-6">{SAMPLE.addr}</p>
 
@@ -235,7 +235,7 @@ export default function SampleRoadmap() {
       {/* Professionals */}
       <div className="border-t border-gray-100 pt-6 mb-6">
         <h2 className="text-sm font-semibold text-gray-900 mb-1">Licensed professionals required</h2>
-        <p className="text-xs text-gray-500 mb-4">Based on project type and NC law — exactly who you need and why.</p>
+        <p className="text-xs text-gray-500 mb-4">Based on project type and NC law - exactly who you need and why.</p>
         {['required', 'recommended'].map(level => {
           const group = SAMPLE.professionals.filter(p => p.level === level)
           return (
@@ -271,16 +271,12 @@ export default function SampleRoadmap() {
       <div className="bg-brand-600 rounded-2xl p-6 text-center">
         <div className="text-white font-semibold text-lg mb-1">Get your specific permit roadmap</div>
         <div className="text-brand-200 text-sm mb-5 leading-relaxed">
-          This sample is for a Raleigh new construction. Your project — different address, different type, different jurisdiction — will have a different sequence. Enter your address and get the exact roadmap for your build.
+          This sample is for a Raleigh new construction. Your project - different address, different type, different jurisdiction - will have a different sequence. Enter your address and get the exact roadmap for your build.
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link to="/wizard"
-            className="px-6 py-3 bg-white text-brand-700 text-sm font-semibold rounded-xl hover:bg-brand-50 transition-colors">
-            Try the wizard free — 2 minutes ↗
-          </Link>
           <Link to="/pricing"
-            className="px-6 py-3 border border-brand-400 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">
-            See pricing — from $79
+            className="px-6 py-3 bg-white text-brand-700 text-sm font-semibold rounded-xl hover:bg-brand-50 transition-colors">
+            Get started ↗
           </Link>
         </div>
       </div>
