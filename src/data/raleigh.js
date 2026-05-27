@@ -16,19 +16,19 @@ export const PERMIT_DATA = {
       {
         label: 'Before you apply',
         permits: [
-          { icon: 'map', name: 'Lot survey & recorded plat', desc: 'Sealed plot plan required. File with Wake County Register of Deeds before submission.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wakegov.com' },
+          { icon: 'map', name: 'Lot survey & recorded plat', desc: 'Sealed plot plan required. File with Wake County Register of Deeds before submission.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wake.gov' },
           { icon: 'map-pin', name: 'Address assignment', desc: 'Contact Raleigh GIS Addressing before any permit application.', jurisdiction: 'city', time: '1–3 days', url: 'https://raleighnc.gov/permits' },
         ]
       },
       {
-        label: 'Phase 1 — site & zoning',
+        label: 'Phase 1 - site & zoning',
         permits: [
           { icon: 'building', name: 'Zoning permit', desc: 'Confirms compliance with Raleigh UDO and zoning classification.', jurisdiction: 'city', time: '5–10 days', url: 'https://raleighnc.gov/permits' },
           { icon: 'layers', name: 'Site / grading permit', desc: 'Required for grading, drainage, and stormwater management.', jurisdiction: 'city', time: '10–15 days', url: 'https://raleighnc.gov/permits' },
         ]
       },
       {
-        label: 'Phase 2 — building permits',
+        label: 'Phase 2 - building permits',
         permits: [
           { icon: 'home', name: 'Residential building permit', desc: 'Core structural permit. Full NC Building Code plan review.', jurisdiction: 'city', time: '15–30 days', url: 'https://permitportal.raleighnc.gov' },
           { icon: 'bolt', name: 'Electrical permit', desc: 'All electrical systems. Submitted with building permit.', jurisdiction: 'city', time: 'Concurrent', url: 'https://permitportal.raleighnc.gov' },
@@ -37,17 +37,17 @@ export const PERMIT_DATA = {
         ]
       },
       {
-        label: 'Phase 3 — connections',
+        label: 'Phase 3 - connections',
         permits: [
-          { icon: 'droplets', name: 'Water & sewer connection', desc: 'Email water.review@raleighnc.gov to confirm availability first.', jurisdiction: 'city', time: '5–10 days', url: 'https://raleighnc.gov/permits/services/connecting-water-and-sewer-services' },
+          { icon: 'droplets', name: 'Water & sewer connection', desc: 'Email water.review@raleighnc.gov to confirm availability first.', jurisdiction: 'city', time: '5–10 days', url: 'https://raleighnc.gov/permits' },
           { icon: 'receipt', name: 'Lien agent appointment', desc: 'Required by NC law for projects over $40,000. File at liensnc.com before work begins.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com' },
         ]
       },
       {
-        label: 'Phase 4 — inspections & close-out',
+        label: 'Phase 4 - inspections & close-out',
         permits: [
-          { icon: 'clipboard-check', name: 'Construction inspections', desc: 'Foundation, framing, rough-in, insulation, final — all through Wake County.', jurisdiction: 'county', time: 'Throughout', url: 'https://www.wakegov.com' },
-          { icon: 'certificate', name: 'Certificate of occupancy', desc: 'Issued after all inspections pass. Required before occupancy.', jurisdiction: 'city', time: '5–10 days', url: 'https://raleighnc.gov/permits/services/certificate-occupancy' },
+          { icon: 'clipboard-check', name: 'Construction inspections', desc: 'Foundation, framing, rough-in, insulation, final - all through Wake County.', jurisdiction: 'county', time: 'Throughout', url: 'https://www.wake.gov' },
+          { icon: 'certificate', name: 'Certificate of occupancy', desc: 'Issued after all inspections pass. Required before occupancy.', jurisdiction: 'city', time: '5–10 days', url: 'https://raleighnc.gov/permits' },
         ]
       },
     ]
@@ -56,7 +56,7 @@ export const PERMIT_DATA = {
     count: 5, timeline: '6–10 weeks', fees: '$2,000–$6,000',
     phases: [
       { label: 'Pre-application', permits: [
-        { icon: 'zoom-check', name: 'Zoning eligibility check', desc: 'Confirm lot qualifies for ADU under Raleigh UDO.', jurisdiction: 'city', time: '1–3 days', url: 'https://raleighnc.gov/permits/services/building-accessory-dwelling-unit-adu' },
+        { icon: 'zoom-check', name: 'Zoning eligibility check', desc: 'Confirm lot qualifies for ADU under Raleigh UDO.', jurisdiction: 'city', time: '1–3 days', url: 'https://raleighnc.gov/permits' },
       ]},
       { label: 'Permits', permits: [
         { icon: 'home', name: 'Residential building permit', desc: 'Detached ADUs treated as single-family. Full plan review.', jurisdiction: 'city', time: '15–30 days', url: 'https://permitportal.raleighnc.gov' },
@@ -64,7 +64,7 @@ export const PERMIT_DATA = {
         { icon: 'droplet', name: 'Plumbing permit', desc: 'Required if ADU includes kitchen or bathroom.', jurisdiction: 'city', time: 'Concurrent', url: 'https://permitportal.raleighnc.gov' },
       ]},
       { label: 'Completion', permits: [
-        { icon: 'certificate', name: 'Certificate of occupancy', desc: 'Required before ADU can be rented or occupied.', jurisdiction: 'city', time: '5–10 days', url: 'https://raleighnc.gov/permits/services/certificate-occupancy' },
+        { icon: 'certificate', name: 'Certificate of occupancy', desc: 'Required before ADU can be rented or occupied.', jurisdiction: 'city', time: '5–10 days', url: 'https://raleighnc.gov/permits' },
       ]},
     ]
   },
@@ -72,7 +72,7 @@ export const PERMIT_DATA = {
     count: 2, timeline: '2–4 weeks', fees: '$300–$1,200',
     phases: [
       { label: 'Permits', permits: [
-        { icon: 'tools', name: 'Residential permit — deck / porch', desc: 'Submit via email to downtownDS@raleighnc.gov.', jurisdiction: 'city', time: '10–15 days', url: 'https://raleighnc.gov/permits/services/building-screened-porch-deck-or-balcony' },
+        { icon: 'tools', name: 'Residential permit - deck / porch', desc: 'Submit via email to downtownDS@raleighnc.gov.', jurisdiction: 'city', time: '10–15 days', url: 'https://raleighnc.gov/permits' },
         { icon: 'bolt', name: 'Electrical permit', desc: 'Required only if adding lighting or outlets.', jurisdiction: 'city', time: 'Concurrent', url: 'https://permitportal.raleighnc.gov' },
       ]},
     ]
@@ -104,7 +104,7 @@ export const PERMIT_DATA = {
         { icon: 'droplet', name: 'Plumbing permit', desc: 'If scope includes plumbing modifications.', jurisdiction: 'city', time: 'Concurrent', url: 'https://permitportal.raleighnc.gov' },
       ]},
       { label: 'Completion', permits: [
-        { icon: 'certificate', name: 'Certificate of occupancy', desc: 'Required if addition creates new occupiable space.', jurisdiction: 'city', time: '5–10 days', url: 'https://raleighnc.gov/permits/services/certificate-occupancy' },
+        { icon: 'certificate', name: 'Certificate of occupancy', desc: 'Required if addition creates new occupiable space.', jurisdiction: 'city', time: '5–10 days', url: 'https://raleighnc.gov/permits' },
       ]},
     ]
   },
@@ -112,26 +112,26 @@ export const PERMIT_DATA = {
     count: 13, timeline: '4–6 months', fees: '$12,000–$25,000',
     phases: [
       { label: 'Before you apply', permits: [
-        { icon: 'map', name: 'Lot survey & recorded plat', desc: 'Sealed plot plan required before any permit submission.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wakegov.com' },
+        { icon: 'map', name: 'Lot survey & recorded plat', desc: 'Sealed plot plan required before any permit submission.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wake.gov' },
       ]},
-      { label: 'Phase 1 — site & zoning', permits: [
+      { label: 'Phase 1 - site & zoning', permits: [
         { icon: 'building-community', name: 'Zoning permit', desc: 'May require Board of Adjustment approval for multi-unit.', jurisdiction: 'city', time: '10–20 days', url: 'https://raleighnc.gov/permits' },
         { icon: 'layers', name: 'Site / grading permit', desc: 'Required for all grading, drainage, and stormwater.', jurisdiction: 'city', time: '10–15 days', url: 'https://raleighnc.gov/permits' },
       ]},
-      { label: 'Phase 2 — building permits', permits: [
+      { label: 'Phase 2 - building permits', permits: [
         { icon: 'home', name: 'Residential building permit (per unit)', desc: 'Each unit may require separate permit.', jurisdiction: 'city', time: '15–30 days', url: 'https://permitportal.raleighnc.gov' },
         { icon: 'bolt', name: 'Electrical permit', desc: 'Per unit.', jurisdiction: 'city', time: 'Concurrent', url: 'https://permitportal.raleighnc.gov' },
         { icon: 'droplet', name: 'Plumbing permit', desc: 'Per unit.', jurisdiction: 'city', time: 'Concurrent', url: 'https://permitportal.raleighnc.gov' },
         { icon: 'wind', name: 'Mechanical / HVAC permit', desc: 'Per unit.', jurisdiction: 'city', time: 'Concurrent', url: 'https://permitportal.raleighnc.gov' },
       ]},
-      { label: 'Phase 3 — connections & compliance', permits: [
-        { icon: 'droplets', name: 'Water & sewer connection', desc: 'Per unit or shared main — confirm with Raleigh Water.', jurisdiction: 'city', time: '5–10 days', url: 'https://raleighnc.gov/permits' },
-        { icon: 'receipt', name: 'Lien agent appointment', desc: 'Required — townhouse projects always exceed $40,000.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com' },
+      { label: 'Phase 3 - connections & compliance', permits: [
+        { icon: 'droplets', name: 'Water & sewer connection', desc: 'Per unit or shared main - confirm with Raleigh Water.', jurisdiction: 'city', time: '5–10 days', url: 'https://raleighnc.gov/permits' },
+        { icon: 'receipt', name: 'Lien agent appointment', desc: 'Required - townhouse projects always exceed $40,000.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com' },
         { icon: 'fire-extinguisher', name: 'Fire code compliance review', desc: 'Multi-unit triggers fire separation and egress review.', jurisdiction: 'city', time: 'Concurrent', url: 'https://raleighnc.gov/permits' },
       ]},
-      { label: 'Phase 4 — completion', permits: [
-        { icon: 'clipboard-check', name: 'Construction inspections', desc: 'All stages through Wake County.', jurisdiction: 'county', time: 'Throughout', url: 'https://www.wakegov.com' },
-        { icon: 'certificate', name: 'Certificate of occupancy (per unit)', desc: 'Issued per unit after all inspections pass.', jurisdiction: 'city', time: '5–10 days', url: 'https://raleighnc.gov/permits/services/certificate-occupancy' },
+      { label: 'Phase 4 - completion', permits: [
+        { icon: 'clipboard-check', name: 'Construction inspections', desc: 'All stages through Wake County.', jurisdiction: 'county', time: 'Throughout', url: 'https://www.wake.gov' },
+        { icon: 'certificate', name: 'Certificate of occupancy (per unit)', desc: 'Issued per unit after all inspections pass.', jurisdiction: 'city', time: '5–10 days', url: 'https://raleighnc.gov/permits' },
       ]},
     ]
   },
@@ -187,7 +187,7 @@ PROFESSIONALS.addition = PROFESSIONALS.reno = [
 ]
 
 export const INSPECTIONS = {
-  sfh: ['Footing / foundation', 'Framing — after complete, before insulation', 'Rough-in — electrical, plumbing, HVAC', 'Insulation', 'Final building', 'Final electrical', 'Final plumbing', 'Final mechanical', 'Certificate of occupancy walkthrough'],
+  sfh: ['Footing / foundation', 'Framing - after complete, before insulation', 'Rough-in - electrical, plumbing, HVAC', 'Insulation', 'Final building', 'Final electrical', 'Final plumbing', 'Final mechanical', 'Certificate of occupancy walkthrough'],
   adu: ['Foundation', 'Framing', 'Rough-in', 'Final building', 'Certificate of occupancy'],
   deck: ['Footing', 'Framing', 'Final'],
   pool: ['Pre-pour', 'Bonding / electrical', 'Barrier / fence', 'Final pool'],

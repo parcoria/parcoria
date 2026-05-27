@@ -1,8 +1,8 @@
-// Holly Springs, NC — Permit Intelligence
+// Holly Springs, NC - Permit Intelligence
 // Jurisdiction: Town of Holly Springs
 // County: Wake County (inspections shared with Raleigh)
-// Portal: CityView Portal — single portal for applications, payments, inspections, status
-// Key note: One of fastest growing towns in US — active residential construction market
+// Portal: CityView Portal - single portal for applications, payments, inspections, status
+// Key note: One of fastest growing towns in US - active residential construction market
 
 export const HOLLY_SPRINGS_META = {
   city: 'Holly Springs',
@@ -20,13 +20,13 @@ export const HOLLY_SPRINGS_META = {
     hours: 'Mon–Fri 8:00 AM – 5:00 PM',
   },
   notes: [
-    'Holly Springs uses a single CityView Portal for everything — applications, payments, inspections, and status tracking',
+    'Holly Springs uses a single CityView Portal for everything - applications, payments, inspections, and status tracking',
     'Inspection requests received before 4:00 PM scheduled for next business day. After 4:00 PM scheduled for second business day',
-    'Owner-builders allowed for single family dwellings only — must be primary residence for 12 months, notarized affidavit required',
+    'Owner-builders allowed for single family dwellings only - must be primary residence for 12 months, notarized affidavit required',
     'Projects over $40,000 require licensed NC General Contractor and lien agent appointment',
-    'Wake County performs all field inspections — same as Raleigh',
+    'Wake County performs all field inspections - same as Raleigh',
     'Progress Energy premise number required for reporting approved inspections for electrical finals',
-    'Holly Springs is one of the fastest growing towns in the US — plan review backlogs possible during peak seasons',
+    'Holly Springs is one of the fastest growing towns in the US - plan review backlogs possible during peak seasons',
   ],
 }
 
@@ -40,16 +40,16 @@ export const HOLLY_SPRINGS_PERMIT_DATA = {
           {
             icon: 'map',
             name: 'Lot survey & plot plan',
-            desc: 'Plot plan required showing proposed building area on the lot. A survey is drawn to show what is actually on the plot — must be signed and sealed by a licensed NC Surveyor.',
+            desc: 'Plot plan required showing proposed building area on the lot. A survey is drawn to show what is actually on the plot - must be signed and sealed by a licensed NC Surveyor.',
             jurisdiction: 'county',
             time: '1–2 wks',
-            url: 'https://www.wakegov.com/departments-government/register-of-deeds',
+            url: 'https://www.wake.gov/departments-government/register-of-deeds',
             warn: false,
           },
           {
             icon: 'map-pin',
             name: 'Address & premise number',
-            desc: 'Confirm official address with Holly Springs. Also obtain your Progress Energy premise number — required for reporting electrical inspection approvals.',
+            desc: 'Confirm official address with Holly Springs. Also obtain your Progress Energy premise number - required for reporting electrical inspection approvals.',
             jurisdiction: 'city',
             time: '1–3 days',
             url: 'https://www.hollyspringsnc.gov',
@@ -58,7 +58,7 @@ export const HOLLY_SPRINGS_PERMIT_DATA = {
         ],
       },
       {
-        label: 'Phase 1 — zoning & site',
+        label: 'Phase 1 - zoning & site',
         permits: [
           {
             icon: 'building-community',
@@ -81,7 +81,7 @@ export const HOLLY_SPRINGS_PERMIT_DATA = {
         ],
       },
       {
-        label: 'Phase 2 — building permits (CityView)',
+        label: 'Phase 2 - building permits (CityView)',
         permits: [
           {
             icon: 'home',
@@ -122,7 +122,7 @@ export const HOLLY_SPRINGS_PERMIT_DATA = {
         ],
       },
       {
-        label: 'Phase 3 — connections & compliance',
+        label: 'Phase 3 - connections & compliance',
         permits: [
           {
             icon: 'droplets',
@@ -145,7 +145,7 @@ export const HOLLY_SPRINGS_PERMIT_DATA = {
         ],
       },
       {
-        label: 'Phase 4 — inspections & close-out',
+        label: 'Phase 4 - inspections & close-out',
         permits: [
           {
             icon: 'clipboard-check',
@@ -200,7 +200,7 @@ export const HOLLY_SPRINGS_PERMIT_DATA = {
       {
         label: 'Permits (CityView)',
         permits: [
-          { icon: 'tools', name: 'Residential building permit — deck / porch', desc: 'Apply through CityView Portal or email DSPermitting@hollyspringsnc.gov.', jurisdiction: 'city', time: '5–10 working days', url: 'https://cityview.hollyspringsnc.us/portal', warn: false },
+          { icon: 'tools', name: 'Residential building permit - deck / porch', desc: 'Apply through CityView Portal or email DSPermitting@hollyspringsnc.gov.', jurisdiction: 'city', time: '5–10 working days', url: 'https://cityview.hollyspringsnc.us/portal', warn: false },
           { icon: 'bolt', name: 'Electrical permit', desc: 'Required if adding lighting or outlets.', jurisdiction: 'city', time: 'Concurrent', url: 'https://cityview.hollyspringsnc.us/portal', warn: false },
         ],
       },
@@ -255,7 +255,7 @@ export const HOLLY_SPRINGS_PERMIT_DATA = {
       {
         label: 'Before you apply',
         permits: [
-          { icon: 'map', name: 'Lot survey & plot plan', desc: 'Sealed survey required. File with Wake County Register of Deeds.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wakegov.com', warn: false },
+          { icon: 'map', name: 'Lot survey & plot plan', desc: 'Sealed survey required. File with Wake County Register of Deeds.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wake.gov', warn: false },
           { icon: 'building-community', name: 'Zoning compliance review', desc: 'Multi-unit residential requires UDO compliance review. May require Board of Adjustment approval.', jurisdiction: 'city', time: '10–20 days', url: 'https://cityview.hollyspringsnc.us/portal', warn: false },
         ],
       },
@@ -271,8 +271,8 @@ export const HOLLY_SPRINGS_PERMIT_DATA = {
       {
         label: 'Connections & compliance',
         permits: [
-          { icon: 'droplets', name: 'Water & sewer connection', desc: 'Contact Holly Springs Public Utilities at (919) 557-2591 early — connection timelines vary.', jurisdiction: 'city', time: '5–10 days', url: 'https://cityview.hollyspringsnc.us/portal', warn: false },
-          { icon: 'receipt', name: 'Lien agent appointment', desc: 'Required — townhouse always exceeds $40,000. File at liensnc.com.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com', warn: false },
+          { icon: 'droplets', name: 'Water & sewer connection', desc: 'Contact Holly Springs Public Utilities at (919) 557-2591 early - connection timelines vary.', jurisdiction: 'city', time: '5–10 days', url: 'https://cityview.hollyspringsnc.us/portal', warn: false },
+          { icon: 'receipt', name: 'Lien agent appointment', desc: 'Required - townhouse always exceeds $40,000. File at liensnc.com.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com', warn: false },
           { icon: 'fire-extinguisher', name: 'Fire code compliance review', desc: 'Multi-unit triggers fire separation and egress review.', jurisdiction: 'city', time: 'Concurrent', url: 'https://cityview.hollyspringsnc.us/portal', warn: false },
         ],
       },
@@ -295,7 +295,7 @@ export const HOLLY_SPRINGS_PROFESSIONALS = {
     { level: 'required', name: 'Licensed electrician', why: 'All electrical work requires a NC licensed electrical contractor. Progress Energy premise number required for final inspection.' },
     { level: 'required', name: 'Licensed plumber', why: 'All plumbing work requires a NC licensed plumbing contractor.' },
     { level: 'required', name: 'Licensed HVAC contractor', why: 'Mechanical systems require a NC licensed mechanical contractor.' },
-    { level: 'required', name: 'Licensed land surveyor', why: 'Sealed plot plan required. Must show what is actually on the plot — hand-drawn plans not accepted for new SFH.' },
+    { level: 'required', name: 'Licensed land surveyor', why: 'Sealed plot plan required. Must show what is actually on the plot - hand-drawn plans not accepted for new SFH.' },
     { level: 'recommended', name: 'Architect or residential designer', why: 'Full construction drawings required for CityView Portal submission.' },
     { level: 'recommended', name: 'Structural engineer', why: 'Required for unconventional spans or complex structural elements.' },
     { level: 'optional', name: 'Geotechnical / soil engineer', why: 'Recommended for sites with fill, slope, or expansive soils in rapidly developing Holly Springs.' },
@@ -334,7 +334,7 @@ HOLLY_SPRINGS_PROFESSIONALS.addition = HOLLY_SPRINGS_PROFESSIONALS.reno = [
 ]
 
 export const HOLLY_SPRINGS_INSPECTIONS = {
-  sfh: ['Footing / foundation', 'Framing — after complete, before insulation', 'Rough-in — electrical, plumbing, HVAC', 'Insulation', 'Final building', 'Final electrical', 'Final plumbing', 'Final mechanical', 'Certificate of occupancy walkthrough'],
+  sfh: ['Footing / foundation', 'Framing - after complete, before insulation', 'Rough-in - electrical, plumbing, HVAC', 'Insulation', 'Final building', 'Final electrical', 'Final plumbing', 'Final mechanical', 'Certificate of occupancy walkthrough'],
   adu: ['Foundation', 'Framing', 'Rough-in', 'Final building', 'Certificate of occupancy'],
   deck: ['Footing', 'Framing', 'Final'],
   pool: ['Pre-pour', 'Bonding / electrical', 'Barrier / fence', 'Final pool'],
@@ -346,9 +346,9 @@ export const HOLLY_SPRINGS_INSPECTIONS = {
 
 export const HOLLY_SPRINGS_BUILDABILITY_CHECKS = (flags) => [
   { ok: true, title: 'Town of Holly Springs jurisdiction confirmed', desc: 'All permits through Holly Springs Development Services. Single CityView Portal for applications, payments, inspections, and status tracking.' },
-  { ok: true, title: 'Wake County inspection district', desc: 'Wake County performs all field inspections. Request through CityView Portal — before 4 PM for next day, after 4 PM for second business day.' },
-  { ok: true, title: 'Progress Energy premise number required', desc: 'Obtain your Progress Energy premise number early — required for reporting approved electrical inspections including finals. Contact Progress Energy when you apply for service.' },
-  { ok: !flags.historic, title: flags.historic ? 'Historic district — flagged by you' : 'No historic district reported', desc: flags.historic ? 'Historic review required before building permit. Contact Holly Springs Planning at DSPermitting@hollyspringsnc.gov.' : 'You indicated no historic district. Verify with Holly Springs Planning before submitting.', verifyUrl: 'https://www.hollyspringsnc.gov', verifyLabel: 'Verify with Holly Springs' },
-  { ok: !flags.septic, title: flags.septic ? 'Private well/septic — Wake County EH approval needed' : 'City utilities reported', desc: flags.septic ? 'Wake County Environmental Services must approve before Holly Springs accepts permit application.' : 'You indicated city utilities. Confirm availability with Holly Springs Public Utilities at (919) 557-2591.' },
-  { ok: !flags.corner, title: flags.corner ? 'Corner lot — dual setbacks apply' : 'Standard lot reported', desc: flags.corner ? 'Corner lots in Holly Springs have setback requirements on both street frontages per Holly Springs UDO.' : 'Confirm setbacks for your zoning district in Holly Springs UDO before finalizing plans.' },
+  { ok: true, title: 'Wake County inspection district', desc: 'Wake County performs all field inspections. Request through CityView Portal - before 4 PM for next day, after 4 PM for second business day.' },
+  { ok: true, title: 'Progress Energy premise number required', desc: 'Obtain your Progress Energy premise number early - required for reporting approved electrical inspections including finals. Contact Progress Energy when you apply for service.' },
+  { ok: !flags.historic, title: flags.historic ? 'Historic district - flagged by you' : 'No historic district reported', desc: flags.historic ? 'Historic review required before building permit. Contact Holly Springs Planning at DSPermitting@hollyspringsnc.gov.' : 'You indicated no historic district. Verify with Holly Springs Planning before submitting.', verifyUrl: 'https://www.hollyspringsnc.gov', verifyLabel: 'Verify with Holly Springs' },
+  { ok: !flags.septic, title: flags.septic ? 'Private well/septic - Wake County EH approval needed' : 'City utilities reported', desc: flags.septic ? 'Wake County Environmental Services must approve before Holly Springs accepts permit application.' : 'You indicated city utilities. Confirm availability with Holly Springs Public Utilities at (919) 557-2591.' },
+  { ok: !flags.corner, title: flags.corner ? 'Corner lot - dual setbacks apply' : 'Standard lot reported', desc: flags.corner ? 'Corner lots in Holly Springs have setback requirements on both street frontages per Holly Springs UDO.' : 'Confirm setbacks for your zoning district in Holly Springs UDO before finalizing plans.' },
 ]

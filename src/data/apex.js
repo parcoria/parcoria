@@ -1,8 +1,8 @@
-// Apex, NC — Permit Intelligence
+// Apex, NC - Permit Intelligence
 // Jurisdiction: Town of Apex
 // County: Wake County (inspections shared with Raleigh)
 // Portals: IDT Plans (plan submissions) + ePermits (payments + inspection tracking)
-// Key note: Dual portal — plans in IDT, payments in ePermits
+// Key note: Dual portal - plans in IDT, payments in ePermits
 
 export const APEX_META = {
   city: 'Apex',
@@ -10,7 +10,7 @@ export const APEX_META = {
   state: 'NC',
   portals: {
     plans: 'https://www.myidtplans.com',
-    epermits: 'https://secure.apexnc.org/eSuite.Permits/WelcomePage.aspx',
+    epermits: 'https://www.apexnc.org/183/Building-Inspections-Permits',
     inspections: 'https://www.apexnc.org/183/Building-Inspections-Permits',
     forms: 'https://www.apexnc.org/188/Forms',
   },
@@ -21,12 +21,12 @@ export const APEX_META = {
     hours: 'Mon–Fri 8:00 AM – 5:00 PM',
   },
   notes: [
-    'Apex uses TWO portals — submit plans via IDT Plans portal, pay fees via ePermits portal',
-    'New single-family applications MUST be submitted through IDT Plans — not accepted at counter',
-    'Inspections must be scheduled by 2:00 PM the day before — online or at Building Inspection desk',
+    'Apex uses TWO portals - submit plans via IDT Plans portal, pay fees via ePermits portal',
+    'New single-family applications MUST be submitted through IDT Plans - not accepted at counter',
+    'Inspections must be scheduled by 2:00 PM the day before - online or at Building Inspection desk',
     'Normal construction hours: Mon–Fri 7AM–7PM, Saturday 9AM–7PM',
     'Projects over $40,000 require Workers Comp affidavit, Certificate of Insurance to Town of Apex, and lien agent form',
-    'Wake County handles all field inspections — same as Raleigh',
+    'Wake County handles all field inspections - same as Raleigh',
     'Plan review: 1–10 working days depending on project type and workload',
   ],
 }
@@ -44,7 +44,7 @@ export const APEX_PERMIT_DATA = {
             desc: 'Sealed plot plan required. File with Wake County Register of Deeds before permit submission.',
             jurisdiction: 'county',
             time: '1–2 wks',
-            url: 'https://www.wakegov.com/departments-government/register-of-deeds',
+            url: 'https://www.wake.gov/departments-government/register-of-deeds',
             portal: null, warn: false,
           },
           {
@@ -59,7 +59,7 @@ export const APEX_PERMIT_DATA = {
         ],
       },
       {
-        label: 'Phase 1 — zoning & planning',
+        label: 'Phase 1 - zoning & planning',
         permits: [
           {
             icon: 'building-community',
@@ -82,12 +82,12 @@ export const APEX_PERMIT_DATA = {
         ],
       },
       {
-        label: 'Phase 2 — building permit (IDT Plans)',
+        label: 'Phase 2 - building permit (IDT Plans)',
         permits: [
           {
             icon: 'home',
             name: 'Residential building permit',
-            desc: 'Must be submitted through IDT Plans portal — not accepted at counter for new SFH. Full NC Building Code plan review. Allow 1–10 working days.',
+            desc: 'Must be submitted through IDT Plans portal - not accepted at counter for new SFH. Full NC Building Code plan review. Allow 1–10 working days.',
             jurisdiction: 'city',
             time: '1–10 working days',
             url: 'https://www.myidtplans.com',
@@ -123,7 +123,7 @@ export const APEX_PERMIT_DATA = {
         ],
       },
       {
-        label: 'Phase 3 — pay fees (ePermits)',
+        label: 'Phase 3 - pay fees (ePermits)',
         permits: [
           {
             icon: 'credit-card',
@@ -131,7 +131,7 @@ export const APEX_PERMIT_DATA = {
             desc: 'After IDT Plans approval, pay all fees through the ePermits portal before permit is issued. Permit is NOT active until fees are paid.',
             jurisdiction: 'city',
             time: 'After approval',
-            url: 'https://secure.apexnc.org/eSuite.Permits/WelcomePage.aspx',
+            url: 'https://www.apexnc.org/183/Building-Inspections-Permits',
             portal: 'ePermits', warn: true,
           },
           {
@@ -146,7 +146,7 @@ export const APEX_PERMIT_DATA = {
         ],
       },
       {
-        label: 'Phase 4 — inspections & close-out',
+        label: 'Phase 4 - inspections & close-out',
         permits: [
           {
             icon: 'clipboard-check',
@@ -163,7 +163,7 @@ export const APEX_PERMIT_DATA = {
             desc: 'Issued after all final inspections pass. Required before occupancy.',
             jurisdiction: 'city',
             time: '3–5 days',
-            url: 'https://secure.apexnc.org/eSuite.Permits/WelcomePage.aspx',
+            url: 'https://www.apexnc.org/183/Building-Inspections-Permits',
             portal: 'ePermits', warn: false,
           },
         ],
@@ -190,7 +190,7 @@ export const APEX_PERMIT_DATA = {
       {
         label: 'Completion',
         permits: [
-          { icon: 'certificate', name: 'Certificate of occupancy', desc: 'Required before ADU can be rented or occupied.', jurisdiction: 'city', time: '3–5 days', url: 'https://secure.apexnc.org/eSuite.Permits/WelcomePage.aspx', portal: 'ePermits', warn: false },
+          { icon: 'certificate', name: 'Certificate of occupancy', desc: 'Required before ADU can be rented or occupied.', jurisdiction: 'city', time: '3–5 days', url: 'https://www.apexnc.org/183/Building-Inspections-Permits', portal: 'ePermits', warn: false },
         ],
       },
     ],
@@ -201,7 +201,7 @@ export const APEX_PERMIT_DATA = {
       {
         label: 'Permits (IDT Plans)',
         permits: [
-          { icon: 'tools', name: 'Residential building permit — deck / porch', desc: 'Submit through IDT Plans portal. Allow 1–10 working days for review.', jurisdiction: 'city', time: '1–10 working days', url: 'https://www.myidtplans.com', portal: 'IDT Plans', warn: false },
+          { icon: 'tools', name: 'Residential building permit - deck / porch', desc: 'Submit through IDT Plans portal. Allow 1–10 working days for review.', jurisdiction: 'city', time: '1–10 working days', url: 'https://www.myidtplans.com', portal: 'IDT Plans', warn: false },
           { icon: 'bolt', name: 'Electrical permit', desc: 'Required if adding lighting or outlets. Submit through IDT Plans.', jurisdiction: 'city', time: 'Concurrent', url: 'https://www.myidtplans.com', portal: 'IDT Plans', warn: false },
         ],
       },
@@ -245,7 +245,7 @@ export const APEX_PERMIT_DATA = {
       {
         label: 'Completion',
         permits: [
-          { icon: 'certificate', name: 'Certificate of occupancy', desc: 'Required if addition creates new occupiable space.', jurisdiction: 'city', time: '3–5 days', url: 'https://secure.apexnc.org/eSuite.Permits/WelcomePage.aspx', portal: 'ePermits', warn: false },
+          { icon: 'certificate', name: 'Certificate of occupancy', desc: 'Required if addition creates new occupiable space.', jurisdiction: 'city', time: '3–5 days', url: 'https://www.apexnc.org/183/Building-Inspections-Permits', portal: 'ePermits', warn: false },
         ],
       },
     ],
@@ -256,7 +256,7 @@ export const APEX_PERMIT_DATA = {
       {
         label: 'Before you apply',
         permits: [
-          { icon: 'map', name: 'Lot survey & recorded plat', desc: 'Sealed plot plan required. File with Wake County Register of Deeds.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wakegov.com', portal: null, warn: false },
+          { icon: 'map', name: 'Lot survey & recorded plat', desc: 'Sealed plot plan required. File with Wake County Register of Deeds.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wake.gov', portal: null, warn: false },
           { icon: 'building-community', name: 'Zoning / planning approval', desc: 'Multi-unit may require Board of Adjustment review. Contact Apex Planning at (919) 249-3300.', jurisdiction: 'city', time: '10–20 days', url: 'https://www.apexnc.org/215/Applications-Schedules', portal: 'IDT Plans', warn: false },
         ],
       },
@@ -272,15 +272,15 @@ export const APEX_PERMIT_DATA = {
       {
         label: 'Fees & compliance',
         permits: [
-          { icon: 'credit-card', name: 'Permit fee payment', desc: 'Pay all fees through ePermits portal after IDT approval. Permit not active until paid.', jurisdiction: 'city', time: 'After approval', url: 'https://secure.apexnc.org/eSuite.Permits/WelcomePage.aspx', portal: 'ePermits', warn: true },
-          { icon: 'receipt', name: 'Lien agent appointment', desc: 'Required — townhouse always exceeds $40,000. File at liensnc.com.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com', portal: null, warn: false },
+          { icon: 'credit-card', name: 'Permit fee payment', desc: 'Pay all fees through ePermits portal after IDT approval. Permit not active until paid.', jurisdiction: 'city', time: 'After approval', url: 'https://www.apexnc.org/183/Building-Inspections-Permits', portal: 'ePermits', warn: true },
+          { icon: 'receipt', name: 'Lien agent appointment', desc: 'Required - townhouse always exceeds $40,000. File at liensnc.com.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com', portal: null, warn: false },
         ],
       },
       {
         label: 'Completion',
         permits: [
           { icon: 'clipboard-check', name: 'Construction inspections', desc: 'Schedule by 2 PM day before via online form or (919) 249-3388. Wake County performs inspections.', jurisdiction: 'county', time: 'Throughout', url: 'https://www.apexnc.org/183/Building-Inspections-Permits', portal: null, warn: false },
-          { icon: 'certificate', name: 'Certificate of occupancy (per unit)', desc: 'Issued after all inspections pass. Required before occupancy.', jurisdiction: 'city', time: '3–5 days', url: 'https://secure.apexnc.org/eSuite.Permits/WelcomePage.aspx', portal: 'ePermits', warn: false },
+          { icon: 'certificate', name: 'Certificate of occupancy (per unit)', desc: 'Issued after all inspections pass. Required before occupancy.', jurisdiction: 'city', time: '3–5 days', url: 'https://www.apexnc.org/183/Building-Inspections-Permits', portal: 'ePermits', warn: false },
         ],
       },
     ],
@@ -334,7 +334,7 @@ APEX_PROFESSIONALS.addition = APEX_PROFESSIONALS.reno = [
 ]
 
 export const APEX_INSPECTIONS = {
-  sfh: ['Footing / foundation', 'Framing — after complete, before insulation', 'Rough-in — electrical, plumbing, HVAC', 'Insulation', 'Final building', 'Final electrical', 'Final plumbing', 'Final mechanical', 'Certificate of occupancy walkthrough'],
+  sfh: ['Footing / foundation', 'Framing - after complete, before insulation', 'Rough-in - electrical, plumbing, HVAC', 'Insulation', 'Final building', 'Final electrical', 'Final plumbing', 'Final mechanical', 'Certificate of occupancy walkthrough'],
   adu: ['Foundation', 'Framing', 'Rough-in', 'Final building', 'Certificate of occupancy'],
   deck: ['Footing', 'Framing', 'Final'],
   pool: ['Pre-pour', 'Bonding / electrical', 'Barrier / fence', 'Final pool'],
@@ -346,9 +346,9 @@ export const APEX_INSPECTIONS = {
 
 export const APEX_BUILDABILITY_CHECKS = (flags) => [
   { ok: true, title: 'Town of Apex jurisdiction confirmed', desc: 'All permits through Apex Building Inspections & Permitting. Plan submissions via IDT Plans portal, payments via ePermits portal.' },
-  { ok: true, title: 'Wake County inspection district', desc: 'Wake County performs all field inspections — same as Raleigh. Schedule inspections by 2:00 PM the day before at (919) 249-3388.' },
-  { ok: true, title: 'Dual portal system — IDT Plans + ePermits', desc: 'Submit all plans through IDT Plans portal. Pay all fees through the ePermits portal. Both accounts required. Permit is not active until fees are paid in ePermits.' },
-  { ok: !flags.historic, title: flags.historic ? 'Historic district — flagged by you' : 'No historic district reported', desc: flags.historic ? 'Apex Historic District review required before building permit. Verify with Apex Planning at (919) 249-3300.' : 'You indicated no historic district. Verify with Apex Planning before submitting.', verifyUrl: 'https://www.apexnc.org/215/Applications-Schedules', verifyLabel: 'Verify with Apex Planning' },
-  { ok: !flags.septic, title: flags.septic ? 'Private well/septic — Wake County EH approval needed' : 'City utilities reported', desc: flags.septic ? 'Wake County Environmental Services must approve before Apex accepts permit application.' : 'You indicated city utilities. Confirm water/sewer availability with Apex Utilities before applying.' },
-  { ok: !flags.corner, title: flags.corner ? 'Corner lot — dual setbacks apply' : 'Standard lot reported', desc: flags.corner ? 'Corner lots in Apex have setback requirements on both street frontages per Apex UDO.' : 'Confirm setbacks for your zoning district in Apex UDO before finalizing plans.' },
+  { ok: true, title: 'Wake County inspection district', desc: 'Wake County performs all field inspections - same as Raleigh. Schedule inspections by 2:00 PM the day before at (919) 249-3388.' },
+  { ok: true, title: 'Dual portal system - IDT Plans + ePermits', desc: 'Submit all plans through IDT Plans portal. Pay all fees through the ePermits portal. Both accounts required. Permit is not active until fees are paid in ePermits.' },
+  { ok: !flags.historic, title: flags.historic ? 'Historic district - flagged by you' : 'No historic district reported', desc: flags.historic ? 'Apex Historic District review required before building permit. Verify with Apex Planning at (919) 249-3300.' : 'You indicated no historic district. Verify with Apex Planning before submitting.', verifyUrl: 'https://www.apexnc.org/215/Applications-Schedules', verifyLabel: 'Verify with Apex Planning' },
+  { ok: !flags.septic, title: flags.septic ? 'Private well/septic - Wake County EH approval needed' : 'City utilities reported', desc: flags.septic ? 'Wake County Environmental Services must approve before Apex accepts permit application.' : 'You indicated city utilities. Confirm water/sewer availability with Apex Utilities before applying.' },
+  { ok: !flags.corner, title: flags.corner ? 'Corner lot - dual setbacks apply' : 'Standard lot reported', desc: flags.corner ? 'Corner lots in Apex have setback requirements on both street frontages per Apex UDO.' : 'Confirm setbacks for your zoning district in Apex UDO before finalizing plans.' },
 ]

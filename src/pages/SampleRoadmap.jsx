@@ -23,7 +23,7 @@ const SAMPLE = {
           jLabel: 'Wake County',
           jColor: 'bg-amber-50 text-amber-700 border border-amber-100',
           time: '1–2 wks',
-          url: 'https://www.wakegov.com/departments-government/register-of-deeds',
+          url: 'https://www.wake.gov/departments-government/register-of-deeds',
         },
         {
           name: 'Lien agent appointment',
@@ -102,7 +102,7 @@ const SAMPLE = {
           jLabel: 'City of Raleigh',
           jColor: 'bg-blue-50 text-blue-700 border border-blue-100',
           time: '5–10 days',
-          url: 'https://raleighnc.gov/water',
+          url: 'https://raleighnc.gov/permits',
         },
         {
           name: 'Land disturbance / grading permit',
@@ -125,7 +125,7 @@ const SAMPLE = {
           jLabel: 'Wake County',
           jColor: 'bg-amber-50 text-amber-700 border border-amber-100',
           time: 'Throughout construction',
-          url: 'https://www.wakegov.com/building',
+          url: 'https://www.wake.gov/departments-government/permits-and-inspections',
         },
         {
           name: 'Certificate of Occupancy',

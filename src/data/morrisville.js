@@ -1,9 +1,9 @@
-// Morrisville, NC — Permit Intelligence
+// Morrisville, NC - Permit Intelligence
 // Jurisdiction: Town of Morrisville
 // County: Wake County
-// Portal: CSS Portal (Customer Self Service) — morrisvillenc.gov e-Permits
+// Portal: CSS Portal (Customer Self Service) - morrisvillenc.gov e-Permits
 // Inspections: Wake County (same as Raleigh, Apex, Holly Springs)
-// Key note: No phone inspection requests — online portal only
+// Key note: No phone inspection requests - online portal only
 
 export const MORRISVILLE_META = {
   city: 'Morrisville',
@@ -21,8 +21,8 @@ export const MORRISVILLE_META = {
   },
   notes: [
     'Morrisville uses CSS (Customer Self Service) Portal for all permits and inspections',
-    'No phone inspection requests accepted — all inspections scheduled through online portal',
-    'Wake County performs all field inspections — same as Raleigh, Apex, Holly Springs',
+    'No phone inspection requests accepted - all inspections scheduled through online portal',
+    'Wake County performs all field inspections - same as Raleigh, Apex, Holly Springs',
     'Projects $40,000+ require licensed NC General Contractor and lien agent',
     'Owner-builders may act as own GC for home they own and will personally occupy',
     'Review Combined Site & Construction Plan Informational Packet before submitting',
@@ -40,13 +40,13 @@ export const MORRISVILLE_PERMIT_DATA = {
         ],
       },
       {
-        label: 'Phase 1 — zoning',
+        label: 'Phase 1 - zoning',
         permits: [
           { icon: 'building-community', name: 'Zoning compliance permit', desc: 'Required before building permit. Confirms compliance with Morrisville UDO. Submit through CSS Portal.', jurisdiction: 'city', time: '5–10 days', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
         ],
       },
       {
-        label: 'Phase 2 — building permits (CSS Portal)',
+        label: 'Phase 2 - building permits (CSS Portal)',
         permits: [
           { icon: 'home', name: 'Residential building permit', desc: 'Apply through CSS Portal. View permit status, plan review status, and pay fees through same portal. NC Building Code plan review required.', jurisdiction: 'city', time: '5–15 working days', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
           { icon: 'bolt', name: 'Electrical permit', desc: 'Apply through CSS Portal. NC licensed electrical contractor required.', jurisdiction: 'city', time: 'Concurrent', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
@@ -55,16 +55,16 @@ export const MORRISVILLE_PERMIT_DATA = {
         ],
       },
       {
-        label: 'Phase 3 — compliance',
+        label: 'Phase 3 - compliance',
         permits: [
           { icon: 'receipt', name: 'Lien agent appointment', desc: 'Required for projects $40,000+. File at liensnc.com before work begins.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com', warn: false },
           { icon: 'droplets', name: 'Water & sewer connection', desc: 'Contact Morrisville Public Works for utility availability before applying.', jurisdiction: 'city', time: '5–10 days', url: 'https://www.morrisvillenc.gov', warn: false },
         ],
       },
       {
-        label: 'Phase 4 — inspections & close-out',
+        label: 'Phase 4 - inspections & close-out',
         permits: [
-          { icon: 'clipboard-check', name: 'Construction inspections', desc: 'All inspections scheduled through CSS Portal — no phone requests accepted. Wake County performs all field inspections.', jurisdiction: 'county', time: 'Throughout', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
+          { icon: 'clipboard-check', name: 'Construction inspections', desc: 'All inspections scheduled through CSS Portal - no phone requests accepted. Wake County performs all field inspections.', jurisdiction: 'county', time: 'Throughout', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
           { icon: 'certificate', name: 'Certificate of occupancy', desc: 'Issued after all final inspections pass. All fees must be paid through CSS Portal before CO issued.', jurisdiction: 'city', time: '3–5 days', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
         ],
       },
@@ -89,7 +89,7 @@ export const MORRISVILLE_PERMIT_DATA = {
   deck: {
     count: 2, timeline: '2–4 weeks', fees: '$300–$900',
     phases: [{ label: 'Permits (CSS Portal)', permits: [
-      { icon: 'tools', name: 'Residential building permit — deck / porch', desc: 'Apply through CSS Portal.', jurisdiction: 'city', time: '5–10 working days', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
+      { icon: 'tools', name: 'Residential building permit - deck / porch', desc: 'Apply through CSS Portal.', jurisdiction: 'city', time: '5–10 working days', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
       { icon: 'bolt', name: 'Electrical permit', desc: 'Required if adding lighting or outlets.', jurisdiction: 'city', time: 'Concurrent', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
     ]}],
   },
@@ -124,7 +124,7 @@ export const MORRISVILLE_PERMIT_DATA = {
     count: 11, timeline: '4–6 months', fees: '$9,000–$20,000',
     phases: [
       { label: 'Before you apply', permits: [
-        { icon: 'map', name: 'Lot survey & site plan', desc: 'Sealed survey required per Combined Site & Construction Plan packet.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wakegov.com', warn: false },
+        { icon: 'map', name: 'Lot survey & site plan', desc: 'Sealed survey required per Combined Site & Construction Plan packet.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wake.gov', warn: false },
         { icon: 'building-community', name: 'Zoning compliance permit', desc: 'Multi-unit residential requires full zoning review.', jurisdiction: 'city', time: '10–20 days', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
       ]},
       { label: 'Building permits (CSS Portal)', permits: [
@@ -134,11 +134,11 @@ export const MORRISVILLE_PERMIT_DATA = {
         { icon: 'wind', name: 'Mechanical / HVAC permit (per unit)', desc: 'Apply through CSS Portal.', jurisdiction: 'city', time: 'Concurrent', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
       ]},
       { label: 'Compliance', permits: [
-        { icon: 'receipt', name: 'Lien agent appointment', desc: 'Required — always exceeds $40,000.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com', warn: false },
+        { icon: 'receipt', name: 'Lien agent appointment', desc: 'Required - always exceeds $40,000.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com', warn: false },
         { icon: 'fire-extinguisher', name: 'Fire code compliance', desc: 'Multi-unit triggers fire separation and egress review.', jurisdiction: 'city', time: 'Concurrent', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
       ]},
       { label: 'Completion', permits: [
-        { icon: 'clipboard-check', name: 'Construction inspections', desc: 'All inspections through CSS Portal — no phone requests. Wake County performs all field inspections.', jurisdiction: 'county', time: 'Throughout', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
+        { icon: 'clipboard-check', name: 'Construction inspections', desc: 'All inspections through CSS Portal - no phone requests. Wake County performs all field inspections.', jurisdiction: 'county', time: 'Throughout', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
         { icon: 'certificate', name: 'Certificate of occupancy (per unit)', desc: 'All fees paid through CSS Portal before CO issued.', jurisdiction: 'city', time: '3–5 days', url: 'https://www.morrisvillenc.gov/Services-Forms/E-Permits-Applications', warn: false },
       ]},
     ],
@@ -155,7 +155,7 @@ export const MORRISVILLE_PROFESSIONALS = {
     { level: 'required', name: 'Licensed land surveyor', why: 'Site plan required per Combined Site & Construction Plan Informational Packet.' },
     { level: 'recommended', name: 'Architect or residential designer', why: 'Full construction drawings required for CSS Portal submission.' },
     { level: 'recommended', name: 'Structural engineer', why: 'Required for engineered products. Stamped drawings required.' },
-    { level: 'optional', name: 'Geotechnical / soil engineer', why: 'Recommended for sites in Morrisville — significant development pressure on varied soil conditions.' },
+    { level: 'optional', name: 'Geotechnical / soil engineer', why: 'Recommended for sites in Morrisville - significant development pressure on varied soil conditions.' },
   ],
   adu: [
     { level: 'required', name: 'Licensed general contractor (GC)', why: 'Project almost certainly exceeds $40,000.' },
@@ -191,7 +191,7 @@ MORRISVILLE_PROFESSIONALS.addition = MORRISVILLE_PROFESSIONALS.reno = [
 ]
 
 export const MORRISVILLE_INSPECTIONS = {
-  sfh: ['Footing / foundation', 'Framing — after complete, before insulation', 'Rough-in — electrical, plumbing, HVAC', 'Insulation', 'Final building', 'Final electrical', 'Final plumbing', 'Final mechanical', 'Certificate of occupancy walkthrough'],
+  sfh: ['Footing / foundation', 'Framing - after complete, before insulation', 'Rough-in - electrical, plumbing, HVAC', 'Insulation', 'Final building', 'Final electrical', 'Final plumbing', 'Final mechanical', 'Certificate of occupancy walkthrough'],
   adu: ['Foundation', 'Framing', 'Rough-in', 'Final building', 'Certificate of occupancy'],
   deck: ['Footing', 'Framing', 'Final'],
   pool: ['Pre-pour', 'Bonding / electrical', 'Barrier / fence', 'Final pool'],
@@ -202,9 +202,9 @@ export const MORRISVILLE_INSPECTIONS = {
 }
 
 export const MORRISVILLE_BUILDABILITY_CHECKS = (flags) => [
-  { ok: true, title: 'Town of Morrisville jurisdiction confirmed', desc: 'All permits through Morrisville Inspections via CSS Portal. No phone inspection requests — online only.' },
+  { ok: true, title: 'Town of Morrisville jurisdiction confirmed', desc: 'All permits through Morrisville Inspections via CSS Portal. No phone inspection requests - online only.' },
   { ok: true, title: 'Wake County inspection district', desc: 'Wake County performs all field inspections. All inspection requests through CSS Portal.' },
-  { ok: !flags.historic, title: flags.historic ? 'Historic district — flagged by you' : 'No historic district reported', desc: flags.historic ? 'Contact Morrisville Planning at (919) 463-6200 for historic district requirements.' : 'You indicated no historic district. Verify with Morrisville Planning before submitting.', verifyUrl: 'https://www.morrisvillenc.gov/government/departments-services/planning', verifyLabel: 'Verify with Morrisville Planning' },
-  { ok: !flags.septic, title: flags.septic ? 'Private well/septic — Wake County EH approval needed' : 'City utilities reported', desc: flags.septic ? 'Wake County Environmental Services must approve before Morrisville accepts permit application.' : 'Confirm utility availability with Morrisville Public Works before applying.' },
-  { ok: !flags.corner, title: flags.corner ? 'Corner lot — dual setbacks apply' : 'Standard lot reported', desc: flags.corner ? 'Corner lots have setback requirements on both street frontages per Morrisville UDO.' : 'Confirm setbacks for your zoning district in Morrisville UDO.' },
+  { ok: !flags.historic, title: flags.historic ? 'Historic district - flagged by you' : 'No historic district reported', desc: flags.historic ? 'Contact Morrisville Planning at (919) 463-6200 for historic district requirements.' : 'You indicated no historic district. Verify with Morrisville Planning before submitting.', verifyUrl: 'https://www.morrisvillenc.gov/government/departments-services/planning', verifyLabel: 'Verify with Morrisville Planning' },
+  { ok: !flags.septic, title: flags.septic ? 'Private well/septic - Wake County EH approval needed' : 'City utilities reported', desc: flags.septic ? 'Wake County Environmental Services must approve before Morrisville accepts permit application.' : 'Confirm utility availability with Morrisville Public Works before applying.' },
+  { ok: !flags.corner, title: flags.corner ? 'Corner lot - dual setbacks apply' : 'Standard lot reported', desc: flags.corner ? 'Corner lots have setback requirements on both street frontages per Morrisville UDO.' : 'Confirm setbacks for your zoning district in Morrisville UDO.' },
 ]

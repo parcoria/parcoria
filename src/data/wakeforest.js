@@ -1,7 +1,7 @@
-// Wake Forest, NC — Permit Intelligence
+// Wake Forest, NC - Permit Intelligence
 // Jurisdiction: Town of Wake Forest
 // County: Wake County
-// Portal: IDT Plans (wakeforest.idtplans.com) — same system as Apex, different town account
+// Portal: IDT Plans (wakeforest.idtplans.com) - same system as Apex, different town account
 // Inspections: Wake County (same as Raleigh, Apex, Holly Springs)
 // Key note: Inspections must be requested before 3 PM for next business day
 
@@ -21,12 +21,12 @@ export const WAKE_FOREST_META = {
     hours: 'Mon–Fri 8:00 AM – 5:00 PM',
   },
   notes: [
-    'Wake Forest uses IDT Plans portal for all permit applications — same system as Apex, different account',
+    'Wake Forest uses IDT Plans portal for all permit applications - same system as Apex, different account',
     'All inspections must be requested before 3 PM for next business day scheduling',
-    'Wake County performs all field inspections — same as Raleigh, Apex, Holly Springs',
-    'Lien agent required for all projects $40,000 or more — must be filed before permit issued',
+    'Wake County performs all field inspections - same as Raleigh, Apex, Holly Springs',
+    'Lien agent required for all projects $40,000 or more - must be filed before permit issued',
     'No permit issued for $40,000+ projects without Mechanics Lien Agent designation',
-    'Reinspection fees apply — must be paid before next inspection can be scheduled',
+    'Reinspection fees apply - must be paid before next inspection can be scheduled',
   ],
 }
 
@@ -37,18 +37,18 @@ export const WAKE_FOREST_PERMIT_DATA = {
       {
         label: 'Before you apply',
         permits: [
-          { icon: 'map', name: 'Lot survey & site plan', desc: 'Site plan drawn to scale required showing building footprint, distances to property lines, driveway location, and impervious surface calculations.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wakegov.com/departments-government/register-of-deeds', warn: false },
+          { icon: 'map', name: 'Lot survey & site plan', desc: 'Site plan drawn to scale required showing building footprint, distances to property lines, driveway location, and impervious surface calculations.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wake.gov/departments-government/register-of-deeds', warn: false },
           { icon: 'map-pin', name: 'Address assignment', desc: 'Confirm official address with Wake Forest before permit application.', jurisdiction: 'city', time: '1–3 days', url: 'https://www.wakeforestnc.gov', warn: false },
         ],
       },
       {
-        label: 'Phase 1 — zoning',
+        label: 'Phase 1 - zoning',
         permits: [
           { icon: 'building-community', name: 'Zoning compliance review', desc: 'Planning staff reviews application for zoning compliance before building permit is issued. Contact Wake Forest Planning Department.', jurisdiction: 'city', time: '5–10 days', url: 'https://www.wakeforestnc.gov/planning', warn: false },
         ],
       },
       {
-        label: 'Phase 2 — building permit (IDT Plans)',
+        label: 'Phase 2 - building permit (IDT Plans)',
         permits: [
           { icon: 'home', name: 'Residential building permit', desc: 'Submit through IDT Plans portal at wakeforest.idtplans.com. Once zoning signs off, contact office for permit purchase. Full NC Building Code plan review required.', jurisdiction: 'city', time: '5–15 working days', url: 'https://wakeforest.idtplans.com/secure/', warn: false },
           { icon: 'bolt', name: 'Electrical permit', desc: 'Submit through IDT Plans portal. Must be submitted by a licensed NC electrical contractor.', jurisdiction: 'city', time: 'Concurrent', url: 'https://wakeforest.idtplans.com/secure/', warn: false },
@@ -57,14 +57,14 @@ export const WAKE_FOREST_PERMIT_DATA = {
         ],
       },
       {
-        label: 'Phase 3 — compliance',
+        label: 'Phase 3 - compliance',
         permits: [
           { icon: 'receipt', name: 'Lien agent appointment', desc: 'Required by NC law for projects $40,000+. Must be designated before permit is issued. File at liensnc.com and post on job site.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com', warn: false },
           { icon: 'droplets', name: 'Water & sewer connection', desc: 'Contact Wake Forest Public Works for utility availability confirmation before applying.', jurisdiction: 'city', time: '5–10 days', url: 'https://www.wakeforestnc.gov', warn: false },
         ],
       },
       {
-        label: 'Phase 4 — inspections & close-out',
+        label: 'Phase 4 - inspections & close-out',
         permits: [
           { icon: 'clipboard-check', name: 'Construction inspections', desc: 'Request before 3 PM via IDT Plans portal for next business day scheduling. Wake County performs all field inspections. Call (919) 435-9531 at 8:30 AM day-of for inspector ETA.', jurisdiction: 'county', time: 'Throughout', url: 'https://wakeforest.idtplans.com/secure/', warn: false },
           { icon: 'certificate', name: 'Certificate of occupancy', desc: 'Issued after all final inspections pass. All fees must be paid including any reinspection fees before CO issued.', jurisdiction: 'city', time: '3–5 days', url: 'https://wakeforest.idtplans.com/secure/', warn: false },
@@ -91,7 +91,7 @@ export const WAKE_FOREST_PERMIT_DATA = {
   deck: {
     count: 2, timeline: '2–4 weeks', fees: '$300–$900',
     phases: [{ label: 'Permits (IDT Plans)', permits: [
-      { icon: 'tools', name: 'Residential building permit — deck / porch', desc: 'Submit through IDT Plans portal.', jurisdiction: 'city', time: '5–10 working days', url: 'https://wakeforest.idtplans.com/secure/', warn: false },
+      { icon: 'tools', name: 'Residential building permit - deck / porch', desc: 'Submit through IDT Plans portal.', jurisdiction: 'city', time: '5–10 working days', url: 'https://wakeforest.idtplans.com/secure/', warn: false },
       { icon: 'bolt', name: 'Electrical permit', desc: 'Required if adding lighting or outlets.', jurisdiction: 'city', time: 'Concurrent', url: 'https://wakeforest.idtplans.com/secure/', warn: false },
     ]}],
   },
@@ -126,7 +126,7 @@ export const WAKE_FOREST_PERMIT_DATA = {
     count: 11, timeline: '4–6 months', fees: '$9,000–$20,000',
     phases: [
       { label: 'Before you apply', permits: [
-        { icon: 'map', name: 'Lot survey & site plan', desc: 'Sealed survey required. File with Wake County Register of Deeds.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wakegov.com', warn: false },
+        { icon: 'map', name: 'Lot survey & site plan', desc: 'Sealed survey required. File with Wake County Register of Deeds.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wake.gov', warn: false },
         { icon: 'building-community', name: 'Zoning compliance review', desc: 'Multi-unit residential requires full zoning review. May require Board of Adjustment approval.', jurisdiction: 'city', time: '10–20 days', url: 'https://www.wakeforestnc.gov/planning', warn: false },
       ]},
       { label: 'Building permits (IDT Plans)', permits: [
@@ -136,7 +136,7 @@ export const WAKE_FOREST_PERMIT_DATA = {
         { icon: 'wind', name: 'Mechanical / HVAC permit (per unit)', desc: 'Submit through IDT Plans portal.', jurisdiction: 'city', time: 'Concurrent', url: 'https://wakeforest.idtplans.com/secure/', warn: false },
       ]},
       { label: 'Compliance', permits: [
-        { icon: 'receipt', name: 'Lien agent appointment', desc: 'Required — townhouse always exceeds $40,000. Must be posted on job site.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com', warn: false },
+        { icon: 'receipt', name: 'Lien agent appointment', desc: 'Required - townhouse always exceeds $40,000. Must be posted on job site.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com', warn: false },
         { icon: 'fire-extinguisher', name: 'Fire code compliance', desc: 'Multi-unit residential triggers fire separation and egress review.', jurisdiction: 'city', time: 'Concurrent', url: 'https://wakeforest.idtplans.com/secure/', warn: false },
       ]},
       { label: 'Completion', permits: [
@@ -151,7 +151,7 @@ WAKE_FOREST_PERMIT_DATA.reno = WAKE_FOREST_PERMIT_DATA.addition
 
 export const WAKE_FOREST_PROFESSIONALS = {
   sfh: [
-    { level: 'required', name: 'Licensed general contractor (GC)', why: 'NC law requires licensed GC for projects $40,000+. GC must provide Mechanics Lien Agent info at permit application — must be posted on job site.' },
+    { level: 'required', name: 'Licensed general contractor (GC)', why: 'NC law requires licensed GC for projects $40,000+. GC must provide Mechanics Lien Agent info at permit application - must be posted on job site.' },
     { level: 'required', name: 'Licensed electrician', why: 'All electrical work requires NC licensed electrical contractor. Submit trade permit through IDT Plans portal.' },
     { level: 'required', name: 'Licensed plumber', why: 'All plumbing work requires NC licensed plumbing contractor. Submit trade permit through IDT Plans portal.' },
     { level: 'required', name: 'Licensed HVAC contractor', why: 'Mechanical systems require NC licensed mechanical contractor. Submit trade permit through IDT Plans portal.' },
@@ -194,7 +194,7 @@ WAKE_FOREST_PROFESSIONALS.addition = WAKE_FOREST_PROFESSIONALS.reno = [
 ]
 
 export const WAKE_FOREST_INSPECTIONS = {
-  sfh: ['Footing / foundation', 'Framing — after complete, before insulation', 'Rough-in — electrical, plumbing, HVAC', 'Insulation', 'Final building', 'Final electrical', 'Final plumbing', 'Final mechanical', 'Certificate of occupancy walkthrough'],
+  sfh: ['Footing / foundation', 'Framing - after complete, before insulation', 'Rough-in - electrical, plumbing, HVAC', 'Insulation', 'Final building', 'Final electrical', 'Final plumbing', 'Final mechanical', 'Certificate of occupancy walkthrough'],
   adu: ['Foundation', 'Framing', 'Rough-in', 'Final building', 'Certificate of occupancy'],
   deck: ['Footing', 'Framing', 'Final'],
   pool: ['Pre-pour', 'Bonding / electrical', 'Barrier / fence', 'Final pool'],
@@ -208,7 +208,7 @@ export const WAKE_FOREST_BUILDABILITY_CHECKS = (flags) => [
   { ok: true, title: 'Town of Wake Forest jurisdiction confirmed', desc: 'All permits through Wake Forest Inspections Department via IDT Plans portal. Inspections performed by Wake County.' },
   { ok: true, title: 'Wake County inspection district', desc: 'Wake County performs all field inspections. Request before 3 PM via IDT Plans portal for next business day. Call (919) 435-9531 at 8:30 AM for inspector ETA.' },
   { ok: true, title: 'IDT Plans portal required', desc: 'All permit applications must be submitted through IDT Plans at wakeforest.idtplans.com. Once zoning approves, contact office to purchase permit.' },
-  { ok: !flags.historic, title: flags.historic ? 'Historic district — flagged by you' : 'No historic district reported', desc: flags.historic ? 'Wake Forest Historic District review required before building permit. Contact Planning at (919) 435-9400.' : 'You indicated no historic district. Verify with Wake Forest Planning before submitting.', verifyUrl: 'https://www.wakeforestnc.gov/planning', verifyLabel: 'Verify with Wake Forest Planning' },
-  { ok: !flags.septic, title: flags.septic ? 'Private well/septic — Wake County EH approval needed' : 'City utilities reported', desc: flags.septic ? 'Wake County Environmental Services must approve before Wake Forest accepts permit application.' : 'Confirm water and sewer availability with Wake Forest Public Works before applying.' },
-  { ok: !flags.corner, title: flags.corner ? 'Corner lot — dual setbacks apply' : 'Standard lot reported', desc: flags.corner ? 'Corner lots have setback requirements on both street frontages per Wake Forest UDO.' : 'Confirm setbacks for your zoning district in Wake Forest UDO before finalizing plans.' },
+  { ok: !flags.historic, title: flags.historic ? 'Historic district - flagged by you' : 'No historic district reported', desc: flags.historic ? 'Wake Forest Historic District review required before building permit. Contact Planning at (919) 435-9400.' : 'You indicated no historic district. Verify with Wake Forest Planning before submitting.', verifyUrl: 'https://www.wakeforestnc.gov/planning', verifyLabel: 'Verify with Wake Forest Planning' },
+  { ok: !flags.septic, title: flags.septic ? 'Private well/septic - Wake County EH approval needed' : 'City utilities reported', desc: flags.septic ? 'Wake County Environmental Services must approve before Wake Forest accepts permit application.' : 'Confirm water and sewer availability with Wake Forest Public Works before applying.' },
+  { ok: !flags.corner, title: flags.corner ? 'Corner lot - dual setbacks apply' : 'Standard lot reported', desc: flags.corner ? 'Corner lots have setback requirements on both street frontages per Wake Forest UDO.' : 'Confirm setbacks for your zoning district in Wake Forest UDO before finalizing plans.' },
 ]
