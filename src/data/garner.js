@@ -39,7 +39,7 @@ export const GARNER_PERMIT_DATA = {
       {
         label: 'Before you apply',
         permits: [
-          { icon: 'map', name: 'Lot survey & site plan', desc: 'Sealed site plan required showing building footprint and distances to all property lines. File with Wake County Register of Deeds.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wake.gov/departments-government/register-of-deeds', warn: false },
+          { icon: 'map', name: 'Lot survey & site plan', desc: 'Sealed site plan required showing building footprint and distances to all property lines. File with Wake County Register of Deeds.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wake.gov/departments-government/register-deeds', warn: false },
           { icon: 'users', name: 'Pre-application conference (if required)', desc: 'Required per Garner UDO Section 4.4.1 for certain applications. Submit request and sketch plan via SmartGov Portal to schedule.', jurisdiction: 'city', time: '1–2 wks', url: 'https://twn-garner-nc.smartgovcommunity.com/Public/Home', warn: false },
         ],
       },

@@ -39,7 +39,7 @@ export const CARY_PERMIT_DATA = {
       {
         label: 'Before you apply',
         permits: [
-          { name: 'Lot survey & site plan', desc: 'Sealed survey and site plan required. Cary requires a Site Plan Review before building permits are issued for new construction.', jurisdiction: 'county', time: '1-2 wks', url: 'https://www.wake.gov/departments-government/register-of-deeds', warn: false },
+          { name: 'Lot survey & site plan', desc: 'Sealed survey and site plan required. Cary requires a Site Plan Review before building permits are issued for new construction.', jurisdiction: 'county', time: '1-2 wks', url: 'https://www.wake.gov/departments-government/register-deeds', warn: false },
           { name: 'Lien agent appointment', desc: 'Required for all projects $40,000+. File at liensnc.com before work begins.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com', warn: true },
         ],
       },

@@ -37,7 +37,7 @@ export const WAKE_FOREST_PERMIT_DATA = {
       {
         label: 'Before you apply',
         permits: [
-          { icon: 'map', name: 'Lot survey & site plan', desc: 'Site plan drawn to scale required showing building footprint, distances to property lines, driveway location, and impervious surface calculations.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wake.gov/departments-government/register-of-deeds', warn: false },
+          { icon: 'map', name: 'Lot survey & site plan', desc: 'Site plan drawn to scale required showing building footprint, distances to property lines, driveway location, and impervious surface calculations.', jurisdiction: 'county', time: '1–2 wks', url: 'https://www.wake.gov/departments-government/register-deeds', warn: false },
           { icon: 'map-pin', name: 'Address assignment', desc: 'Confirm official address with Wake Forest before permit application.', jurisdiction: 'city', time: '1–3 days', url: 'https://www.wakeforestnc.gov', warn: false },
         ],
       },

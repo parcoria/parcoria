@@ -34,7 +34,7 @@ export const FUQUAY_VARINA_PERMIT_DATA = {
       {
         label: 'Before you apply',
         permits: [
-          { name: 'Lot survey & site plan', desc: 'Sealed site plan required showing building footprint, setbacks, driveway, and impervious surface calculations.', jurisdiction: 'county', time: '1-2 wks', url: 'https://www.wake.gov/departments-government/register-of-deeds', warn: false },
+          { name: 'Lot survey & site plan', desc: 'Sealed site plan required showing building footprint, setbacks, driveway, and impervious surface calculations.', jurisdiction: 'county', time: '1-2 wks', url: 'https://www.wake.gov/departments-government/register-deeds', warn: false },
           { name: 'Lien agent appointment', desc: 'Required for all projects $40,000+. File at liensnc.com before work begins. Post certificate on job site.', jurisdiction: 'state', time: '1 day', url: 'https://www.liensnc.com', warn: true },
         ],
       },

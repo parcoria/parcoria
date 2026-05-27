@@ -44,7 +44,7 @@ export const APEX_PERMIT_DATA = {
             desc: 'Sealed plot plan required. File with Wake County Register of Deeds before permit submission.',
             jurisdiction: 'county',
             time: '1–2 wks',
-            url: 'https://www.wake.gov/departments-government/register-of-deeds',
+            url: 'https://www.wake.gov/departments-government/register-deeds',
             portal: null, warn: false,
           },
           {

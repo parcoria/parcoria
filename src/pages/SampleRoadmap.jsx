@@ -23,7 +23,7 @@ const SAMPLE = {
           jLabel: 'Wake County',
           jColor: 'bg-amber-50 text-amber-700 border border-amber-100',
           time: '1–2 wks',
-          url: 'https://www.wake.gov/departments-government/register-of-deeds',
+          url: 'https://www.wake.gov/departments-government/register-deeds',
         },
         {
           name: 'Lien agent appointment',

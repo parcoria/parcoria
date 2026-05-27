@@ -43,7 +43,7 @@ export const HOLLY_SPRINGS_PERMIT_DATA = {
             desc: 'Plot plan required showing proposed building area on the lot. A survey is drawn to show what is actually on the plot - must be signed and sealed by a licensed NC Surveyor.',
             jurisdiction: 'county',
             time: '1–2 wks',
-            url: 'https://www.wake.gov/departments-government/register-of-deeds',
+            url: 'https://www.wake.gov/departments-government/register-deeds',
             warn: false,
           },
           {
