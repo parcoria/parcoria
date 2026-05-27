@@ -6,15 +6,15 @@ import { hasAccess, isDeveloper } from '../lib/access'
 const PAIN_STATS = [
   { n: '11+', label: 'Permits for a single new home in Raleigh' },
   { n: '60 days', label: 'Average city review time before ground breaks' },
-  { n: '3 agencies', label: 'City, Wake County, and state — each different' },
+  { n: '3 agencies', label: 'City, Wake County, and state - each different' },
   { n: '2–3x', label: 'Correction cycles on incomplete applications' },
 ]
 
 const HOW_IT_WORKS = [
   { step: '1', title: 'Enter your address', desc: 'We identify your zoning, jurisdiction, and any lot-level conditions that affect your project.' },
-  { step: '2', title: "Tell us what you're building", desc: 'New home, ADU, deck, addition — we map your project to the exact permits required.' },
-  { step: '3', title: 'Get your permit roadmap', desc: 'A sequenced checklist of every permit, fee, and timeline — in the right order.' },
-  { step: '4', title: 'Know who you need to hire', desc: 'Exactly which licensed professionals NC law requires for your project — and why.' },
+  { step: '2', title: "Tell us what you're building", desc: 'New home, ADU, deck, addition - we map your project to the exact permits required.' },
+  { step: '3', title: 'Get your permit roadmap', desc: 'A sequenced checklist of every permit, fee, and timeline - in the right order.' },
+  { step: '4', title: 'Know who you need to hire', desc: 'Exactly which licensed professionals NC law requires for your project - and why.' },
 ]
 
 const PERMIT_SAMPLES = [
@@ -31,12 +31,6 @@ const PERMIT_SAMPLES = [
 
 export default function Home() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [email2, setEmail2] = useState('')
-  const [submitted, setSubmitted] = useState(false)
-  const [submitted2, setSubmitted2] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const userIsDeveloper = isDeveloper()
   const userHasAccess = hasAccess()
 
@@ -46,33 +40,6 @@ export default function Home() {
       navigate('/dashboard')
     }
   }, [userIsDeveloper, navigate])
-
-  async function handleSubmit(e, which) {
-    e.preventDefault()
-    const val = which === 1 ? email : email2
-    if (!val || !val.includes('@')) return
-
-    setLoading(true)
-    setError('')
-
-    const { error: err } = await supabase
-      .from('waitlist')
-      .insert([{ email: val.toLowerCase().trim(), source: 'landing_page' }])
-
-    setLoading(false)
-
-    if (err) {
-      if (err.code === '23505') {
-        which === 1 ? setSubmitted(true) : setSubmitted2(true)
-      } else {
-        setError('Something went wrong. Please try again.')
-        console.error('Supabase error:', err)
-      }
-    } else {
-      which === 1 ? setSubmitted(true) : setSubmitted2(true)
-      which === 1 ? setEmail('') : setEmail2('')
-    }
-  }
 
   return (
     <div>
@@ -90,7 +57,7 @@ export default function Home() {
         </p>
 
         {userHasAccess ? (
-          /* Homeowner with active access — show continue CTA */
+          /* Homeowner with active access - show continue CTA */
           <div className="flex flex-col items-center gap-4">
             <div className="bg-green-50 border border-green-100 rounded-xl px-6 py-4 text-center max-w-md mx-auto">
               <div className="text-sm font-semibold text-green-800 mb-1">✓ Your Parcoria access is active</div>
@@ -114,50 +81,31 @@ export default function Home() {
               Different device? Restore access ↗
             </Link>
           </div>
-        ) : submitted ? (
-          <div className="inline-flex items-center gap-2 text-green-700 bg-green-50 border border-green-100 rounded-lg px-5 py-3 text-sm font-medium">
-            ✓ You're on the list — we'll be in touch soon
-          </div>
         ) : (
-          <form onSubmit={e => handleSubmit(e, 1)} className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-              required
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-5 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors whitespace-nowrap disabled:opacity-50"
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-2">
+            <Link
+              to="/pricing"
+              className="px-6 py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors"
             >
-              {loading ? 'Saving...' : 'Get early access'}
-            </button>
-          </form>
+              Get started - from $79 ↗
+            </Link>
+            <Link
+              to="/wizard"
+              className="px-6 py-3 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:border-gray-300 transition-colors"
+            >
+              Try the wizard free
+            </Link>
+          </div>
         )}
 
-        {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
-
         {!userHasAccess && (
-          <>
-            <p className="text-xs text-gray-400 mt-3">Free during beta · Research Triangle + Wake County</p>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/wizard"
-                className="inline-flex items-center gap-2 text-sm text-brand-600 font-medium hover:text-brand-700 transition-colors"
-              >
-                Try the permit wizard now
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <Link to="/sample" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-                See a sample roadmap ↗
-              </Link>
-            </div>
-          </>
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <Link to="/sample" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+              See a sample roadmap ↗
+            </Link>
+            <span className="text-xs text-gray-200">|</span>
+            <span className="text-xs text-gray-400">Research Triangle + Wake County</span>
+          </div>
         )}
       </section>
 
@@ -219,7 +167,7 @@ export default function Home() {
 
         {submitted2 ? (
           <div className="inline-flex items-center gap-2 text-green-700 bg-green-50 border border-green-100 rounded-lg px-5 py-3 text-sm font-medium mb-4">
-            ✓ You're on the list — we'll be in touch soon
+            ✓ You're on the list - we'll be in touch soon
           </div>
         ) : (
           <form onSubmit={e => handleSubmit(e, 2)} className="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto mb-4">
