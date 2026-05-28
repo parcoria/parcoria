@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getUser } from '../lib/supabase'
+import { getUser, sendMagicLink } from '../lib/supabase'
 import { getProfile, saveProfile, getExpiringCredentials, LICENSE_TYPES, JURISDICTIONS_LIST } from '../lib/contractor-profile'
 import { getJobs, createJob, updateJob, deleteJob, JOB_STATUSES, PERMIT_STATUSES, STATUS_COLORS } from '../lib/client-jobs'
 import { TEMPLATES, fillTemplate } from '../data/client-templates'
@@ -52,6 +52,10 @@ export default function ContractorMode() {
   const [copiedTemplate, setCopiedTemplate] = useState(false)
 
   const [error, setError] = useState('')
+  const [needsAuth, setNeedsAuth] = useState(false)
+  const [magicEmail, setMagicEmail] = useState('')
+  const [magicSent, setMagicSent] = useState(false)
+  const [magicLoading, setMagicLoading] = useState(false)
 
   useEffect(() => {
     // Gate by localStorage token first — no Supabase session needed to view the page
@@ -184,7 +188,12 @@ export default function ContractorMode() {
       setEditingJob(null)
       setJobForm(EMPTY_JOB)
     } catch (err) {
-      setError(`Could not save job: ${err.message}`)
+      if (err.message === 'Not authenticated') {
+        setNeedsAuth(true)
+        setError('')
+      } else {
+        setError(`Could not save job: ${err.message}`)
+      }
     } finally {
       setSavingJob(false)
     }
@@ -229,13 +238,26 @@ export default function ContractorMode() {
     })
   }
 
+  async function handleMagicLink() {
+    if (!magicEmail) return
+    setMagicLoading(true)
+    try {
+      await sendMagicLink(magicEmail)
+      setMagicSent(true)
+    } catch (err) {
+      setError(`Could not send login link: ${err.message}`)
+    } finally {
+      setMagicLoading(false)
+    }
+  }
+
   const warnings = profile ? getExpiringCredentials(profile) : []
   const activeJobs = jobs.filter(j => j.status !== 'complete')
   const filledTemplate = selectedTemplate ? fillTemplate(selectedTemplate, templateVars) : null
 
   if (loading) return (
     <div className="max-w-5xl mx-auto px-4 py-20 text-center">
-      <div className="animate-pulse text-gray-400 text-sm">Loading Contractor Mode...</div>
+      <div className="animate-pulse text-gray-400 text-sm">Loading...</div>
     </div>
   )
 
@@ -245,7 +267,7 @@ export default function ContractorMode() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Contractor Mode</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Jobs</h1>
           <p className="text-sm text-gray-400 mt-0.5">{user?.email} · {activeJobs.length} active job{activeJobs.length !== 1 ? 's' : ''}</p>
         </div>
         {tab === 'Dashboard' && (
@@ -269,6 +291,33 @@ export default function ContractorMode() {
               <div key={i} className="text-xs text-amber-700">{w.label} expires {new Date(w.expires).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
             ))}
           </div>
+        </div>
+      )}
+
+      {needsAuth && (
+        <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 mb-5">
+          <div className="text-sm font-semibold text-brand-900 mb-1">Sign in to save your jobs</div>
+          <div className="text-xs text-brand-700 mb-3 leading-relaxed">
+            Enter your email and we'll send you a magic link. Your jobs and profile are saved to your account.
+          </div>
+          {magicSent ? (
+            <div className="text-sm text-green-700 font-medium">Check your email for the login link.</div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={magicEmail}
+                onChange={e => setMagicEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleMagicLink()}
+                placeholder="your@email.com"
+                className="flex-1 border border-brand-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              <button onClick={handleMagicLink} disabled={magicLoading}
+                className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50">
+                {magicLoading ? 'Sending...' : 'Send link'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
