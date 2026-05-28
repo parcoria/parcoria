@@ -123,7 +123,7 @@ export default function ProjectBrief() {
       {/* Action bar - hidden on print */}
       <div className="flex items-center justify-between gap-3 mb-8 print:hidden">
         <Link to="/wizard" className="text-xs text-gray-400 hover:text-gray-600">
-          <- Back to wizard
+          &larr; Back to wizard
         </Link>
         <div className="flex items-center gap-2">
           <button onClick={copyLink}
