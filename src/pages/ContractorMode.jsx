@@ -4,7 +4,7 @@ import { getUser } from '../lib/supabase'
 import { getProfile, saveProfile, getExpiringCredentials, LICENSE_TYPES, JURISDICTIONS_LIST } from '../lib/contractor-profile'
 import { getJobs, createJob, updateJob, deleteJob, JOB_STATUSES, PERMIT_STATUSES, STATUS_COLORS } from '../lib/client-jobs'
 import { TEMPLATES, fillTemplate } from '../data/client-templates'
-import { hasAccess } from '../lib/access'
+import { hasAccess, isContractor } from '../lib/access'
 
 const JUR_LABELS = {
   raleigh: 'Raleigh', durham: 'Durham', chapelhill: 'Chapel Hill',
@@ -54,14 +54,20 @@ export default function ContractorMode() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    // Gate by localStorage token first — no Supabase session needed to view the page
+    if (!isContractor() && !hasAccess()) {
+      navigate('/pricing')
+      return
+    }
     loadAll()
   }, [])
 
   async function loadAll() {
     setLoading(true)
     try {
+      // Supabase session is optional — needed for saving jobs/profile
+      // Page still loads without it using localStorage token
       const currentUser = await getUser()
-      if (!currentUser) { navigate('/contractor-login'); return }
       setUser(currentUser)
 
       const [profileData, jobsData] = await Promise.all([
@@ -369,7 +375,7 @@ export default function ContractorMode() {
               <div className="text-4xl mb-4">🏗️</div>
               <div className="text-sm font-semibold text-gray-800 mb-2">No client jobs yet</div>
               <div className="text-xs text-gray-400 mb-6 max-w-sm mx-auto leading-relaxed">
-                Add your active permit jobs to track status, next actions, and send client updates — all in one place.
+                Add your active permit jobs to track status, next actions, and send client updates - all in one place.
               </div>
               <button onClick={startNewJob}
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700">
@@ -434,7 +440,7 @@ export default function ContractorMode() {
       {tab === 'My Profile' && (
         <div>
           <div className="bg-brand-50 border border-brand-100 rounded-xl px-4 py-3 mb-6 text-xs text-brand-700 leading-relaxed">
-            Set up your profile once. Your license number, insurance info, and business details will be available to reference on every permit application — no more retyping the same information.
+            Set up your profile once. Your license number, insurance info, and business details will be available to reference on every permit application - no more retyping the same information.
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
@@ -521,7 +527,7 @@ export default function ContractorMode() {
           {/* Checklist preview */}
           {profile && (
             <div className="mt-6 bg-gray-50 rounded-xl p-5">
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Your application info — ready to reference</div>
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Your application info - ready to reference</div>
               {[
                 { label: 'Business name', value: profile.business_name },
                 { label: 'License type', value: LICENSE_TYPES[profile.license_type] },
