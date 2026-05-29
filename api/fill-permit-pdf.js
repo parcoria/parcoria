@@ -144,9 +144,23 @@ export default async function handler(req, res) {
   if (typeof body === 'string') {
     try { body = JSON.parse(body) } catch { body = {} }
   }
+  body = body || {}
 
-  const { form, permitType = 'building', totalCost = 0 } = body || {}
-  if (!form) return res.status(400).json({ error: 'Form data required' })
+  console.log('fill-permit-pdf body keys:', Object.keys(body))
+  console.log('fill-permit-pdf form keys:', body.form ? Object.keys(body.form) : 'no form key, checking flat')
+
+  // Accept both { form: {...}, permitType, totalCost } and flat { jobAddress, ..., permitType, totalCost }
+  let form = body.form
+  if (!form && body.jobAddress !== undefined) {
+    form = body
+  }
+  const permitType = body.permitType || 'building'
+  const totalCost = body.totalCost || 0
+
+  if (!form || Object.keys(form).length === 0) {
+    console.error('No form data found. Body:', JSON.stringify(body).slice(0, 200))
+    return res.status(400).json({ error: 'Form data required', received: Object.keys(body) })
+  }
 
   const jurisdiction = (form.jurisdiction || 'durham').toLowerCase()
   const jurConfig = JURISDICTION_CONFIG[jurisdiction]
