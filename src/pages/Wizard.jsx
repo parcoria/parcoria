@@ -261,23 +261,6 @@ export default function Wizard() {
         />
       )}
 
-      {/* ── Step 1 - Jurisdiction (REPLACED by AddressDetector) ── */}
-      {false && step === 99 && (
-        <div>
-          <p className="text-xs text-gray-400 mb-1">Step 1 of 6</p>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Where are you building?</h2>
-          <p className="text-sm text-gray-500 mb-6">Select your jurisdiction. Each city has different permit portals, requirements, and review timelines.</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-6">
-            {JURISDICTIONS.map(j => (
-              <button key={j.id} onClick={() => update('jurisdiction', j.id)}
-                className={`text-left border rounded-xl p-4 transition-all ${state.jurisdiction === j.id ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
-                <span className={`text-xs px-2 py-0.5 rounded-full border font-medium inline-block mb-2 ${j.badgeColor}`}>{j.badge}</span>
-                <div className={`text-base font-semibold mb-1 ${state.jurisdiction === j.id ? 'text-brand-700' : 'text-gray-900'}`}>{j.name}</div>
-                <div className={`text-xs mb-1 font-medium ${state.jurisdiction === j.id ? 'text-brand-600' : 'text-gray-500'}`}>{j.county}</div>
-                <div className={`text-xs leading-relaxed ${state.jurisdiction === j.id ? 'text-brand-600' : 'text-gray-400'}`}>{j.desc}</div>
-              </button>
-            ))}
           </div>
 
           {isDurham && (
@@ -324,18 +307,6 @@ export default function Wizard() {
         </div>
       )}
 
-      {/* ── Step 2 - Address (REPLACED by AddressDetector) ── */}
-      {false && step === 98 && (
-        <div>
-          <p className="text-xs text-gray-400 mb-1">Step 2 of 6</p>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Where is your property?</h2>
-          <p className="text-sm text-gray-500 mb-6">We identify your zoning, jurisdiction overlays, and lot-level conditions before anything else.</p>
-
-          <input
-            className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 mb-3"
-            placeholder={`e.g. 123 Main St, ${cityName}, NC`}
-            value={state.addr}
-            onChange={e => update('addr', e.target.value)}
           />
           <div className="bg-gray-50 rounded-lg px-4 py-3 text-xs text-gray-500 mb-5">
             Enter your {cityName} address. We will run a live FEMA flood zone check on the next screen.

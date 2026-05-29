@@ -125,7 +125,12 @@ export default function ContractorMode() {
       setProfileSaved(true)
       setTimeout(() => setProfileSaved(false), 3000)
     } catch (err) {
-      setError(`Could not save profile: ${err.message}`)
+      if (err.message === 'Not authenticated') {
+        setNeedsAuth(true)
+        setError('')
+      } else {
+        setError(`Could not save profile: ${err.message}`)
+      }
     } finally {
       setSavingProfile(false)
     }

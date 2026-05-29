@@ -36,6 +36,10 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(false)
   const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState('projects')
+  const [devProfile, setDevProfile] = useState({ name: '', company: '', phone: '', email: '' })
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [profileSaved, setProfileSaved] = useState(false)
 
   useEffect(() => {
     // Check for existing session
@@ -71,6 +75,9 @@ export default function Dashboard() {
     try {
       const data = await getProjects()
       setProjects(data)
+      // Load developer profile
+      const { data: prof } = await supabase.from('developer_profiles').select('*').eq('user_id', currentUser.id).single()
+      if (prof) setDevProfile({ name: prof.name || '', company: prof.company || '', phone: prof.phone || '', email: prof.email || '' })
     } catch (err) {
       console.error('Load projects error:', err)
     } finally {
@@ -143,7 +150,7 @@ export default function Dashboard() {
     )
   }
 
-  // Not authenticated — show magic link login
+  // Not authenticated - show magic link login
   if (authState === 'unauthenticated') {
     return (
       <div className="max-w-md mx-auto px-4 sm:px-6 py-20">
@@ -153,7 +160,7 @@ export default function Dashboard() {
           </div>
           <h1 className="text-xl font-semibold text-gray-900 mb-2">One more step</h1>
           <p className="text-sm text-gray-500 leading-relaxed">
-            Enter the email you used when you signed up for Parcoria. We'll send you a secure login link to access your projects — no password needed.
+            Enter the email you used when you signed up for Parcoria. We'll send you a secure login link to access your projects - no password needed.
           </p>
         </div>
 
@@ -205,7 +212,27 @@ export default function Dashboard() {
     )
   }
 
-  // Authenticated — show dashboard
+  // Authenticated - show dashboard
+  async function handleSaveDevProfile() {
+    setSavingProfile(true)
+    try {
+      await supabase.from('developer_profiles').upsert({
+        user_id: user.id,
+        name: devProfile.name,
+        company: devProfile.company,
+        phone: devProfile.phone,
+        email: devProfile.email,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' })
+      setProfileSaved(true)
+      setTimeout(() => setProfileSaved(false), 3000)
+    } catch (err) {
+      setError('Could not save profile')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
 
@@ -272,7 +299,7 @@ export default function Dashboard() {
         <div className="space-y-3">
           {projects.map(project => (
             <div key={project.id} className="bg-white border border-gray-100 rounded-xl p-4 hover:border-gray-200 transition-colors">
-              {/* Row 1 — title + status + actions always locked to same line */}
+              {/* Row 1 - title + status + actions always locked to same line */}
               <div className="flex items-center justify-between gap-3 mb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   <h3 className="text-sm font-semibold text-gray-900 truncate">
@@ -321,7 +348,7 @@ export default function Dashboard() {
                   </button>
                 </div>
               </div>
-              {/* Row 2 — metadata: jurisdiction, type, address, stats */}
+              {/* Row 2 - metadata: jurisdiction, type, address, stats */}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${JUR_COLORS[project.jurisdiction] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
                   {JUR_LABELS[project.jurisdiction] || project.jurisdiction}
