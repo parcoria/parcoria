@@ -99,7 +99,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: false,
       tier: null,
-      message: 'No completed payment found for this email address. Please check the email used at checkout, or contact hello@parcoria.com.',
+      message: 'No completed payment found for this email address. Please check the email used at checkout, or contact support@parcoria.com.',
     })
 
   } catch (err) {

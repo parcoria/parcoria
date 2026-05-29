@@ -24,7 +24,7 @@ const FOOTER_LINKS = {
     { label: 'Wake Forest · Morrisville · Garner', to: '/wizard' },
   ],
   Company: [
-    { label: 'Contact', href: 'mailto:hello@parcoria.com' },
+    { label: 'Contact', href: 'mailto:support@parcoria.com' },
     { label: 'Developer support', href: 'mailto:developer@parcoria.com' },
     { label: 'Restore access', to: '/restore' },
   ],

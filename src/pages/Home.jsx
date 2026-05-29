@@ -87,7 +87,9 @@ export default function Home() {
 
         {!userHasAccess && (
           <div className="mt-4 flex items-center justify-center gap-4">
-            <span className="text-xs text-gray-400">Research Triangle + Wake County</span>
+            <Link to="/waitlist" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+              Not ready to pay? Join the waitlist ↗
+            </Link>
           </div>
         )}
       </section>
@@ -159,7 +161,7 @@ export default function Home() {
           <Link to="/wizard" className="px-6 py-3 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:border-gray-300 transition-colors">
             Try the wizard free
           </Link>
-          <a href="mailto:hello@parcoria.com" className="px-6 py-3 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:border-gray-300 transition-colors">
+          <a href="mailto:support@parcoria.com" className="px-6 py-3 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:border-gray-300 transition-colors">
             Get in touch
           </a>
         </div>

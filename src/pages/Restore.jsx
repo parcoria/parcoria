@@ -39,7 +39,7 @@ export default function Restore() {
     } catch (err) {
       console.error('Restore error:', err)
       setStatus('error')
-      setMessage('Something went wrong. Please try again or email hello@parcoria.com.')
+      setMessage('Something went wrong. Please try again or email support@parcoria.com.')
     }
   }
 
@@ -117,8 +117,8 @@ export default function Restore() {
       <div className="mt-6 text-center space-y-2">
         <p className="text-xs text-gray-400">
           Can't find your email?{' '}
-          <a href="mailto:hello@parcoria.com?subject=Access restore request" className="text-brand-600 hover:text-brand-700">
-            Email us at hello@parcoria.com
+          <a href="mailto:support@parcoria.com?subject=Access restore request" className="text-brand-600 hover:text-brand-700">
+            Email us at support@parcoria.com
           </a>
         </p>
         <Link to="/pricing" className="block text-xs text-gray-400 hover:text-gray-600">

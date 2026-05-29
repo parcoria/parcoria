@@ -20,6 +20,7 @@ import SampleRoadmap from './pages/SampleRoadmap'
 import ProjectBrief from './pages/ProjectBrief'
 import ApplicationPrefill from './pages/ApplicationPrefill'
 import Guide from './pages/Guide'
+import Waitlist from './pages/Waitlist'
 
 export default function App() {
   return (
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/brief" element={<ProjectBrief />} />
             <Route path="/apply" element={<ApplicationPrefill />} />
             <Route path="/learn/:slug" element={<Guide />} />
+            <Route path="/waitlist" element={<Waitlist />} />
           </Routes>
         </main>
         <Footer />

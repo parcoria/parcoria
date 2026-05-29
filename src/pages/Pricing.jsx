@@ -259,6 +259,20 @@ export default function Pricing() {
 
       {error && <p className="text-xs text-red-500 text-center mb-6">{error}</p>}
 
+      <div className="text-center mb-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+        <Link to="/wizard" className="text-sm text-brand-600 hover:text-brand-700 font-medium">
+          Try the permit wizard free first ↗
+        </Link>
+        <Link to="/restore" className="text-xs text-gray-400 hover:text-gray-600">
+          Already paid? Restore your access ↗
+        </Link>
+        {!hasAccess() && (
+          <Link to="/waitlist" className="text-xs text-gray-400 hover:text-gray-600">
+            Not ready yet? Join the waitlist ↗
+          </Link>
+        )}
+      </div>
+
       {/* FAQ */}
       <div className="max-w-2xl mx-auto">
         <h3 className="text-base font-semibold text-gray-900 mb-4 text-center">Common questions</h3>
@@ -268,22 +282,13 @@ export default function Pricing() {
           { q: 'Can I cancel my Developer subscription?', a: 'Yes — cancel anytime from your Stripe billing portal. You retain access until the end of your current billing period.' },
           { q: 'What happens to my projects if I cancel Developer?', a: 'Your project data is retained for 90 days after cancellation. You can export or reactivate within that window.' },
           { q: 'Does the Homeowner AI Concierge really expire after 30 days?', a: 'Yes. Most permit processes resolve within 30 days. If you need longer, purchase a second project or upgrade to Developer.' },
-          { q: 'Can I get a refund?', a: 'Homeowner: yes within 7 days if unused. Developer: prorated refund within 7 days of first charge. Contact hello@parcoria.com.' },
+          { q: 'Can I get a refund?', a: 'Homeowner: yes within 7 days if unused. Developer: prorated refund within 7 days of first charge. Contact support@parcoria.com.' },
         ].map((item, i) => (
           <div key={i} className="border-b border-gray-100 py-4">
             <div className="text-sm font-medium text-gray-900 mb-1.5">{item.q}</div>
             <div className="text-sm text-gray-500 leading-relaxed">{item.a}</div>
           </div>
         ))}
-      </div>
-
-      <div className="text-center mt-10 flex flex-col gap-3 items-center">
-        <Link to="/wizard" className="text-sm text-brand-600 hover:text-brand-700 font-medium">
-          Try the permit wizard free first ↗
-        </Link>
-        <Link to="/restore" className="text-xs text-gray-400 hover:text-gray-600">
-          Already paid? Restore your access ↗
-        </Link>
       </div>
     </div>
   )

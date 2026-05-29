@@ -109,7 +109,7 @@ export default function Success() {
       </div>
 
       <p className="text-xs text-gray-400 mt-8">
-        Questions? Email <a href="mailto:hello@parcoria.com" className="text-brand-600">hello@parcoria.com</a>
+        Questions? Email <a href="mailto:support@parcoria.com" className="text-brand-600">support@parcoria.com</a>
       </p>
     </div>
   )
