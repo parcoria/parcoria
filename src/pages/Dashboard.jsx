@@ -387,6 +387,15 @@ export default function Dashboard() {
                   >
                     🔒 Vault
                   </Link>
+                  {project.jurisdiction === 'durham' && (
+                    <Link
+                      to={`/apply?a=${encodeURIComponent(project.address || '')}&p=${project.project_type || 'sfh'}&s=${project.flags?.septic ? '1' : '0'}`}
+                      className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      title="Pre-fill Durham permit application"
+                    >
+                      📋 Pre-fill app
+                    </Link>
+                  )}
                   <Link
                     to={`/wizard?project=${project.id}`}
                     className="text-xs px-3 py-1.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"

@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { getProfile } from '../lib/contractor-profile'
+import { getMyContractors, TRADE_TYPES } from '../lib/contractors'
 import { getUser } from '../lib/supabase'
 
 const PROJ_DESCRIPTIONS = {
@@ -30,6 +31,7 @@ const COST_FIELDS = [
 export default function ApplicationPrefill() {
   const [params] = useSearchParams()
   const [profile, setProfile] = useState(null)
+  const [myContractors, setMyContractors] = useState([])
   const [loading, setLoading] = useState(true)
   const [printed, setPrinted] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -93,7 +95,7 @@ export default function ApplicationPrefill() {
     try {
       const user = await getUser()
       if (user) {
-        const p = await getProfile()
+        const [p, contractors] = await Promise.all([getProfile(), getMyContractors()])
         if (p) {
           setProfile(p)
           // Pre-fill contractor fields from profile
@@ -110,11 +112,31 @@ export default function ApplicationPrefill() {
             signerName: p.business_name || '',
           }))
         }
+        setMyContractors(contractors || [])
       }
     } catch {}
     finally {
       setLoading(false)
     }
+  }
+
+  function fillFromContractor(contractorId) {
+    if (!contractorId) return
+    const c = myContractors.find(x => x.id === contractorId)
+    if (!c) return
+    // Parse address if stored as "Street, City, ZIP"
+    const parts = (c.address || '').split(',')
+    setForm(f => ({
+      ...f,
+      contractorName: c.company || c.name || '',
+      contractorLicense: c.license_number || '',
+      contractorEmail: c.email || '',
+      contractorPhone: c.phone || '',
+      contractorAddress: parts[0]?.trim() || '',
+      contractorCity: parts[1]?.trim() || '',
+      contractorZip: parts[2]?.trim() || '',
+      signerName: f.signerName || c.company || c.name || '',
+    }))
   }
 
   function updateForm(key, val) {
@@ -245,6 +267,28 @@ export default function ApplicationPrefill() {
         <section>
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Contractor Information</h2>
           <div className="bg-white border border-gray-100 rounded-xl p-5">
+            {myContractors.length > 0 && (
+              <div className="mb-4 pb-4 border-b border-gray-100">
+                <label className="text-xs font-medium text-gray-500 block mb-1.5">
+                  Quick-fill from my contractor network
+                </label>
+                <select
+                  defaultValue=""
+                  onChange={e => fillFromContractor(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-brand-50 border-brand-200"
+                >
+                  <option value="" disabled>Select a contractor to auto-fill fields below...</option>
+                  {myContractors.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.company ? `${c.company} (${c.name})` : c.name}
+                      {c.trade_type ? ` — ${TRADE_TYPES[c.trade_type] || c.trade_type}` : ''}
+                      {c.license_number ? ` · Lic. ${c.license_number}` : ''}
+                    </option>
+                  ))}
+                </select>
+                <div className="text-xs text-gray-400 mt-1">Fields below will be filled automatically. Edit anything as needed.</div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <Field label="Contractor / business name *" value={form.contractorName} onChange={v => updateForm('contractorName', v)} placeholder="Smith Construction LLC" />
               <Field label="NC Contractor license no. *" value={form.contractorLicense} onChange={v => updateForm('contractorLicense', v)} placeholder="78234" half />

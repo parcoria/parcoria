@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { getUser, sendMagicLink } from '../lib/supabase'
 import { getProfile, saveProfile, getExpiringCredentials, LICENSE_TYPES, JURISDICTIONS_LIST } from '../lib/contractor-profile'
 import { getJobs, createJob, updateJob, deleteJob, JOB_STATUSES } from '../lib/client-jobs'
@@ -455,6 +455,17 @@ export default function ContractorMode() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                       </button>
+                      {job.jurisdiction === 'durham' && (
+                        <Link
+                          to={`/apply?a=${encodeURIComponent(job.address || '')}&p=${job.project_type || 'sfh'}&s=0`}
+                          className="p-2 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50 transition-colors"
+                          title="Pre-fill Durham permit application"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </Link>
+                      )}
                       <button onClick={() => startEditJob(job)}
                         className="p-2 text-gray-400 hover:text-brand-600 rounded-lg hover:bg-brand-50 transition-colors" title="Edit">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
