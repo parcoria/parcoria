@@ -1,493 +1,646 @@
 // src/lib/permit-pdf.js
-// Generates filled Durham permit application PDFs using jsPDF
-// Supports: Building (Doc.983), Electrical, Plumbing, Mechanical
+// Generates Durham permit application PDFs that mirror the official Doc.983 Rev.08.01.2025 layout
+// Fields, section order, Yes/No checkboxes, and footer match the official Durham form exactly
 
 import { jsPDF } from 'jspdf'
 
-// ─── Layout constants ────────────────────────────────────────────────────────
+// ─── Layout constants (letter, portrait, inches → mm) ───────────────────────
+const PW = 215.9   // 8.5in
+const PH = 279.4   // 11in
+const ML = 14      // left margin
+const MR = 14      // right margin
+const CW = PW - ML - MR  // content width = 187.9mm
+const FS_LABEL = 7.5
+const FS_VALUE = 9
+const FS_SMALL = 6.5
+const ROW_H = 7    // standard field row height
+const SECTION_H = 6.5
 
-const PAGE_W = 216   // 8.5in in mm
-const PAGE_H = 279   // 11in in mm
-const MARGIN = 14
-const COL = PAGE_W - MARGIN * 2
-const LINE = 5.5     // line height
-const SECTION_GAP = 4
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function doc(pdf) {
-  // Chainable helpers scoped to a pdf instance
-  let y = MARGIN
-
-  const cursor = () => y
-  const move = (n) => { y += n }
-  const reset = () => { y = MARGIN }
-
-  function checkPage(needed = 20) {
-    if (y + needed > PAGE_H - MARGIN) {
-      pdf.addPage()
-      y = MARGIN
-    }
-  }
-
-  function header(title, subtitle, docRef) {
-    // Dark header band
-    pdf.setFillColor(30, 30, 30)
-    pdf.rect(0, 0, PAGE_W, 22, 'F')
-    pdf.setTextColor(255, 255, 255)
-    pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(11)
-    pdf.text(title, MARGIN, 9)
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(7.5)
-    pdf.text(subtitle, MARGIN, 14.5)
-    if (docRef) {
-      pdf.setFontSize(6.5)
-      pdf.text(docRef, PAGE_W - MARGIN, 14.5, { align: 'right' })
-    }
-    pdf.setTextColor(0, 0, 0)
-    y = 28
-  }
-
-  function sectionTitle(text) {
-    checkPage(14)
-    y += SECTION_GAP
-    pdf.setFillColor(245, 245, 245)
-    pdf.rect(MARGIN, y, COL, 6.5, 'F')
-    pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(7)
-    pdf.setTextColor(80, 80, 80)
-    pdf.text(text.toUpperCase(), MARGIN + 2, y + 4.5)
-    pdf.setTextColor(0, 0, 0)
-    y += 8
-  }
-
-  function row(label, value, opts = {}) {
-    checkPage(12)
-    const halfWidth = opts.half ? COL / 2 - 2 : COL
-    const xOffset = opts.xOffset || 0
-
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(6.5)
-    pdf.setTextColor(100, 100, 100)
-    pdf.text(label, MARGIN + xOffset, y)
-
-    // Field underline
-    const fieldX = MARGIN + xOffset
-    const fieldWidth = halfWidth
-    pdf.setDrawColor(200, 200, 200)
-    pdf.line(fieldX, y + 4.5, fieldX + fieldWidth, y + 4.5)
-
-    // Value
-    if (value) {
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(9)
-      pdf.setTextColor(0, 0, 0)
-      const maxWidth = fieldWidth - 2
-      const lines = pdf.splitTextToSize(String(value), maxWidth)
-      pdf.text(lines[0], fieldX + 1, y + 4)
-    }
-    pdf.setTextColor(0, 0, 0)
-
-    if (!opts.noAdvance) y += LINE + 2
-  }
-
-  function twoCol(label1, val1, label2, val2) {
-    checkPage(12)
-    const half = (COL - 4) / 2
-    // Left
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(6.5)
-    pdf.setTextColor(100, 100, 100)
-    pdf.text(label1, MARGIN, y)
-    pdf.setDrawColor(200, 200, 200)
-    pdf.line(MARGIN, y + 4.5, MARGIN + half, y + 4.5)
-    if (val1) {
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(9)
-      pdf.setTextColor(0, 0, 0)
-      pdf.text(pdf.splitTextToSize(String(val1), half - 2)[0], MARGIN + 1, y + 4)
-    }
-    // Right
-    const rx = MARGIN + half + 4
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(6.5)
-    pdf.setTextColor(100, 100, 100)
-    pdf.text(label2, rx, y)
-    pdf.setDrawColor(200, 200, 200)
-    pdf.line(rx, y + 4.5, rx + half, y + 4.5)
-    if (val2) {
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(9)
-      pdf.setTextColor(0, 0, 0)
-      pdf.text(pdf.splitTextToSize(String(val2), half - 2)[0], rx + 1, y + 4)
-    }
-    pdf.setTextColor(0, 0, 0)
-    y += LINE + 2
-  }
-
-  function threeCol(items) {
-    // items: [{label, value}]
-    checkPage(12)
-    const w = (COL - 8) / 3
-    items.forEach((item, i) => {
-      const x = MARGIN + i * (w + 4)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(6.5)
-      pdf.setTextColor(100, 100, 100)
-      pdf.text(item.label, x, y)
-      pdf.setDrawColor(200, 200, 200)
-      pdf.line(x, y + 4.5, x + w, y + 4.5)
-      if (item.value) {
-        pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(9)
-        pdf.setTextColor(0, 0, 0)
-        pdf.text(pdf.splitTextToSize(String(item.value), w - 2)[0], x + 1, y + 4)
-      }
-    })
-    pdf.setTextColor(0, 0, 0)
-    y += LINE + 2
-  }
-
-  function yesNoRow(label, checked) {
-    checkPage(10)
-    const boxSize = 3.5
-    // Yes box
-    const yesX = PAGE_W - MARGIN - 30
-    pdf.setDrawColor(150, 150, 150)
-    pdf.rect(yesX, y - 3, boxSize, boxSize)
-    if (checked === true) {
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(8)
-      pdf.setTextColor(0, 0, 0)
-      pdf.text('✓', yesX + 0.3, y)
-    }
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(7)
-    pdf.setTextColor(80, 80, 80)
-    pdf.text('Yes', yesX + boxSize + 1.5, y)
-    // No box
-    const noX = yesX + 14
-    pdf.setDrawColor(150, 150, 150)
-    pdf.rect(noX, y - 3, boxSize, boxSize)
-    if (checked === false) {
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(8)
-      pdf.setTextColor(0, 0, 0)
-      pdf.text('✓', noX + 0.3, y)
-    }
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(7)
-    pdf.setTextColor(80, 80, 80)
-    pdf.text('No', noX + boxSize + 1.5, y)
-    // Label
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(7.5)
-    pdf.setTextColor(30, 30, 30)
-    const wrapped = pdf.splitTextToSize(label, COL - 40)
-    pdf.text(wrapped[0], MARGIN, y)
-    pdf.setTextColor(0, 0, 0)
-    y += LINE + 1
-  }
-
-  function costRow(label, value, isTotal = false) {
-    checkPage(8)
-    if (isTotal) {
-      pdf.setFillColor(240, 240, 240)
-      pdf.rect(MARGIN, y - 3.5, COL, 6.5, 'F')
-    }
-    pdf.setFont('helvetica', isTotal ? 'bold' : 'normal')
-    pdf.setFontSize(8)
-    pdf.setTextColor(isTotal ? 30 : 60, isTotal ? 30 : 60, isTotal ? 30 : 60)
-    pdf.text(label, MARGIN + 2, y)
-    const valStr = value || (isTotal ? '—' : '$0.00')
-    pdf.setTextColor(0, 0, 0)
-    pdf.text(valStr, PAGE_W - MARGIN - 2, y, { align: 'right' })
-    y += LINE
-  }
-
-  function scopeList(items) {
-    checkPage(10)
-    items.forEach(item => {
-      checkPage(7)
-      const boxSize = 3
-      pdf.setDrawColor(150, 150, 150)
-      pdf.rect(MARGIN, y - 2.5, boxSize, boxSize, 'S')
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(8)
-      pdf.text('✓', MARGIN + 0.2, y)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(8)
-      pdf.setTextColor(30, 30, 30)
-      const wrapped = pdf.splitTextToSize(item, COL - 8)
-      pdf.text(wrapped[0], MARGIN + 5, y)
-      pdf.setTextColor(0, 0, 0)
-      y += LINE
-    })
-  }
-
-  function signatureBlock(signerName, date, disclaimer) {
-    checkPage(40)
-    y += SECTION_GAP
-    // Disclaimer box
-    pdf.setFillColor(250, 250, 250)
-    pdf.setDrawColor(220, 220, 220)
-    const disclaimerLines = pdf.splitTextToSize(disclaimer, COL - 4)
-    const boxH = disclaimerLines.length * 3.8 + 4
-    pdf.rect(MARGIN, y, COL, boxH, 'FD')
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(6.5)
-    pdf.setTextColor(80, 80, 80)
-    pdf.text(disclaimerLines, MARGIN + 2, y + 4)
-    y += boxH + 6
-
-    // Signature fields
-    twoCol('Printed name', signerName, 'Date', date)
-    checkPage(16)
-    y += 2
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(6.5)
-    pdf.setTextColor(100, 100, 100)
-    pdf.text('Signature', MARGIN, y)
-    pdf.setDrawColor(100, 100, 100)
-    pdf.line(MARGIN, y + 8, MARGIN + (COL / 2), y + 8)
-    pdf.setFontSize(6)
-    pdf.setTextColor(150, 150, 150)
-    pdf.text('Sign here', MARGIN + 2, y + 12)
-    pdf.setTextColor(0, 0, 0)
-    y += 18
-  }
-
-  function footer() {
-    const pageCount = pdf.internal.getNumberOfPages()
-    for (let i = 1; i <= pageCount; i++) {
-      pdf.setPage(i)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(6)
-      pdf.setTextColor(150, 150, 150)
-      pdf.text(
-        `Generated by Parcoria · parcoria.com · Durham City-County Building & Safety · Page ${i} of ${pageCount}`,
-        PAGE_W / 2,
-        PAGE_H - 5,
-        { align: 'center' }
-      )
-    }
-  }
-
-  return { cursor, move, reset, checkPage, header, sectionTitle, row, twoCol, threeCol, yesNoRow, costRow, scopeList, signatureBlock, footer }
+function newDoc() {
+  return new jsPDF({ unit: 'mm', format: 'letter', orientation: 'portrait' })
 }
 
-// ─── Building permit PDF ──────────────────────────────────────────────────────
+// Draw a filled black section header band (like the official form)
+function sectionHeader(pdf, y, text) {
+  pdf.setFillColor(0, 0, 0)
+  pdf.rect(ML, y, CW, SECTION_H, 'F')
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(8)
+  pdf.setTextColor(255, 255, 255)
+  pdf.text(text, ML + 2, y + 4.5)
+  pdf.setTextColor(0, 0, 0)
+  return y + SECTION_H
+}
+
+// Draw a field with label on top, underline below, value filled in
+function field(pdf, x, y, w, label, value, opts = {}) {
+  // Label
+  pdf.setFont('helvetica', opts.boldLabel ? 'bold' : 'normal')
+  pdf.setFontSize(FS_LABEL)
+  pdf.setTextColor(30, 30, 30)
+  pdf.text(label, x, y + 3)
+  // Underline
+  pdf.setDrawColor(150, 150, 150)
+  pdf.line(x, y + ROW_H, x + w, y + ROW_H)
+  // Value
+  if (value) {
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(FS_VALUE)
+    pdf.setTextColor(0, 0, 0)
+    const lines = pdf.splitTextToSize(String(value), w - 1)
+    pdf.text(lines[0], x + 0.5, y + ROW_H - 1.5)
+  }
+}
+
+// Inline label: value on same row (no underline, for compact rows)
+function inlineField(pdf, x, y, w, label, value) {
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(FS_LABEL)
+  pdf.setTextColor(30, 30, 30)
+  pdf.text(label, x, y)
+  pdf.setDrawColor(150, 150, 150)
+  pdf.line(x, y + 3.5, x + w, y + 3.5)
+  if (value) {
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(FS_VALUE)
+    const lines = pdf.splitTextToSize(String(value), w - 1)
+    pdf.text(lines[0], x + 0.5, y + 3)
+  }
+}
+
+// Draw a checkbox (square) with optional check mark
+function checkbox(pdf, x, y, checked) {
+  const sz = 3.2
+  pdf.setDrawColor(80, 80, 80)
+  pdf.setLineWidth(0.3)
+  pdf.rect(x, y - sz + 0.5, sz, sz)
+  if (checked) {
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(7)
+    pdf.setTextColor(0, 0, 0)
+    pdf.text('X', x + 0.5, y - 0.2)
+  }
+  pdf.setLineWidth(0.2)
+}
+
+// Yes/No checkbox pair — returns x position after the pair
+function yesNo(pdf, x, y, checked) {
+  // Yes
+  checkbox(pdf, x, y, checked === true)
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(FS_LABEL)
+  pdf.setTextColor(30, 30, 30)
+  pdf.text('Yes', x + 4, y)
+  // No
+  checkbox(pdf, x + 12, y, checked === false)
+  pdf.text('No', x + 16, y)
+  return x + 24
+}
+
+// Cost row with Yes/No checkboxes on left (for trade permits)
+function costRow(pdf, y, label, value, hasCheckbox, isChecked) {
+  if (hasCheckbox) {
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(FS_LABEL)
+    pdf.setTextColor(30, 30, 30)
+    pdf.text(label, ML, y)
+    yesNo(pdf, ML + 38, y, isChecked)
+  } else {
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(FS_LABEL)
+    pdf.setTextColor(30, 30, 30)
+    pdf.text(label, ML, y)
+  }
+  // Dollar amount right-aligned
+  const amt = value || '$________________'
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(FS_VALUE)
+  pdf.setDrawColor(150, 150, 150)
+  pdf.line(ML + CW - 40, y + 0.5, ML + CW, y + 0.5)
+  if (value) pdf.text(value, ML + CW - 1, y, { align: 'right' })
+  return y + ROW_H
+}
+
+// Full-width bordered box for disclaimer text
+function disclaimerBox(pdf, y, text, italic = false) {
+  pdf.setDrawColor(100, 100, 100)
+  pdf.setLineWidth(0.3)
+  const lines = pdf.splitTextToSize(text, CW - 4)
+  const boxH = lines.length * 3.8 + 4
+  pdf.rect(ML, y, CW, boxH)
+  pdf.setFont('helvetica', italic ? 'italic' : 'normal')
+  pdf.setFontSize(FS_SMALL)
+  pdf.setTextColor(30, 30, 30)
+  pdf.text(lines, ML + 2, y + 4)
+  return y + boxH
+}
+
+// Page footer
+function pageFooter(pdf, docRef) {
+  const pages = pdf.internal.getNumberOfPages()
+  for (let i = 1; i <= pages; i++) {
+    pdf.setPage(i)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(6)
+    pdf.setTextColor(120, 120, 120)
+    pdf.text(docRef, PW - MR, PH - 5, { align: 'right' })
+    pdf.text(`Generated by Parcoria · parcoria.com · Page ${i} of ${pages}`, ML, PH - 5)
+  }
+}
+
+// ─── Building Permit (Doc.983) ───────────────────────────────────────────────
 
 function buildBuildingPDF(form, totalCost) {
-  const pdf = new jsPDF({ unit: 'mm', format: 'letter', orientation: 'portrait' })
-  const d = doc(pdf)
+  const pdf = newDoc()
+  let y = ML
 
-  d.header(
-    'City of Durham — Building Permit Application',
-    'City-County Building & Safety Dept · 101 City Hall Plaza, Suite 400, Durham NC 27701 · (919) 560-4144',
-    'Doc.983 Rev.08.01.2025'
+  // ── Official header ──────────────────────────────────────────────────────
+  // Top instruction box
+  pdf.setDrawColor(200, 150, 0)
+  pdf.setFillColor(255, 248, 220)
+  pdf.rect(ML, y, CW, 8, 'FD')
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(8)
+  pdf.setTextColor(180, 100, 0)
+  pdf.text('Download and open PDF file before entering information', PW / 2, y + 3.5, { align: 'center' })
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(6.5)
+  pdf.setTextColor(80, 80, 80)
+  pdf.text('Must be submitted to https://www.durhamnc.gov/467/Dplans', PW / 2, y + 6.5, { align: 'center' })
+  y += 12
+
+  // Title block
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(14)
+  pdf.setTextColor(0, 0, 0)
+  pdf.text('BUILDING PERMIT APPLICATION', PW / 2, y + 5, { align: 'center' })
+  y += 9
+  pdf.setFontSize(9)
+  pdf.text('CITY-COUNTY BUILDING & SAFETY DEPARTMENT', PW / 2, y + 4, { align: 'center' })
+  y += 6
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(8)
+  pdf.text('101 City Hall Plaza, Ground Floor, Suite 400, Durham NC 27701', PW / 2, y + 4, { align: 'center' })
+  y += 5
+  pdf.text('Phone: (919) 560-4144', PW / 2, y + 4, { align: 'center' })
+  y += 8
+
+  // Intro box
+  const introText = 'This form is to be submitted with all non-residential structures and new residential primary structure construction projects, along with either a Non-Residential or Residential checklist as applicable.'
+  y = disclaimerBox(pdf, y, introText) + 3
+
+  // ── PROJECT INFORMATION ──────────────────────────────────────────────────
+  y = sectionHeader(pdf, y, 'PROJECT INFORMATION')
+  y += 1
+
+  // Job Address | Lot/Unit
+  field(pdf, ML, y, CW - 35, 'JOB ADDRESS:', form.jobAddress)
+  field(pdf, ML + CW - 33, y, 33, 'LOT/UNIT:', form.lotUnit)
+  y += ROW_H + 2
+
+  // Site Plan | Subdivision
+  field(pdf, ML, y, 70, 'SITE PLAN NUMBER* (for all nonresidential jobs):', '')
+  field(pdf, ML + 75, y, CW - 75, 'SUBDIVISION:', form.subdivision)
+  y += ROW_H + 2
+
+  // Job Description
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(FS_LABEL)
+  pdf.setTextColor(30, 30, 30)
+  pdf.text('JOB DESCRIPTION (Must align with the checklist, construction plan, and site plan where required):', ML, y + 3)
+  y += 5
+  pdf.setDrawColor(150, 150, 150)
+  pdf.line(ML, y + 2, ML + CW, y + 2)
+  if (form.jobDescription) {
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(FS_VALUE)
+    const lines = pdf.splitTextToSize(form.jobDescription, CW - 2)
+    pdf.text(lines[0], ML + 0.5, y + 1.5)
+  }
+  y += 6
+
+  // ── CONTRACTOR INFORMATION ───────────────────────────────────────────────
+  y = sectionHeader(pdf, y, 'CONTRACTOR INFORMATION')
+  y += 1
+
+  // Contractor | License
+  field(pdf, ML, y, CW - 60, 'CONTRACTOR:', form.contractorName)
+  field(pdf, ML + CW - 58, y, 58, 'STATE CONTRACTOR LICENSE NO.:', form.contractorLicense)
+  y += ROW_H + 2
+
+  // Email | Phone
+  field(pdf, ML, y, CW - 60, 'EMAIL FOR POINT-OF-CONTACT:', form.contractorEmail)
+  field(pdf, ML + CW - 58, y, 58, 'PHONE:', form.contractorPhone)
+  y += ROW_H + 2
+
+  // CID — with asterisk note
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(FS_LABEL)
+  pdf.setTextColor(30, 30, 30)
+  pdf.text('REQUIRED DURHAM CONTRACTOR ID (CID)*:', ML, y + 3)
+  pdf.setDrawColor(150, 150, 150)
+  pdf.line(ML + 70, y + 4, ML + 70 + 50, y + 4)
+  if (form.durhamCID) {
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(FS_VALUE)
+    pdf.text(String(form.durhamCID), ML + 71, y + 3.5)
+  }
+  y += 5
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(6)
+  pdf.setTextColor(80, 80, 80)
+  pdf.text('* To request a CID, email your contact information, including any construction licenses held, to permittechnicians@durhamnc.gov.', ML, y + 3)
+  y += 5
+
+  // Address | City | State | ZIP
+  field(pdf, ML, y, CW - 80, 'ADDRESS:', form.contractorAddress)
+  field(pdf, ML + CW - 78, y, 35, 'CITY:', form.contractorCity)
+  field(pdf, ML + CW - 41, y, 15, 'STATE:', form.contractorState || 'NC')
+  field(pdf, ML + CW - 24, y, 24, 'ZIP CODE:', form.contractorZip)
+  y += ROW_H + 3
+
+  // Architect row
+  field(pdf, ML, y, CW - 80, 'ARCHITECT:', form.architectName)
+  field(pdf, ML + CW - 78, y, 45, 'EMAIL:', form.architectEmail)
+  field(pdf, ML + CW - 31, y, 31, 'PHONE:', form.architectPhone)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW - 80, 'ADDRESS:', '')
+  field(pdf, ML + CW - 78, y, 35, 'CITY:', '')
+  field(pdf, ML + CW - 41, y, 15, 'STATE:', '')
+  field(pdf, ML + CW - 24, y, 24, 'ZIP CODE:', '')
+  y += ROW_H + 3
+
+  // ── PROPERTY OWNER INFORMATION ───────────────────────────────────────────
+  y = sectionHeader(pdf, y, 'PROPERTY OWNER INFORMATION')
+  y += 1
+
+  field(pdf, ML, y, CW, 'PROPERTY OWNER NAME:', form.ownerName)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW - 60, 'EMAIL:', form.ownerEmail)
+  field(pdf, ML + CW - 58, y, 58, 'PHONE:', form.ownerPhone)
+  y += ROW_H + 3
+
+  // ── CONSTRUCTION COSTS ───────────────────────────────────────────────────
+  y = sectionHeader(pdf, y, 'CONSTRUCTION COSTS  Must reflect current market value for labor and materials (Materials obtained for free must be accounted for in the project costs)')
+  y += 2
+
+  y = costRow(pdf, y, 'BUILDING WORK:', form.building, false, null)
+  y += 1
+  y = costRow(pdf, y, 'ELECTRICAL WORK?', form.electrical, true, form.hasElectrical)
+  y += 1
+  y = costRow(pdf, y, 'PLUMBING WORK?', form.plumbing, true, form.hasPlumbing)
+  y += 1
+  y = costRow(pdf, y, 'MECHANICAL WORK?', form.mechanical, true, form.hasMechanical)
+  y += 1
+  y = costRow(pdf, y, 'FIRE PROTECTION WORK?', form.fire, true, form.hasFire)
+  y += 3
+
+  // Total
+  pdf.setDrawColor(0, 0, 0)
+  pdf.setLineWidth(0.5)
+  pdf.line(ML + CW - 60, y, ML + CW, y)
+  pdf.setLineWidth(0.2)
+  y += 1
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(9)
+  pdf.setTextColor(0, 0, 0)
+  pdf.text('TOTAL PROJECT COST', ML + CW - 62, y + 4, { align: 'right' })
+  pdf.text(
+    '$' + (totalCost || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }),
+    ML + CW,
+    y + 4,
+    { align: 'right' }
   )
+  y += 8
 
-  d.sectionTitle('Project Information')
-  d.row('Job Address', form.jobAddress)
-  d.twoCol('Lot / Unit', form.lotUnit, 'Subdivision', form.subdivision)
-  d.row('Description of Work', form.jobDescription)
+  // ── REQUIRED QUESTIONS ───────────────────────────────────────────────────
+  const questions = [
+    { text: 'Does this project exceed 12k sq. ft of land disturbance?', val: form.landDisturbance },
+    { text: 'Does this project include public food service area(s)?', val: form.publicFood },
+    { text: 'Is this a single-family, duplex, or townhome that includes a sprinkler? (If "Yes" check "Yes" for Plumbing above)', val: form.sprinkler },
+    { text: 'Will a sub-slab soil exhaust system be installed?', val: form.subSlab },
+    { text: 'Is this property currently serviced or planned to be serviced by a well or septic tank?  *', val: form.wellSeptic },
+    { text: 'Is an alteration to an existing natural or man-made drainage system proposed as part of this work?  **', val: form.drainage },
+  ]
 
-  d.sectionTitle('Contractor Information')
-  d.twoCol('Contractor / Business Name', form.contractorName, 'NC License No.', form.contractorLicense)
-  d.twoCol('Durham Contractor ID (CID)', form.durhamCID, 'Phone', form.contractorPhone)
-  d.twoCol('Email', form.contractorEmail, 'State', form.contractorState || 'NC')
-  d.row('Address', `${form.contractorAddress}${form.contractorCity ? ', ' + form.contractorCity : ''}${form.contractorZip ? ' ' + form.contractorZip : ''}`)
-
-  if (form.architectName) {
-    d.sectionTitle('Architect / Designer')
-    d.threeCol([
-      { label: 'Name', value: form.architectName },
-      { label: 'Email', value: form.architectEmail },
-      { label: 'Phone', value: form.architectPhone },
-    ])
-  }
-
-  d.sectionTitle('Property Owner')
-  d.twoCol('Owner Name', form.ownerName, 'Phone', form.ownerPhone)
-  d.row('Email', form.ownerEmail)
-
-  d.sectionTitle('Construction Costs (Labor + Materials)')
-  const COST_LABELS = {
-    building: 'Building work', electrical: 'Electrical work',
-    plumbing: 'Plumbing work', mechanical: 'Mechanical / HVAC work', fire: 'Fire protection work',
-  }
-  Object.entries(COST_LABELS).forEach(([key, label]) => {
-    d.costRow(label, form[key] || '$0.00')
+  questions.forEach(q => {
+    const qLines = pdf.splitTextToSize(q.text, CW - 28)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(FS_LABEL)
+    pdf.setTextColor(30, 30, 30)
+    pdf.text(qLines, ML, y + 3)
+    yesNo(pdf, ML + CW - 24, y + 3, q.val)
+    y += Math.max(qLines.length * 4, ROW_H) + 1
   })
-  d.costRow('TOTAL PROJECT COST', `$${(totalCost || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, true)
 
-  d.sectionTitle('Required Questions')
-  d.yesNoRow('Does this project exceed 12,000 sq ft of land disturbance?', form.landDisturbance)
-  d.yesNoRow('Does this project include public food service areas?', form.publicFood)
-  d.yesNoRow('Single-family, duplex, or townhome with sprinkler system?', form.sprinkler)
-  d.yesNoRow('Will a sub-slab soil exhaust system be installed?', form.subSlab)
-  d.yesNoRow('Is this property serviced by a well or septic tank?', form.wellSeptic)
-  d.yesNoRow('Is an alteration to an existing drainage system proposed?', form.drainage)
+  // Footnotes
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(FS_SMALL)
+  pdf.setTextColor(60, 60, 60)
+  pdf.text('*If "Yes," contact Environmental Health at 919-560-7800 for their approval.', ML, y + 3)
+  y += 4.5
+  pdf.text('**If "Yes," a separate drainage permit application may be required. Contact 919-560-4326 for more information.', ML, y + 3)
+  y += 7
 
-  if (form.notes) {
-    d.sectionTitle('Additional Notes')
-    d.row('Notes', form.notes)
-  }
+  // ── AUTHORIZATION ────────────────────────────────────────────────────────
+  y = sectionHeader(pdf, y, 'AUTHORIZATION FROM OWNER OR AUTHORIZED AGENT')
+  y += 2
 
-  d.signatureBlock(
-    form.signerName,
-    form.signDate,
-    'The owner or authorized agent signing this application is responsible for determining whether sewer, water, gas and other utilities are available. All easements and restrictions must be shown on the plot plan. The applicant must adhere to all codes and ordinances. Applications which are not completed to "Issued" status within 6 months will expire.'
-  )
+  const auth = 'The owner or authorized agent of the owner who signs this application is responsible for determining whether sewer, water, gas and other utilities are available for this site. Also, all easements and restrictions must be shown on the plot plan. Where applicable, allowable impervious coverage must be verified by a certified survey at the completion of all site work. The applicant must adhere to all codes and ordinances. A separate permit is required for each trade that work is to be performed. No trade permits will be issued until the accompanying building permit is issued. Applications which are not completed to "ISSUED" status within 6 months will expire. By signing this application, the applicant assumes all responsibility for these items.'
+  y = disclaimerBox(pdf, y, auth, true) + 4
 
-  d.footer()
+  // Signature line
+  field(pdf, ML, y, 65, 'PRINT NAME:', form.signerName)
+  field(pdf, ML + 68, y, 80, 'SIGNATURE:', '')
+  field(pdf, ML + 152, y, CW - 152, 'DATE:', form.signDate)
+
+  pageFooter(pdf, 'Doc.983 Rev.08.01.2025')
   return pdf
 }
 
-// ─── Electrical permit PDF ────────────────────────────────────────────────────
+// ─── Electrical Permit ───────────────────────────────────────────────────────
 
 function buildElectricalPDF(form) {
-  const pdf = new jsPDF({ unit: 'mm', format: 'letter', orientation: 'portrait' })
-  const d = doc(pdf)
+  const pdf = newDoc()
+  let y = ML
 
-  d.header(
-    'City of Durham — Electrical Permit Application',
-    'Submit via LDO Portal: ldo4.durhamnc.gov/DurhamWeb · (919) 560-4144',
-    'Durham LDO Portal'
-  )
+  // Header
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(13)
+  pdf.setTextColor(0, 0, 0)
+  pdf.text('ELECTRICAL PERMIT APPLICATION', PW / 2, y + 6, { align: 'center' })
+  y += 9
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(8)
+  pdf.text('City-County Building & Safety Department · 101 City Hall Plaza, Suite 400, Durham NC 27701 · (919) 560-4144', PW / 2, y + 4, { align: 'center' })
+  y += 7
+  pdf.setFontSize(7)
+  pdf.setTextColor(80, 80, 80)
+  pdf.text('Submit via LDO Portal: ldo4.durhamnc.gov/DurhamWeb', PW / 2, y + 3, { align: 'center' })
+  y += 8
 
-  d.sectionTitle('Project Information')
-  d.row('Job Address', form.jobAddress)
-  d.row('Description of Work', form.jobDescription)
+  y = sectionHeader(pdf, y, 'PROJECT INFORMATION')
+  y += 1
+  field(pdf, ML, y, CW, 'JOB ADDRESS:', form.jobAddress)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW, 'DESCRIPTION OF WORK:', form.jobDescription)
+  y += ROW_H + 4
 
+  y = sectionHeader(pdf, y, 'SCOPE OF ELECTRICAL WORK')
+  y += 2
   if (form.workScope?.length > 0) {
-    d.sectionTitle('Scope of Electrical Work')
-    d.scopeList(form.workScope)
+    form.workScope.forEach(item => {
+      checkbox(pdf, ML, y + 0.5, true)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(FS_LABEL)
+      pdf.setTextColor(30, 30, 30)
+      pdf.text(item, ML + 5, y + 3)
+      y += 5.5
+    })
+  } else {
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(FS_LABEL)
+    pdf.setTextColor(120, 120, 120)
+    pdf.text('(No scope items selected)', ML + 2, y + 3)
+    y += 6
   }
+  y += 2
 
-  d.sectionTitle('Electrical Details')
-  d.twoCol('Service Size (Amps)', form.serviceAmps, 'Number of Circuits', form.numCircuits)
-  d.twoCol('Wiring Method', form.wiringMethod, 'Estimated Cost', form.estimatedCost || '$0.00')
+  y = sectionHeader(pdf, y, 'ELECTRICAL DETAILS')
+  y += 1
+  field(pdf, ML, y, 60, 'SERVICE SIZE (AMPS):', form.serviceAmps)
+  field(pdf, ML + 64, y, 60, 'NUMBER OF CIRCUITS:', form.numCircuits)
+  field(pdf, ML + 128, y, CW - 128, 'ESTIMATED COST:', form.estimatedCost || '$0.00')
+  y += ROW_H + 2
+  field(pdf, ML, y, CW, 'WIRING METHOD:', form.wiringMethod)
+  y += ROW_H + 4
 
-  d.sectionTitle('Contractor Information')
-  d.twoCol('Contractor / Business Name', form.contractorName, 'NC Electrical License No.', form.contractorLicense)
-  d.twoCol('Durham Contractor ID (CID)', form.durhamCID, 'Phone', form.contractorPhone)
-  d.row('Email', form.contractorEmail)
-  d.row('Address', `${form.contractorAddress}${form.contractorCity ? ', ' + form.contractorCity : ''}${form.contractorZip ? ' ' + form.contractorZip : ''}`)
+  y = sectionHeader(pdf, y, 'CONTRACTOR INFORMATION')
+  y += 1
+  field(pdf, ML, y, CW - 60, 'CONTRACTOR:', form.contractorName)
+  field(pdf, ML + CW - 58, y, 58, 'NC ELECTRICAL LICENSE NO.:', form.contractorLicense)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW - 60, 'EMAIL:', form.contractorEmail)
+  field(pdf, ML + CW - 58, y, 58, 'PHONE:', form.contractorPhone)
+  y += ROW_H + 2
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(FS_LABEL)
+  pdf.text('REQUIRED DURHAM CONTRACTOR ID (CID)*:', ML, y + 3)
+  pdf.setDrawColor(150, 150, 150)
+  pdf.line(ML + 70, y + 4, ML + 70 + 50, y + 4)
+  if (form.durhamCID) {
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(FS_VALUE)
+    pdf.text(String(form.durhamCID), ML + 71, y + 3.5)
+  }
+  y += 5
+  field(pdf, ML, y, CW - 80, 'ADDRESS:', form.contractorAddress)
+  field(pdf, ML + CW - 78, y, 35, 'CITY:', form.contractorCity)
+  field(pdf, ML + CW - 41, y, 15, 'STATE:', form.contractorState || 'NC')
+  field(pdf, ML + CW - 24, y, 24, 'ZIP CODE:', form.contractorZip)
+  y += ROW_H + 4
 
-  d.sectionTitle('Property Owner')
-  d.twoCol('Owner Name', form.ownerName, 'Phone', form.ownerPhone)
-  d.row('Email', form.ownerEmail)
+  y = sectionHeader(pdf, y, 'PROPERTY OWNER INFORMATION')
+  y += 1
+  field(pdf, ML, y, CW, 'PROPERTY OWNER NAME:', form.ownerName)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW - 60, 'EMAIL:', form.ownerEmail)
+  field(pdf, ML + CW - 58, y, 58, 'PHONE:', form.ownerPhone)
+  y += ROW_H + 4
 
-  if (form.notes) { d.sectionTitle('Notes'); d.row('Notes', form.notes) }
+  y = sectionHeader(pdf, y, 'AUTHORIZATION')
+  y += 2
+  y = disclaimerBox(pdf, y, 'By submitting this application, the applicant certifies that all electrical work will be performed by or under the supervision of a NC-licensed electrical contractor, and that all work will conform to the 2023 NEC as adopted by NC and all applicable Durham codes.', true) + 4
 
-  d.signatureBlock(
-    form.signerName,
-    form.signDate,
-    'By submitting this application, the applicant certifies that all electrical work will be performed by or under the supervision of a NC-licensed electrical contractor, and that all work will conform to the 2023 NEC as adopted by NC and all applicable Durham codes.'
-  )
+  field(pdf, ML, y, 65, 'PRINT NAME:', form.signerName)
+  field(pdf, ML + 68, y, 80, 'SIGNATURE:', '')
+  field(pdf, ML + 152, y, CW - 152, 'DATE:', form.signDate)
 
-  d.footer()
+  pageFooter(pdf, 'Durham LDO Portal — Electrical Permit')
   return pdf
 }
 
-// ─── Plumbing permit PDF ──────────────────────────────────────────────────────
+// ─── Plumbing Permit ─────────────────────────────────────────────────────────
 
 function buildPlumbingPDF(form) {
-  const pdf = new jsPDF({ unit: 'mm', format: 'letter', orientation: 'portrait' })
-  const d = doc(pdf)
+  const pdf = newDoc()
+  let y = ML
 
-  d.header(
-    'City of Durham — Plumbing Permit Application',
-    'Submit via LDO Portal: ldo4.durhamnc.gov/DurhamWeb · (919) 560-4144',
-    'Durham LDO Portal'
-  )
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(13)
+  pdf.setTextColor(0, 0, 0)
+  pdf.text('PLUMBING PERMIT APPLICATION', PW / 2, y + 6, { align: 'center' })
+  y += 9
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(8)
+  pdf.text('City-County Building & Safety Department · 101 City Hall Plaza, Suite 400, Durham NC 27701 · (919) 560-4144', PW / 2, y + 4, { align: 'center' })
+  y += 7
+  pdf.setFontSize(7)
+  pdf.setTextColor(80, 80, 80)
+  pdf.text('Submit via LDO Portal: ldo4.durhamnc.gov/DurhamWeb', PW / 2, y + 3, { align: 'center' })
+  y += 8
 
-  d.sectionTitle('Project Information')
-  d.row('Job Address', form.jobAddress)
-  d.row('Description of Work', form.jobDescription)
+  y = sectionHeader(pdf, y, 'PROJECT INFORMATION')
+  y += 1
+  field(pdf, ML, y, CW, 'JOB ADDRESS:', form.jobAddress)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW, 'DESCRIPTION OF WORK:', form.jobDescription)
+  y += ROW_H + 4
 
+  y = sectionHeader(pdf, y, 'SCOPE OF PLUMBING WORK')
+  y += 2
   if (form.workScope?.length > 0) {
-    d.sectionTitle('Scope of Plumbing Work')
-    d.scopeList(form.workScope)
+    form.workScope.forEach(item => {
+      checkbox(pdf, ML, y + 0.5, true)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(FS_LABEL)
+      pdf.setTextColor(30, 30, 30)
+      pdf.text(item, ML + 5, y + 3)
+      y += 5.5
+    })
+  } else {
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(FS_LABEL); pdf.setTextColor(120, 120, 120)
+    pdf.text('(No scope items selected)', ML + 2, y + 3); y += 6
   }
+  y += 2
 
-  d.sectionTitle('Plumbing Details')
-  d.twoCol('Number of Fixtures', form.numCircuits, 'Estimated Cost', form.estimatedCost || '$0.00')
-  d.yesNoRow('Does scope include gas piping (natural gas or LP)?', form.gasWork)
-  if (form.gasWork && form.gasType) d.row('Gas Type', form.gasType)
+  y = sectionHeader(pdf, y, 'PLUMBING DETAILS')
+  y += 1
+  field(pdf, ML, y, 90, 'NUMBER OF FIXTURES:', form.numCircuits)
+  field(pdf, ML + 94, y, CW - 94, 'ESTIMATED COST:', form.estimatedCost || '$0.00')
+  y += ROW_H + 2
+  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(FS_LABEL); pdf.setTextColor(30,30,30)
+  pdf.text('DOES SCOPE INCLUDE GAS PIPING?', ML, y + 3)
+  yesNo(pdf, ML + 62, y + 3, form.gasWork)
+  if (form.gasWork && form.gasType) {
+    field(pdf, ML + 90, y, CW - 90, 'GAS TYPE:', form.gasType)
+  }
+  y += ROW_H + 4
 
-  d.sectionTitle('Contractor Information')
-  d.twoCol('Contractor / Business Name', form.contractorName, 'NC Plumbing License No.', form.contractorLicense)
-  d.twoCol('Durham Contractor ID (CID)', form.durhamCID, 'Phone', form.contractorPhone)
-  d.row('Email', form.contractorEmail)
-  d.row('Address', `${form.contractorAddress}${form.contractorCity ? ', ' + form.contractorCity : ''}${form.contractorZip ? ' ' + form.contractorZip : ''}`)
+  y = sectionHeader(pdf, y, 'CONTRACTOR INFORMATION')
+  y += 1
+  field(pdf, ML, y, CW - 60, 'CONTRACTOR:', form.contractorName)
+  field(pdf, ML + CW - 58, y, 58, 'NC PLUMBING LICENSE NO.:', form.contractorLicense)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW - 60, 'EMAIL:', form.contractorEmail)
+  field(pdf, ML + CW - 58, y, 58, 'PHONE:', form.contractorPhone)
+  y += ROW_H + 2
+  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(FS_LABEL); pdf.text('REQUIRED DURHAM CONTRACTOR ID (CID)*:', ML, y + 3)
+  pdf.setDrawColor(150, 150, 150); pdf.line(ML + 70, y + 4, ML + 120, y + 4)
+  if (form.durhamCID) { pdf.setFont('helvetica', 'normal'); pdf.setFontSize(FS_VALUE); pdf.text(String(form.durhamCID), ML + 71, y + 3.5) }
+  y += 5
+  field(pdf, ML, y, CW - 80, 'ADDRESS:', form.contractorAddress)
+  field(pdf, ML + CW - 78, y, 35, 'CITY:', form.contractorCity)
+  field(pdf, ML + CW - 41, y, 15, 'STATE:', form.contractorState || 'NC')
+  field(pdf, ML + CW - 24, y, 24, 'ZIP CODE:', form.contractorZip)
+  y += ROW_H + 4
 
-  d.sectionTitle('Property Owner')
-  d.twoCol('Owner Name', form.ownerName, 'Phone', form.ownerPhone)
-  d.row('Email', form.ownerEmail)
+  y = sectionHeader(pdf, y, 'PROPERTY OWNER INFORMATION')
+  y += 1
+  field(pdf, ML, y, CW, 'PROPERTY OWNER NAME:', form.ownerName)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW - 60, 'EMAIL:', form.ownerEmail)
+  field(pdf, ML + CW - 58, y, 58, 'PHONE:', form.ownerPhone)
+  y += ROW_H + 4
 
-  if (form.notes) { d.sectionTitle('Notes'); d.row('Notes', form.notes) }
+  y = sectionHeader(pdf, y, 'AUTHORIZATION')
+  y += 2
+  y = disclaimerBox(pdf, y, 'By submitting this application, the applicant certifies that all plumbing work will be performed by or under the supervision of a NC-licensed plumbing contractor, and that all work will conform to the 2018 NC Plumbing Code and applicable Durham amendments.', true) + 4
+  field(pdf, ML, y, 65, 'PRINT NAME:', form.signerName)
+  field(pdf, ML + 68, y, 80, 'SIGNATURE:', '')
+  field(pdf, ML + 152, y, CW - 152, 'DATE:', form.signDate)
 
-  d.signatureBlock(
-    form.signerName,
-    form.signDate,
-    'By submitting this application, the applicant certifies that all plumbing work will be performed by or under the supervision of a NC-licensed plumbing contractor, and that all work will conform to the 2018 NC Plumbing Code and applicable Durham amendments.'
-  )
-
-  d.footer()
+  pageFooter(pdf, 'Durham LDO Portal — Plumbing Permit')
   return pdf
 }
 
-// ─── Mechanical permit PDF ────────────────────────────────────────────────────
+// ─── Mechanical Permit ───────────────────────────────────────────────────────
 
 function buildMechanicalPDF(form) {
-  const pdf = new jsPDF({ unit: 'mm', format: 'letter', orientation: 'portrait' })
-  const d = doc(pdf)
+  const pdf = newDoc()
+  let y = ML
 
-  d.header(
-    'City of Durham — Mechanical / HVAC Permit Application',
-    'Submit via LDO Portal: ldo4.durhamnc.gov/DurhamWeb · (919) 560-4144',
-    'Durham LDO Portal'
-  )
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(13)
+  pdf.setTextColor(0, 0, 0)
+  pdf.text('MECHANICAL / HVAC PERMIT APPLICATION', PW / 2, y + 6, { align: 'center' })
+  y += 9
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(8)
+  pdf.text('City-County Building & Safety Department · 101 City Hall Plaza, Suite 400, Durham NC 27701 · (919) 560-4144', PW / 2, y + 4, { align: 'center' })
+  y += 7
+  pdf.setFontSize(7)
+  pdf.setTextColor(80, 80, 80)
+  pdf.text('Submit via LDO Portal: ldo4.durhamnc.gov/DurhamWeb', PW / 2, y + 3, { align: 'center' })
+  y += 8
 
-  d.sectionTitle('Project Information')
-  d.row('Job Address', form.jobAddress)
-  d.row('Description of Work', form.jobDescription)
+  y = sectionHeader(pdf, y, 'PROJECT INFORMATION')
+  y += 1
+  field(pdf, ML, y, CW, 'JOB ADDRESS:', form.jobAddress)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW, 'DESCRIPTION OF WORK:', form.jobDescription)
+  y += ROW_H + 4
 
+  y = sectionHeader(pdf, y, 'SCOPE OF MECHANICAL WORK')
+  y += 2
   if (form.workScope?.length > 0) {
-    d.sectionTitle('Scope of Mechanical Work')
-    d.scopeList(form.workScope)
+    form.workScope.forEach(item => {
+      checkbox(pdf, ML, y + 0.5, true)
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(FS_LABEL); pdf.setTextColor(30,30,30)
+      pdf.text(item, ML + 5, y + 3); y += 5.5
+    })
+  } else {
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(FS_LABEL); pdf.setTextColor(120, 120, 120)
+    pdf.text('(No scope items selected)', ML + 2, y + 3); y += 6
   }
+  y += 2
 
-  d.sectionTitle('Mechanical Details')
-  d.twoCol('System Type', form.wiringMethod, 'Estimated Cost', form.estimatedCost || '$0.00')
+  y = sectionHeader(pdf, y, 'MECHANICAL DETAILS')
+  y += 1
+  field(pdf, ML, y, 90, 'SYSTEM TYPE:', form.wiringMethod)
+  field(pdf, ML + 94, y, CW - 94, 'ESTIMATED COST:', form.estimatedCost || '$0.00')
+  y += ROW_H + 4
 
-  d.sectionTitle('Contractor Information')
-  d.twoCol('Contractor / Business Name', form.contractorName, 'NC HVAC License No.', form.contractorLicense)
-  d.twoCol('Durham Contractor ID (CID)', form.durhamCID, 'Phone', form.contractorPhone)
-  d.row('Email', form.contractorEmail)
-  d.row('Address', `${form.contractorAddress}${form.contractorCity ? ', ' + form.contractorCity : ''}${form.contractorZip ? ' ' + form.contractorZip : ''}`)
+  y = sectionHeader(pdf, y, 'CONTRACTOR INFORMATION')
+  y += 1
+  field(pdf, ML, y, CW - 60, 'CONTRACTOR:', form.contractorName)
+  field(pdf, ML + CW - 58, y, 58, 'NC HVAC LICENSE NO.:', form.contractorLicense)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW - 60, 'EMAIL:', form.contractorEmail)
+  field(pdf, ML + CW - 58, y, 58, 'PHONE:', form.contractorPhone)
+  y += ROW_H + 2
+  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(FS_LABEL); pdf.text('REQUIRED DURHAM CONTRACTOR ID (CID)*:', ML, y + 3)
+  pdf.setDrawColor(150, 150, 150); pdf.line(ML + 70, y + 4, ML + 120, y + 4)
+  if (form.durhamCID) { pdf.setFont('helvetica', 'normal'); pdf.setFontSize(FS_VALUE); pdf.text(String(form.durhamCID), ML + 71, y + 3.5) }
+  y += 5
+  field(pdf, ML, y, CW - 80, 'ADDRESS:', form.contractorAddress)
+  field(pdf, ML + CW - 78, y, 35, 'CITY:', form.contractorCity)
+  field(pdf, ML + CW - 41, y, 15, 'STATE:', form.contractorState || 'NC')
+  field(pdf, ML + CW - 24, y, 24, 'ZIP CODE:', form.contractorZip)
+  y += ROW_H + 4
 
-  d.sectionTitle('Property Owner')
-  d.twoCol('Owner Name', form.ownerName, 'Phone', form.ownerPhone)
-  d.row('Email', form.ownerEmail)
+  y = sectionHeader(pdf, y, 'PROPERTY OWNER INFORMATION')
+  y += 1
+  field(pdf, ML, y, CW, 'PROPERTY OWNER NAME:', form.ownerName)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW - 60, 'EMAIL:', form.ownerEmail)
+  field(pdf, ML + CW - 58, y, 58, 'PHONE:', form.ownerPhone)
+  y += ROW_H + 4
 
-  if (form.notes) { d.sectionTitle('Notes'); d.row('Notes', form.notes) }
+  y = sectionHeader(pdf, y, 'AUTHORIZATION')
+  y += 2
+  y = disclaimerBox(pdf, y, 'By submitting this application, the applicant certifies that all mechanical work will be performed by or under the supervision of a NC-licensed HVAC/mechanical contractor, and that all work will conform to the 2018 NC Mechanical Code and applicable Durham amendments.', true) + 4
+  field(pdf, ML, y, 65, 'PRINT NAME:', form.signerName)
+  field(pdf, ML + 68, y, 80, 'SIGNATURE:', '')
+  field(pdf, ML + 152, y, CW - 152, 'DATE:', form.signDate)
 
-  d.signatureBlock(
-    form.signerName,
-    form.signDate,
-    'By submitting this application, the applicant certifies that all mechanical work will be performed by or under the supervision of a NC-licensed HVAC/mechanical contractor, and that all work will conform to the 2018 NC Mechanical Code and applicable Durham amendments.'
-  )
-
-  d.footer()
+  pageFooter(pdf, 'Durham LDO Portal — Mechanical Permit')
   return pdf
 }
 
-// ─── Public API ───────────────────────────────────────────────────────────────
+// ─── Public API ──────────────────────────────────────────────────────────────
 
 export function generatePermitPDF(permitType, form, totalCost) {
   switch (permitType) {

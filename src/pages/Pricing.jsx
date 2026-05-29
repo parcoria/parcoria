@@ -260,9 +260,11 @@ export default function Pricing() {
       {error && <p className="text-xs text-red-500 text-center mb-6">{error}</p>}
 
       <div className="text-center mb-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-        <Link to="/wizard" className="text-sm text-brand-600 hover:text-brand-700 font-medium">
-          Try the permit wizard free first ↗
-        </Link>
+        {!hasAccess() && (
+          <Link to="/wizard" className="text-sm text-brand-600 hover:text-brand-700 font-medium">
+            Try the permit wizard free first ↗
+          </Link>
+        )}
         <Link to="/restore" className="text-xs text-gray-400 hover:text-gray-600">
           Already paid? Restore your access ↗
         </Link>
