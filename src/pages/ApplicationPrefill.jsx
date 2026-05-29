@@ -9,6 +9,7 @@ import { getProfile } from '../lib/contractor-profile'
 import { getMyContractors, TRADE_TYPES } from '../lib/contractors'
 import { getUser } from '../lib/supabase'
 import { downloadPermitPDF } from '../lib/permit-pdf'
+import SubmissionAgent from '../components/SubmissionAgent'
 
 // ─── Shared data ──────────────────────────────────────────────────────────────
 
@@ -1107,13 +1108,16 @@ export default function ApplicationPrefill() {
               </div>
             )}
 
-            {/* Coming soon pill */}
-            <div className="mt-4 flex items-center gap-2 bg-brand-50 border border-brand-100 rounded-xl px-4 py-3">
-              <div className="w-2 h-2 rounded-full bg-brand-500 flex-shrink-0 animate-pulse"></div>
-              <div className="text-xs text-brand-700">
-                <span className="font-semibold">Submission Agent coming soon</span> — Parcoria will submit directly to {permitType === 'building' ? 'Dplans' : 'LDO'} for you.
-              </div>
-            </div>
+            {/* Submission Agent */}
+            <SubmissionAgent
+              form={form}
+              permitType={permitType}
+              jurisdiction={params.get('j') || 'durham'}
+              pdfFilename={lastFilename}
+              projectId={params.get('project') || null}
+              userId={profile?.user_id}
+              userEmail={profile?.email || form.contractorEmail}
+            />
           </div>
 
           {/* Actions */}

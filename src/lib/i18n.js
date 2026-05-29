@@ -187,11 +187,11 @@ export function t(key) {
 }
 
 // React hook for language-reactive components
+import { useState, useEffect } from 'react'
+
 export function useLang() {
-  // eslint-disable-next-line no-undef
-  const [lang, setLangState] = (typeof React !== 'undefined' ? React : require('react')).useState(getLang())
-  // eslint-disable-next-line no-undef
-  ;(typeof React !== 'undefined' ? React : require('react')).useEffect(() => {
+  const [lang, setLangState] = useState(getLang())
+  useEffect(() => {
     const handler = () => setLangState(getLang())
     window.addEventListener('parcoria_lang_change', handler)
     return () => window.removeEventListener('parcoria_lang_change', handler)

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { startCheckout } from '../lib/checkout'
 import { isDeveloper, hasAccess, isContractor } from '../lib/access'
+import { t, useLang } from '../lib/i18n'
 
 const FEATURES_HOMEOWNER = [
   'Full permit wizard — one project',
@@ -48,6 +49,7 @@ async function startDeveloperCheckout(email, billing = 'monthly') {
 }
 
 export default function Pricing() {
+  useLang() // re-render on language change
   const [homeownerLoading, setHomeownerLoading] = useState(false)
   const [contractorLoading, setContractorLoading] = useState(false)
   const [developerLoading, setDeveloperLoading] = useState(false)
@@ -125,12 +127,12 @@ export default function Pricing() {
         {/* Homeowner */}
         <div className="bg-white border border-gray-200 rounded-2xl p-7">
           <div className="mb-5">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">Homeowner</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">{t("price_homeowner")}</h2>
             <p className="text-sm text-gray-500 leading-relaxed">First-time builders and owner-builders navigating permits for a single project.</p>
           </div>
           <div className="flex items-baseline gap-2 mb-1">
             <span className="text-4xl font-semibold text-gray-900">$79</span>
-            <span className="text-gray-400 text-sm">one-time · per project</span>
+            <span className="text-gray-400 text-sm">{t("price_one_time")} · per project</span>
           </div>
           <p className="text-xs text-gray-400 mb-6">No subscription. No renewal. Pay once.</p>
 
@@ -141,7 +143,7 @@ export default function Pricing() {
 
           <button onClick={handleHomeowner} disabled={homeownerLoading}
             className="w-full py-3 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 mb-4">
-            {homeownerLoading ? 'Redirecting...' : 'Get started — $79 ↗'}
+            {homeownerLoading ? 'Redirecting...' : t('price_get_started') + ' — $79 ↗'}
           </button>
 
           <div className="border-t border-gray-100 pt-4">
@@ -159,14 +161,14 @@ export default function Pricing() {
         {/* Contractor */}
         <div className="bg-white border border-gray-200 rounded-2xl p-6">
           <div className="mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">Contractor</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">{t("price_contractor")}</h2>
             <p className="text-sm text-gray-500 leading-relaxed">Licensed NC contractors managing permits across multiple client jobs.</p>
           </div>
           <div className="flex items-baseline gap-2 mb-1">
             <span className="text-3xl font-semibold text-gray-900">$149</span>
-            <span className="text-gray-400 text-sm">/month</span>
+            <span className="text-gray-400 text-sm">{t("price_month")}</span>
           </div>
-          <p className="text-xs text-gray-400 mb-5">Cancel anytime</p>
+          <p className="text-xs text-gray-400 mb-5">{t("price_cancel")}</p>
 
           <label className="text-xs font-medium text-gray-600 block mb-1.5">Your email</label>
           <input type="email" value={contractorEmail} onChange={e => setContractorEmail(e.target.value)}
@@ -175,7 +177,7 @@ export default function Pricing() {
 
           <button onClick={handleContractor} disabled={contractorLoading}
             className="w-full py-2.5 bg-gray-800 text-white text-sm font-semibold rounded-xl hover:bg-gray-900 transition-colors disabled:opacity-50 mb-4">
-            {contractorLoading ? 'Redirecting...' : 'Start Contractor — $149/mo ↗'}
+            {contractorLoading ? 'Redirecting...' : t('price_get_started') + ' — $149/mo ↗'}
           </button>
 
           <div className="border-t border-gray-100 pt-3">
@@ -196,7 +198,7 @@ export default function Pricing() {
             <span className="bg-brand-600 text-white text-xs font-semibold px-3 py-1 rounded-full">Most popular</span>
           </div>
           <div className="mb-5">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">Developer</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">{t("price_developer")}</h2>
             <p className="text-sm text-gray-500 leading-relaxed">Small residential developers building 3–15 homes/year across the Triangle.</p>
           </div>
           {/* Billing toggle */}
@@ -220,7 +222,7 @@ export default function Pricing() {
             {billing === 'monthly' ? (
               <>
                 <span className="text-4xl font-semibold text-gray-900">$299</span>
-                <span className="text-gray-400 text-sm">/month</span>
+                <span className="text-gray-400 text-sm">{t("price_month")}</span>
               </>
             ) : (
               <>

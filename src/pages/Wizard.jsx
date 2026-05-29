@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { t, useLang } from '../lib/i18n'
 import { PROJECT_TYPES, PERMIT_DATA, PROFESSIONALS, INSPECTIONS } from '../data/raleigh'
 import { DURHAM_PERMIT_DATA, DURHAM_PROFESSIONALS, DURHAM_INSPECTIONS } from '../data/durham'
 import { CHAPEL_HILL_PERMIT_DATA, CHAPEL_HILL_PROFESSIONALS, CHAPEL_HILL_INSPECTIONS, CHAPEL_HILL_BUILDABILITY_CHECKS } from '../data/chapelhill'
@@ -79,6 +80,7 @@ function getRaleighBuildabilityChecks(flags) {
 
 export default function Wizard() {
   const navigate = useNavigate()
+  useLang() // re-render on language change
   const [step, setStep] = useState(1)
   const [state, setState] = useState({
     jurisdiction: '', addr: '', proj: '', cost: '',
@@ -283,7 +285,7 @@ export default function Wizard() {
           />
 
           <div className="flex gap-2 mt-6">
-            <button onClick={() => setStep(1)} className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← Back</button>
+            <button onClick={() => setStep(1)} className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← {t('wiz_back')}</button>
             <button onClick={next} className="flex-1 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors">Continue to project type</button>
           </div>
         </div>
@@ -314,7 +316,7 @@ export default function Wizard() {
           </div>
 
           <div className="flex gap-2">
-            <button onClick={back} className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← Back</button>
+            <button onClick={back} className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← {t('wiz_back')}</button>
             <button onClick={next} disabled={!state.proj}
               className="flex-1 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
               Generate permit roadmap
@@ -334,7 +336,7 @@ export default function Wizard() {
 
               {/* Stats - always visible */}
               <div className="grid grid-cols-3 gap-3 mb-5">
-                {[{ n: permitCount, l: 'Permits required' }, { n: data.timeline, l: 'Est. timeline' }, { n: data.fees, l: 'Est. permit fees' }].map((s, i) => (
+                {[{ n: permitCount, l: t('wiz_permits_req') }, { n: data.timeline, l: t('wiz_est_timeline') }, { n: data.fees, l: t('wiz_est_fees') }].map((s, i) => (
                   <div key={i} className="bg-gray-50 rounded-xl p-3 text-center">
                     <div className="text-lg font-semibold text-gray-900">{s.n}</div>
                     <div className="text-xs text-gray-500 mt-0.5">{s.l}</div>
@@ -423,7 +425,7 @@ export default function Wizard() {
               )}
 
               <div className="grid grid-cols-3 gap-3 mb-6">
-                {[{ n: permitCount, l: 'Permits required' }, { n: data.timeline, l: 'Est. timeline' }, { n: data.fees, l: 'Est. permit fees' }].map((s, i) => (
+                {[{ n: permitCount, l: t('wiz_permits_req') }, { n: data.timeline, l: t('wiz_est_timeline') }, { n: data.fees, l: t('wiz_est_fees') }].map((s, i) => (
                   <div key={i} className="bg-gray-50 rounded-xl p-3 text-center">
                     <div className="text-lg font-semibold text-gray-900">{s.n}</div>
                     <div className="text-xs text-gray-500 mt-0.5">{s.l}</div>
@@ -495,7 +497,7 @@ export default function Wizard() {
               </div>
 
               <div className="flex gap-2 mt-4">
-                <button onClick={back} className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← Back</button>
+                <button onClick={back} className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← {t('wiz_back')}</button>
                 <button onClick={next} className="flex-1 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors">See required professionals</button>
               </div>
             </>
@@ -583,10 +585,10 @@ export default function Wizard() {
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-2">
-            <button onClick={back} className="py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← Back</button>
+            <button onClick={back} className="py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← {t('wiz_back')}</button>
             <button onClick={() => navigate('/action-plan', { state: { proj: state.proj, addr: state.addr, jurisdiction: state.jurisdiction } })}
               className="py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors">
-              Get my action plan ↗
+              {t('wiz_action_plan')}
             </button>
           </div>
           {/* Save to dashboard button - only shown when authenticated */}
@@ -602,7 +604,7 @@ export default function Wizard() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
-            Share this roadmap with my contractor
+            {t('wiz_share')}
           </button>}
           <button
             onClick={() => {
@@ -619,7 +621,7 @@ export default function Wizard() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Generate project brief
+            {t('wiz_generate_brief')}
           </button>
           {state.jurisdiction === 'durham' && (
             <button

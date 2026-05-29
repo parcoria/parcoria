@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { t, useLang } from '../lib/i18n'
 import { getUser, sendMagicLink } from '../lib/supabase'
 import { getProfile, saveProfile, getExpiringCredentials, LICENSE_TYPES, JURISDICTIONS_LIST } from '../lib/contractor-profile'
 import { getJobs, createJob, updateJob, deleteJob, JOB_STATUSES } from '../lib/client-jobs'
@@ -112,7 +113,6 @@ const PROJ_LABELS = {
   sfh: 'New SFH', adu: 'ADU', addition: 'Addition', deck: 'Deck',
   reno: 'Renovation', pool: 'Pool', shed: 'Shed', townhouse: 'Townhouse',
 }
-const TABS = ['Dashboard', 'My Profile', 'Client Templates']
 
 const EMPTY_JOB = {
   clientName: '', address: '', jurisdiction: 'raleigh',
@@ -121,9 +121,11 @@ const EMPTY_JOB = {
 
 export default function ContractorMode() {
   const navigate = useNavigate()
+  useLang() // re-render on language change
+  const TABS = [t('nav_dashboard'), t('profile_title'), t('templates_title')]
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState('Dashboard')
+  const [tab, setTab] = useState(t('nav_dashboard'))
 
   // Dashboard state
   const [jobs, setJobs] = useState([])
@@ -373,13 +375,13 @@ export default function ContractorMode() {
           <h1 className="text-2xl font-semibold text-gray-900">Jobs</h1>
           <p className="text-sm text-gray-400 mt-0.5">{user?.email} · {activeJobs.length} active job{activeJobs.length !== 1 ? 's' : ''}</p>
         </div>
-        {tab === 'Dashboard' && (
+        {tab === t('nav_dashboard') && (
           <button onClick={startNewJob}
             className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Add client job
+            {t('jobs_add')}
           </button>
         )}
       </div>
@@ -442,7 +444,7 @@ export default function ContractorMode() {
       </div>
 
       {/* ── Dashboard Tab ── */}
-      {tab === 'Dashboard' && (
+      {tab === t('nav_dashboard') && (
         <div>
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -462,7 +464,7 @@ export default function ContractorMode() {
           {/* Job form */}
           {showJobForm && (
             <div className="bg-white border border-brand-200 rounded-2xl p-5 mb-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">{editingJob ? 'Edit job' : 'Add client job'}</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">{editingJob ? 'Edit job' : t('jobs_add')}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="text-xs font-medium text-gray-700 block mb-1.5">Client name *</label>
@@ -512,10 +514,10 @@ export default function ContractorMode() {
               </div>
               <div className="flex gap-2">
                 <button onClick={() => { setShowJobForm(false); setEditingJob(null) }}
-                  className="px-4 py-2 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300">Cancel</button>
+                  className="px-4 py-2 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300">{t('jobs_cancel')}</button>
                 <button onClick={handleSaveJob} disabled={savingJob}
                   className="flex-1 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50">
-                  {savingJob ? 'Saving...' : editingJob ? 'Save changes' : 'Add job'}
+                  {savingJob ? 'Saving...' : editingJob ? t('jobs_save_changes') : t('jobs_save')}
                 </button>
               </div>
             </div>
@@ -547,7 +549,7 @@ export default function ContractorMode() {
                       </select>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
-                      <button onClick={() => { setTab('Client Templates'); setTemplateVars(v => ({ ...v, client_name: job.client_name, address: job.address, jurisdiction: JUR_LABELS[job.jurisdiction] || job.jurisdiction, project_type: PROJ_LABELS[job.project_type] || job.project_type })) }}
+                      <button onClick={() => { setTab(t('templates_title')); setTemplateVars(v => ({ ...v, client_name: job.client_name, address: job.address, jurisdiction: JUR_LABELS[job.jurisdiction] || job.jurisdiction, project_type: PROJ_LABELS[job.project_type] || job.project_type })) }}
                         className="p-2 text-gray-400 hover:text-brand-600 rounded-lg hover:bg-brand-50 transition-colors" title="Send client update">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -600,7 +602,7 @@ export default function ContractorMode() {
       )}
 
       {/* ── Profile Tab ── */}
-      {tab === 'My Profile' && (
+      {tab === t('profile_title') && (
         <div>
           <div className="bg-brand-50 border border-brand-100 rounded-xl px-4 py-3 mb-6 text-xs text-brand-700 leading-relaxed">
             Set up your profile once. Your license number, insurance info, and business details will be available to reference on every permit application - no more retyping the same information.
@@ -735,7 +737,7 @@ export default function ContractorMode() {
 
           <button onClick={handleSaveProfile} disabled={savingProfile}
             className="w-full py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50">
-            {savingProfile ? 'Saving...' : profileSaved ? '✓ Profile saved' : 'Save profile'}
+            {savingProfile ? t('profile_save') + '...' : profileSaved ? '✓ ' + t('profile_saved') : t('profile_save')}
           </button>
 
           {/* Checklist preview */}
@@ -764,7 +766,7 @@ export default function ContractorMode() {
       )}
 
       {/* ── Client Templates Tab ── */}
-      {tab === 'Client Templates' && (
+      {tab === t('templates_title') && (
         <div className="grid sm:grid-cols-2 gap-5">
           {/* Template list */}
           <div>
@@ -814,7 +816,7 @@ export default function ContractorMode() {
 
                 <button onClick={copyTemplate}
                   className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors">
-                  {copiedTemplate ? '✓ Copied to clipboard' : 'Copy message'}
+                  {copiedTemplate ? t('templates_copied') : t('templates_copy')}
                 </button>
                 <div className="text-xs text-gray-400 text-center mt-2">Paste into email, text, or messaging app</div>
               </div>
