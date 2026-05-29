@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { isDeveloper, hasAccess, isContractor } from '../lib/access'
+import { t, getLang, setLang } from '../lib/i18n'
 import { getUser } from '../lib/supabase'
 import { LogoMark } from './Logo'
 
@@ -18,6 +19,13 @@ export default function Navbar() {
   const [supabaseUser, setSupabaseUser] = useState(null)
   const devUser = isDeveloper()
   const contractorUser = isContractor()
+  const [lang, setLangState] = useState(getLang())
+
+  function toggleLang() {
+    const next = lang === 'en' ? 'es' : 'en'
+    setLang(next)
+    setLangState(next)
+  }
   const userHasAccess = hasAccess()
 
   useEffect(() => {
@@ -48,6 +56,12 @@ export default function Navbar() {
               Plan Pre-Check
             </Link>
           )}
+          <button onClick={toggleLang}
+            className="text-xs font-medium text-gray-400 hover:text-gray-700 border border-gray-200 rounded-md px-2 py-1 transition-colors"
+            title={lang === 'en' ? 'Cambiar a Español' : 'Switch to English'}
+          >
+            {lang === 'en' ? 'ES' : 'EN'}
+          </button>
           {contractorUser ? (
             <Link to="/contractor"
               className="text-sm bg-brand-600 text-white px-4 py-1.5 rounded-lg hover:bg-brand-700 transition-colors font-medium">
@@ -91,6 +105,12 @@ export default function Navbar() {
               Plan Pre-Check
             </Link>
           )}
+          <button onClick={toggleLang}
+            className="text-xs font-medium text-gray-400 hover:text-gray-700 border border-gray-200 rounded-md px-2 py-1 transition-colors"
+            title={lang === 'en' ? 'Cambiar a Español' : 'Switch to English'}
+          >
+            {lang === 'en' ? 'ES' : 'EN'}
+          </button>
           {contractorUser ? (
             <Link to="/contractor"
               className="text-sm bg-brand-600 text-white px-4 py-1.5 rounded-lg hover:bg-brand-700 transition-colors font-medium">

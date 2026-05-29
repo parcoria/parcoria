@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { t, getLang, setLang } from '../lib/i18n'
+import { useState, useEffect } from 'react'
 import { hasAccess, isDeveloper } from '../lib/access'
 
 const PAIN_STATS = [
@@ -30,6 +31,12 @@ const PERMIT_SAMPLES = [
 
 export default function Home() {
   const navigate = useNavigate()
+  const [lang, setLangState] = useState(getLang())
+  useEffect(() => {
+    const handler = () => setLangState(getLang())
+    window.addEventListener('parcoria_lang_change', handler)
+    return () => window.removeEventListener('parcoria_lang_change', handler)
+  }, [])
   const userIsDeveloper = isDeveloper()
   const userHasAccess = hasAccess()
 
@@ -88,7 +95,7 @@ export default function Home() {
       {/* Pain stats */}
       <section className="border-y border-gray-100 bg-gray-50 py-12">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-widest text-center mb-8">The problem today</p>
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-widest text-center mb-8">{t('home_problem')}</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             {PAIN_STATS.map((s, i) => (
               <div key={i} className="text-center">
@@ -102,8 +109,8 @@ export default function Home() {
 
       {/* How it works */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20">
-        <h2 className="text-2xl font-semibold text-gray-900 text-center mb-2">How Parcoria works</h2>
-        <p className="text-sm text-gray-500 text-center mb-12">Four steps from empty lot to permit roadmap</p>
+        <h2 className="text-2xl font-semibold text-gray-900 text-center mb-2">{t('home_how_works')}</h2>
+        <p className="text-sm text-gray-500 text-center mb-12">{t('home_four_steps')}</p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {HOW_IT_WORKS.map((s, i) => (
             <div key={i} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
@@ -120,7 +127,7 @@ export default function Home() {
       {/* Permit sample */}
       <section className="bg-gray-50 border-y border-gray-100 py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl font-semibold text-gray-900 text-center mb-2">Every permit, mapped for you</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 text-center mb-2">{t('home_every_permit')}</h2>
           <p className="text-sm text-gray-500 text-center mb-10">A sample of what a new single-family home in Raleigh requires</p>
           <div className="max-w-lg mx-auto flex flex-col gap-2 mb-8">
             {PERMIT_SAMPLES.map((p, i) => (
@@ -141,7 +148,7 @@ export default function Home() {
 
       {/* Bottom CTA */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 text-center">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-3">Ready to build smarter in the Triangle?</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-3">{t('home_bottom_cta')}</h2>
         <p className="text-gray-500 text-sm mb-8 max-w-md mx-auto leading-relaxed">
           Permit intelligence for Raleigh, Durham, Chapel Hill, Apex, Holly Springs, Wake Forest, Morrisville, Garner, Fuquay-Varina, and Cary. From empty lot to certificate of occupancy.
         </p>

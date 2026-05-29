@@ -18,6 +18,7 @@ import ContractorMode from './pages/ContractorMode'
 import ScrollToTop from './components/ScrollToTop'
 import SampleRoadmap from './pages/SampleRoadmap'
 import ProjectBrief from './pages/ProjectBrief'
+import ApplicationPrefill from './pages/ApplicationPrefill'
 import Guide from './pages/Guide'
 
 export default function App() {
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="/contractor" element={<ContractorMode />} />
             <Route path="/sample" element={<SampleRoadmap />} />
             <Route path="/brief" element={<ProjectBrief />} />
+            <Route path="/apply" element={<ApplicationPrefill />} />
             <Route path="/learn/:slug" element={<Guide />} />
           </Routes>
         </main>

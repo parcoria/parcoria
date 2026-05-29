@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { t } from '../lib/i18n'
 import { LogoMark } from './Logo'
 
 const FOOTER_LINKS = {
@@ -51,7 +52,7 @@ export default function Footer() {
           {/* Link columns */}
           {Object.entries(FOOTER_LINKS).map(([group, links]) => (
             <div key={group}>
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{group}</div>
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{group === 'Product' ? t('footer_product') : group === 'Learn' ? t('footer_learn') : group === 'Jurisdictions' ? t('footer_jurs') : t('footer_company')}</div>
               <div className="flex flex-col gap-2">
                 {links.map((link, i) => (
                   link.href
