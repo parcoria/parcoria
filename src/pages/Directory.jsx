@@ -38,6 +38,7 @@ export default function Directory() {
 
   useEffect(() => {
     loadDirectory()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterTrade, filterJurisdiction])
 
   async function loadDirectory() {
@@ -114,7 +115,7 @@ export default function Directory() {
           <div className="text-sm font-semibold text-gray-800 mb-2">No contractors found</div>
           <div className="text-xs text-gray-400 mb-4 leading-relaxed max-w-sm mx-auto">
             {contractors.length === 0
-              ? 'The public directory is being built by Parcoria Developer members. Check back soon — or if you\'re a developer, add your trusted contractors.'
+              ? 'The public directory is being built by Parcoria Developer members. Check back soon - or if you\'re a developer, add your trusted contractors.'
               : 'Try adjusting your filters or search term.'}
           </div>
           {(filterTrade !== 'all' || filterJurisdiction !== 'all' || search) && (
@@ -164,7 +165,7 @@ export default function Directory() {
                           rel="noreferrer"
                           className="text-xs text-brand-600 hover:text-brand-700"
                         >
-                          License #{c.license_number} — verify at {getLicenseBoardName(c.trade_type)} ↗
+                          License #{c.license_number} - verify at {getLicenseBoardName(c.trade_type)} ↗
                         </a>
                       )}
                     </div>
@@ -190,7 +191,7 @@ export default function Directory() {
       <div className="mt-10 bg-brand-50 border border-brand-100 rounded-2xl p-6 text-center">
         <div className="text-sm font-semibold text-brand-900 mb-1">Are you a developer or GC?</div>
         <div className="text-xs text-brand-700 mb-4 leading-relaxed">
-          Add your trusted contractors to this directory. Developer accounts can add verified contractors to the public listing — helping the whole Triangle community.
+          Add your trusted contractors to this directory. Developer accounts can add verified contractors to the public listing - helping the whole Triangle community.
         </div>
         <div className="flex items-center justify-center gap-3">
           <Link to="/contractors"
@@ -206,7 +207,7 @@ export default function Directory() {
 
       <div className="text-center mt-6">
         <p className="text-xs text-gray-400 leading-relaxed">
-          All listings verified by Parcoria Developer members against official NC licensing boards. Parcoria does not independently verify credentials — always confirm license status directly at the relevant board before hiring.
+          All listings verified by Parcoria Developer members against official NC licensing boards. Parcoria does not independently verify credentials - always confirm license status directly at the relevant board before hiring.
         </p>
       </div>
     </div>

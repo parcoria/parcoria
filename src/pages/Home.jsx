@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { t, getLang, setLang } from '../lib/i18n'
+import { t, getLang } from '../lib/i18n'
 import { useState, useEffect } from 'react'
 import { hasAccess, isDeveloper } from '../lib/access'
 

@@ -3,11 +3,11 @@
 // Homeowners: URL params (instant, no login)
 // Developers: also saved to Supabase project record
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 
 // Import all jurisdiction data
-import { PERMIT_DATA, PROFESSIONALS, INSPECTIONS, PROJECT_TYPES } from '../data/raleigh'
+import { PERMIT_DATA, PROFESSIONALS, INSPECTIONS } from '../data/raleigh'
 import { DURHAM_PERMIT_DATA, DURHAM_PROFESSIONALS, DURHAM_INSPECTIONS } from '../data/durham'
 import { CHAPEL_HILL_PERMIT_DATA, CHAPEL_HILL_PROFESSIONALS, CHAPEL_HILL_INSPECTIONS } from '../data/chapelhill'
 import { APEX_PERMIT_DATA, APEX_PROFESSIONALS, APEX_INSPECTIONS } from '../data/apex'
@@ -35,12 +35,6 @@ const PROJ_LABELS = {
   sfh: 'New single-family home', adu: 'Accessory dwelling unit (ADU)',
   addition: 'Addition', deck: 'Deck or porch', reno: 'Major renovation',
   pool: 'Pool or spa', shed: 'Shed or garage', townhouse: 'Townhouse / duplex',
-}
-
-const JUR_LABELS = {
-  city:   (jur) => JUR_META[jur]?.label || jur,
-  county: (jur) => JUR_META[jur]?.county || 'Wake County',
-  state:  () => 'NC State',
 }
 
 const PERMIT_DATA_MAP = {

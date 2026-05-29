@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { isDeveloper, hasAccess, isContractor } from '../lib/access'
-import { t, getLang, setLang } from '../lib/i18n'
+import { getLang, setLang } from '../lib/i18n'
 import { getUser } from '../lib/supabase'
 import { LogoMark } from './Logo'
 

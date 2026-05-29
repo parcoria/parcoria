@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { getUser, sendMagicLink } from '../lib/supabase'
 import { getProfile, saveProfile, getExpiringCredentials, LICENSE_TYPES, JURISDICTIONS_LIST } from '../lib/contractor-profile'
-import { getJobs, createJob, updateJob, deleteJob, JOB_STATUSES, PERMIT_STATUSES, STATUS_COLORS } from '../lib/client-jobs'
+import { getJobs, createJob, updateJob, deleteJob, JOB_STATUSES } from '../lib/client-jobs'
 import { TEMPLATES, fillTemplate } from '../data/client-templates'
 import { hasAccess, isContractor } from '../lib/access'
 
