@@ -24,10 +24,10 @@ const PROJ_DESCRIPTIONS = {
 }
 
 const PERMIT_TYPES = [
-  { id: 'building',    label: 'Building permit',       portal: 'Dplans',  icon: '🏗️', doc: 'Doc.983 Rev.08.01.2025' },
-  { id: 'electrical',  label: 'Electrical permit',     portal: 'LDO',     icon: '⚡', doc: 'Durham LDO Portal' },
-  { id: 'plumbing',    label: 'Plumbing permit',       portal: 'LDO',     icon: '🔧', doc: 'Durham LDO Portal' },
-  { id: 'mechanical',  label: 'Mechanical/HVAC permit', portal: 'LDO',    icon: '❄️', doc: 'Durham LDO Portal' },
+  { id: 'building',    label: 'Building Permit',       portal: 'Dplans',  icon: '🏗️', doc: 'Doc.983 Rev.08.01.2025' },
+  { id: 'electrical',  label: 'Electrical Permit',     portal: 'LDO',     icon: '⚡', doc: 'Durham LDO Portal' },
+  { id: 'plumbing',    label: 'Plumbing Permit',       portal: 'LDO',     icon: '🔧', doc: 'Durham LDO Portal' },
+  { id: 'mechanical',  label: 'Mechanical/HVAC Permit', portal: 'LDO',    icon: '❄️', doc: 'Durham LDO Portal' },
 ]
 
 // ─── Building permit cost fields ─────────────────────────────────────────────
@@ -192,6 +192,20 @@ export default function ApplicationPrefill() {
       signerName: f.signerName || c.company || c.name || '',
     }))
   }
+
+  function fillFromArchitect(contractorId) {
+    if (!contractorId) return
+    const c = myContractors.find(x => x.id === contractorId)
+    if (!c) return
+    setForm(f => ({
+      ...f,
+      architectName: c.company || c.name || '',
+      architectEmail: c.email || '',
+      architectPhone: c.phone || '',
+    }))
+  }
+
+  const savedArchitects = myContractors.filter(c => c.trade_type === 'architect')
 
   function update(key, val) { setForm(f => ({ ...f, [key]: val })) }
 
@@ -402,6 +416,22 @@ export default function ApplicationPrefill() {
         <section>
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Architect <span className="font-normal normal-case text-gray-400">(if applicable)</span></h2>
           <div className="bg-white border border-gray-100 rounded-xl p-5">
+            {savedArchitects.length > 0 && (
+              <div className="mb-4 pb-4 border-b border-gray-100">
+                <label className="text-xs font-medium text-gray-500 block mb-1.5">Quick-fill from my contractor network</label>
+                <select defaultValue="" onChange={e => fillFromArchitect(e.target.value)}
+                  className="w-full border border-brand-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-brand-50">
+                  <option value="" disabled>Select an architect to auto-fill fields below...</option>
+                  {savedArchitects.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.company ? `${c.company} (${c.name})` : c.name}
+                      {c.license_number ? ` · Lic. ${c.license_number}` : ''}
+                    </option>
+                  ))}
+                </select>
+                <div className="text-xs text-gray-400 mt-1">Fields below will be filled automatically. Edit anything as needed.</div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <Field label="Architect name" value={form.architectName} onChange={v => update('architectName', v)} placeholder="Jane Doe, AIA" half />
               <Field label="Email" value={form.architectEmail} onChange={v => update('architectEmail', v)} placeholder="jane@doearchitecture.com" half type="email" />
@@ -541,7 +571,7 @@ export default function ApplicationPrefill() {
       <SignatureSection disclaimer="By submitting this application, the applicant certifies that all electrical work will be performed by or under the supervision of a NC-licensed electrical contractor, and that all work will conform to the 2023 NEC as adopted by NC and all applicable Durham codes." />
 
       <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 print:hidden">
-        <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Electrical permit</div>
+        <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Electrical Permit</div>
         <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
           <li>1. Review all fields above</li>
           <li>2. Sign the downloaded PDF (wet signature required by Durham)</li>
@@ -615,7 +645,7 @@ export default function ApplicationPrefill() {
       <SignatureSection disclaimer="By submitting this application, the applicant certifies that all plumbing work will be performed by or under the supervision of a NC-licensed plumbing contractor, and that all work will conform to the 2018 NC Plumbing Code and applicable Durham amendments." />
 
       <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 print:hidden">
-        <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Plumbing permit</div>
+        <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Plumbing Permit</div>
         <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
           <li>1. Review all fields above</li>
           <li>2. Sign the downloaded PDF (wet signature required by Durham)</li>
@@ -680,7 +710,7 @@ export default function ApplicationPrefill() {
       <SignatureSection disclaimer="By submitting this application, the applicant certifies that all mechanical work will be performed by or under the supervision of a NC-licensed HVAC/mechanical contractor, and that all work will conform to the 2018 NC Mechanical Code and applicable Durham amendments." />
 
       <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 print:hidden">
-        <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Mechanical permit</div>
+        <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Mechanical Permit</div>
         <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
           <li>1. Review all fields above</li>
           <li>2. Sign the downloaded PDF (wet signature required by Durham)</li>
