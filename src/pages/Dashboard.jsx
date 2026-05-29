@@ -7,6 +7,8 @@ import { LogoMark } from '../components/Logo'
 const JUR_LABELS = {
   raleigh: 'Raleigh', durham: 'Durham',
   chapelhill: 'Chapel Hill', apex: 'Apex', hollysprings: 'Holly Springs',
+  wakeforest: 'Wake Forest', morrisville: 'Morrisville', garner: 'Garner',
+  fuquayvarina: 'Fuquay-Varina', cary: 'Cary',
 }
 const JUR_COLORS = {
   raleigh: 'bg-brand-50 text-brand-700 border-brand-100',
@@ -14,6 +16,11 @@ const JUR_COLORS = {
   chapelhill: 'bg-blue-50 text-blue-700 border-blue-100',
   apex: 'bg-green-50 text-green-700 border-green-100',
   hollysprings: 'bg-purple-50 text-purple-700 border-purple-100',
+  wakeforest: 'bg-teal-50 text-teal-700 border-teal-100',
+  morrisville: 'bg-cyan-50 text-cyan-700 border-cyan-100',
+  garner: 'bg-orange-50 text-orange-700 border-orange-100',
+  fuquayvarina: 'bg-rose-50 text-rose-700 border-rose-100',
+  cary: 'bg-indigo-50 text-indigo-700 border-indigo-100',
 }
 const PROJ_LABELS = {
   sfh: 'New SFH', adu: 'ADU', addition: 'Addition',
@@ -51,7 +58,7 @@ export default function Dashboard() {
       if (session?.user) {
         setUser(session.user)
         setAuthState('authenticated')
-        loadProjects()
+        loadProjects(session.user.id)
         // If coming from magic link email, navigate to dashboard cleanly
         if (event === 'SIGNED_IN') {
           navigate('/dashboard', { replace: true })
@@ -90,19 +97,19 @@ export default function Dashboard() {
     if (currentUser) {
       setUser(currentUser)
       setAuthState('authenticated')
-      loadProjects()
+      loadProjects(currentUser.id)
     } else {
       setAuthState('unauthenticated')
     }
   }
 
-  async function loadProjects() {
+  async function loadProjects(userId) {
     setLoadingProjects(true)
     try {
       const data = await getProjects()
       setProjects(data)
       // Load developer profile
-      const { data: prof } = await supabase.from('developer_profiles').select('*').eq('user_id', currentUser.id).single()
+      const { data: prof } = await supabase.from('developer_profiles').select('*').eq('user_id', userId).single()
       if (prof) setDevProfile({ name: prof.name || '', company: prof.company || '', phone: prof.phone || '', email: prof.email || '' })
     } catch (err) {
       console.error('Load projects error:', err)
@@ -139,12 +146,12 @@ export default function Dashboard() {
     // Optimistic update
     setProjects(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p))
     try {
-      const { supabase } = await import('../lib/supabase')
       await supabase.from('projects').update({ status: newStatus }).eq('id', id)
     } catch (err) {
       console.error('Status update error:', err)
       // Revert on error
-      loadProjects()
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (currentUser) loadProjects(currentUser.id)
     }
   }
 
