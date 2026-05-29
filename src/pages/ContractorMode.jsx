@@ -6,6 +6,103 @@ import { getJobs, createJob, updateJob, deleteJob, JOB_STATUSES } from '../lib/c
 import { TEMPLATES, fillTemplate } from '../data/client-templates'
 import { hasAccess, isContractor } from '../lib/access'
 
+// ─── Jurisdiction portal ID definitions ─────────────────────────────────────
+// Durham is the only Triangle jurisdiction that issues a separate numeric CID.
+// All others require portal registration but don't issue a separate ID number.
+
+const JURISDICTION_PORTAL_IDS = [
+  {
+    id: 'durham',
+    label: 'Durham',
+    description: 'Durham Contractor ID (CID) — required to log into the LDO portal and pull trade permits.',
+    idField: true,
+    required: true,
+    placeholder: 'e.g. 12345',
+    howToGet: 'Email permittechnicians@durhamnc.gov with your NC license number to request your CID.',
+  },
+  {
+    id: 'raleigh',
+    label: 'Raleigh',
+    description: 'Raleigh Permit & Development Portal — contractors must be registered before permit issuance.',
+    idField: false,
+    required: true,
+    registerUrl: 'https://raleighnc.gov/permits/services/permit-and-development-portal-help-center',
+    howToGet: 'Register at the Raleigh Permit & Development Portal. No separate ID issued — account email is your identifier.',
+  },
+  {
+    id: 'cary',
+    label: 'Cary',
+    description: 'Town of Cary ePermit portal — contractor registration required.',
+    idField: false,
+    required: false,
+    registerUrl: 'https://epermit.townofcary.org',
+    howToGet: 'Register at epermit.townofcary.org before applying for permits.',
+  },
+  {
+    id: 'apex',
+    label: 'Apex',
+    description: 'Apex ePermit portal — registration required to create and pay for permits online.',
+    idField: false,
+    required: false,
+    registerUrl: 'https://secure.apexnc.org/eSuite.Permits/WelcomePage.aspx',
+    howToGet: 'Register at secure.apexnc.org/eSuite.Permits to activate contractor account.',
+  },
+  {
+    id: 'chapelhill',
+    label: 'Chapel Hill',
+    description: 'Chapel Hill OpenGov portal — contractor registration required.',
+    idField: false,
+    required: false,
+    registerUrl: 'https://chapelhillnc.portal.opengov.com',
+    howToGet: 'Register at chapelhillnc.portal.opengov.com.',
+  },
+  {
+    id: 'hollysprings',
+    label: 'Holly Springs',
+    description: 'Holly Springs eSuite portal — registration required for permit applications.',
+    idField: false,
+    required: false,
+    registerUrl: 'https://hollysprings.hs.permit.solutions',
+    howToGet: 'Contact Holly Springs Building Inspections at (919) 567-4010 to register.',
+  },
+  {
+    id: 'morrisville',
+    label: 'Morrisville',
+    description: 'Morrisville permit portal — contractor registration required.',
+    idField: false,
+    required: false,
+    registerUrl: 'https://www.townofmorrisville.org/government/departments/planning-and-development/permits',
+    howToGet: 'Contact Morrisville Planning & Development at (919) 463-6200.',
+  },
+  {
+    id: 'wakeforest',
+    label: 'Wake Forest',
+    description: 'Wake Forest permit portal — contractor registration required.',
+    idField: false,
+    required: false,
+    registerUrl: 'https://www.wakeforestnc.gov/permits',
+    howToGet: 'Contact Wake Forest Planning at (919) 435-9510.',
+  },
+  {
+    id: 'garner',
+    label: 'Garner',
+    description: 'Town of Garner permit portal — contractor registration required.',
+    idField: false,
+    required: false,
+    registerUrl: 'https://www.garnernc.gov/departments/development-services/permits',
+    howToGet: 'Contact Garner Development Services at (919) 772-4688.',
+  },
+  {
+    id: 'fuquayvarina',
+    label: 'Fuquay-Varina',
+    description: 'Fuquay-Varina permit portal — contractor registration required.',
+    idField: false,
+    required: false,
+    registerUrl: 'https://www.fuquay-varina.org/259/Permits-Inspections',
+    howToGet: 'Contact Fuquay-Varina Inspections at (919) 552-1429.',
+  },
+]
+
 const JUR_LABELS = {
   raleigh: 'Raleigh', durham: 'Durham', chapelhill: 'Chapel Hill',
   apex: 'Apex', hollysprings: 'Holly Springs', wakeforest: 'Wake Forest',
@@ -41,7 +138,7 @@ export default function ContractorMode() {
     businessName: '', dba: '', licenseType: 'gc', licenseNumber: '',
     licenseExpires: '', insuranceCarrier: '', insurancePolicy: '',
     insuranceExpires: '', bondNumber: '', phone: '', email: '',
-    address: '', jurisdictions: [],
+    address: '', jurisdictions: [], jurisdictionIds: {},
   })
   const [savingProfile, setSavingProfile] = useState(false)
   const [profileSaved, setProfileSaved] = useState(false)
@@ -95,6 +192,7 @@ export default function ContractorMode() {
           email: profileData.email || '',
           address: profileData.address || '',
           jurisdictions: profileData.jurisdictions || [],
+          jurisdictionIds: profileData.jurisdiction_ids || {},
         })
         // Pre-fill template vars from profile
         setTemplateVars({
@@ -580,6 +678,57 @@ export default function ContractorMode() {
                   className={`text-xs px-3 py-1.5 rounded-full border transition-colors font-medium ${profileForm.jurisdictions.includes(j.id) ? 'bg-brand-600 text-white border-brand-600' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
                   {j.label}
                 </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 pt-5 mb-6">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Jurisdiction Portal IDs</div>
+            <p className="text-xs text-gray-400 mb-4 leading-relaxed">
+              Save your contractor IDs for each jurisdiction once — Parcoria will auto-fill them on every permit application.
+            </p>
+            <div className="space-y-3">
+              {JURISDICTION_PORTAL_IDS.map(j => (
+                <div key={j.id} className={`rounded-xl border p-4 ${profileForm.jurisdictions.includes(j.id) ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'}`}>
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div>
+                      <div className="text-sm font-medium text-gray-800">{j.label}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">{j.description}</div>
+                    </div>
+                    {j.required && (
+                      <span className="text-xs bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full font-medium flex-shrink-0">Required</span>
+                    )}
+                    {!j.required && (
+                      <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium flex-shrink-0">Portal reg.</span>
+                    )}
+                  </div>
+                  {j.idField ? (
+                    <input
+                      value={profileForm.jurisdictionIds?.[j.id] || ''}
+                      onChange={e => setProfileForm(p => ({ ...p, jurisdictionIds: { ...p.jurisdictionIds, [j.id]: e.target.value } }))}
+                      placeholder={j.placeholder}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={!!profileForm.jurisdictionIds?.[j.id]}
+                          onChange={e => setProfileForm(p => ({ ...p, jurisdictionIds: { ...p.jurisdictionIds, [j.id]: e.target.checked ? 'registered' : '' } }))}
+                          className="w-4 h-4 rounded border-gray-300 text-brand-600"
+                        />
+                        <span className="text-xs text-gray-600">I'm registered in the {j.label} permit portal</span>
+                      </label>
+                      {j.registerUrl && (
+                        <a href={j.registerUrl} target="_blank" rel="noreferrer" className="text-xs text-brand-600 hover:underline flex-shrink-0">Register ↗</a>
+                      )}
+                    </div>
+                  )}
+                  {j.howToGet && (
+                    <div className="text-xs text-gray-400 mt-2">{j.howToGet}</div>
+                  )}
+                </div>
               ))}
             </div>
           </div>

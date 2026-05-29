@@ -62,6 +62,7 @@ export async function saveProfile(profile) {
     email: profile.email || null,
     address: profile.address || null,
     jurisdictions: profile.jurisdictions || [],
+    jurisdiction_ids: profile.jurisdictionIds || {},
     updated_at: new Date().toISOString(),
   }
 

@@ -167,6 +167,7 @@ export default function ApplicationPrefill() {
             contractorCity: parts[1]?.trim() || '',
             contractorZip: parts[2]?.trim() || '',
             signerName: p.business_name || '',
+            durhamCID: p.jurisdiction_ids?.durham || '',
           }))
         }
         setMyContractors(contractors || [])
