@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase, sendMagicLink, getUser, signOut, getProjects, deleteProject } from '../lib/supabase'
 import { isDeveloper, hasAccess } from '../lib/access'
+import { LogoMark } from '../components/Logo'
 
 const JUR_LABELS = {
   raleigh: 'Raleigh', durham: 'Durham',
@@ -51,6 +52,10 @@ export default function Dashboard() {
         setUser(session.user)
         setAuthState('authenticated')
         loadProjects()
+        // If coming from magic link email, navigate to dashboard cleanly
+        if (event === 'SIGNED_IN') {
+          navigate('/dashboard', { replace: true })
+        }
       } else {
         setAuthState('unauthenticated')
       }
@@ -58,6 +63,27 @@ export default function Dashboard() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  async function handleSaveDevProfile() {
+    if (!user) return
+    setSavingProfile(true)
+    try {
+      await supabase.from('developer_profiles').upsert({
+        user_id: user.id,
+        name: devProfile.name,
+        company: devProfile.company,
+        phone: devProfile.phone,
+        email: devProfile.email,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' })
+      setProfileSaved(true)
+      setTimeout(() => setProfileSaved(false), 3000)
+    } catch (err) {
+      setError('Could not save profile')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
 
   async function checkAuth() {
     const currentUser = await getUser()
@@ -155,8 +181,8 @@ export default function Dashboard() {
     return (
       <div className="max-w-md mx-auto px-4 sm:px-6 py-20">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center mx-auto mb-4">
-            <span className="text-white text-lg font-semibold">P</span>
+          <div className="mx-auto mb-4 w-12 h-12 flex items-center justify-center">
+            <LogoMark size={48} />
           </div>
           <h1 className="text-xl font-semibold text-gray-900 mb-2">One more step</h1>
           <p className="text-sm text-gray-500 leading-relaxed">
@@ -213,26 +239,6 @@ export default function Dashboard() {
   }
 
   // Authenticated - show dashboard
-  async function handleSaveDevProfile() {
-    setSavingProfile(true)
-    try {
-      await supabase.from('developer_profiles').upsert({
-        user_id: user.id,
-        name: devProfile.name,
-        company: devProfile.company,
-        phone: devProfile.phone,
-        email: devProfile.email,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' })
-      setProfileSaved(true)
-      setTimeout(() => setProfileSaved(false), 3000)
-    } catch (err) {
-      setError('Could not save profile')
-    } finally {
-      setSavingProfile(false)
-    }
-  }
-
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
 
@@ -266,6 +272,49 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* Tab bar */}
+      <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 mb-6 w-fit">
+        {[['projects', 'My Projects'], ['settings', 'Settings']].map(([id, label]) => (
+          <button key={id} onClick={() => setActiveTab(id)}
+            className={`text-sm px-4 py-1.5 rounded-md font-medium transition-all ${activeTab === id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'settings' && (
+        <div className="max-w-lg">
+          <h2 className="text-base font-semibold text-gray-900 mb-5">Developer Profile</h2>
+          <div className="bg-brand-50 border border-brand-100 rounded-xl px-4 py-3 mb-5 text-xs text-brand-700">
+            Your profile info will be used to pre-fill project briefs and permit applications.
+          </div>
+          <div className="space-y-4">
+            {[
+              { key: 'name', label: 'Your name', placeholder: 'John Smith' },
+              { key: 'company', label: 'Company name', placeholder: 'Smith Development LLC' },
+              { key: 'email', label: 'Contact email', placeholder: 'john@smithdev.com' },
+              { key: 'phone', label: 'Phone', placeholder: '(919) 555-0100' },
+            ].map(f => (
+              <div key={f.key}>
+                <label className="text-xs font-medium text-gray-700 block mb-1.5">{f.label}</label>
+                <input
+                  value={devProfile[f.key]}
+                  onChange={e => setDevProfile(p => ({ ...p, [f.key]: e.target.value }))}
+                  placeholder={f.placeholder}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+            ))}
+            <button onClick={handleSaveDevProfile} disabled={savingProfile}
+              className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50 mt-2">
+              {savingProfile ? 'Saving...' : profileSaved ? '✓ Profile saved' : 'Save profile'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'projects' && <>
 
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
@@ -382,6 +431,9 @@ export default function Dashboard() {
           Email support ↗
         </a>
       </div>
+
+      </>}
+
     </div>
   )
 }
