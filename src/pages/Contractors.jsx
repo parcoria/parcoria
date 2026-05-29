@@ -24,10 +24,69 @@ const TRADE_ICONS = {
   insulation: '🧱', roofing: '🏠', other: '👷',
 }
 
+// Jurisdiction-specific portal ID config — shown dynamically as jurisdictions are toggled
+const PORTAL_ID_CONFIG = {
+  durham: {
+    idField: true,
+    label: 'Durham Contractor ID (CID)',
+    placeholder: 'e.g. 12345',
+    hint: 'Email permittechnicians@durhamnc.gov with your NC license number to request your CID.',
+  },
+  raleigh: {
+    idField: false,
+    label: 'Raleigh Permit & Development Portal',
+    checkboxLabel: 'Registered in the Raleigh permit portal',
+    registerUrl: 'https://raleighnc.gov/permits/services/permit-and-development-portal-help-center',
+    hint: 'No separate ID issued — portal account email is the identifier.',
+  },
+  cary: {
+    idField: false,
+    label: 'Cary ePermit Portal',
+    checkboxLabel: 'Registered in the Cary permit portal',
+    registerUrl: 'https://epermit.townofcary.org',
+  },
+  apex: {
+    idField: false,
+    label: 'Apex ePermit Portal',
+    checkboxLabel: 'Registered in the Apex permit portal',
+    registerUrl: 'https://secure.apexnc.org/eSuite.Permits/WelcomePage.aspx',
+  },
+  chapelhill: {
+    idField: false,
+    label: 'Chapel Hill OpenGov Portal',
+    checkboxLabel: 'Registered in the Chapel Hill permit portal',
+    registerUrl: 'https://chapelhillnc.portal.opengov.com',
+  },
+  hollysprings: {
+    idField: false,
+    label: 'Holly Springs Permit Portal',
+    checkboxLabel: 'Registered in the Holly Springs permit portal',
+    registerUrl: 'https://hollysprings.hs.permit.solutions',
+  },
+  morrisville: {
+    idField: false,
+    label: 'Morrisville Permit Portal',
+    checkboxLabel: 'Registered in the Morrisville permit portal',
+    registerUrl: 'https://www.townofmorrisville.org/government/departments/planning-and-development/permits',
+  },
+  wakeforest: {
+    idField: false,
+    label: 'Wake Forest Permit Portal',
+    checkboxLabel: 'Registered in the Wake Forest permit portal',
+    registerUrl: 'https://www.wakeforestnc.gov/permits',
+  },
+  garner: {
+    idField: false,
+    label: 'Garner Permit Portal',
+    checkboxLabel: 'Registered in the Garner permit portal',
+    registerUrl: 'https://www.garnernc.gov/departments/development-services/permits',
+  },
+}
+
 const EMPTY_FORM = {
   name: '', company: '', tradeType: 'general', licenseNumber: '',
   licenseVerified: false, phone: '', email: '', jurisdictions: [],
-  rating: '', notes: '', isPublic: false,
+  jurisdictionIds: {}, rating: '', notes: '', isPublic: false,
 }
 
 export default function Contractors() {
@@ -86,6 +145,7 @@ export default function Contractors() {
       phone: contractor.phone || '',
       email: contractor.email || '',
       jurisdictions: contractor.jurisdictions || [],
+      jurisdictionIds: contractor.jurisdiction_ids || {},
       rating: contractor.rating || '',
       notes: contractor.notes || '',
       isPublic: contractor.is_public || false,
@@ -110,12 +170,13 @@ export default function Contractors() {
           name: form.name, company: form.company, trade_type: form.tradeType,
           license_number: form.licenseNumber, license_verified: form.licenseVerified,
           phone: form.phone, email: form.email, jurisdictions: form.jurisdictions,
+          jurisdiction_ids: form.jurisdictionIds || {},
           rating: form.rating ? parseInt(form.rating) : null,
           notes: form.notes, is_public: form.isPublic,
         })
         setContractors(prev => prev.map(c => c.id === editingId ? updated : c))
       } else {
-        const created = await addContractor(form)
+        const created = await addContractor({ ...form, jurisdiction_ids: form.jurisdictionIds || {} })
         setContractors(prev => [created, ...prev])
       }
       cancelForm()
@@ -268,7 +329,7 @@ export default function Contractors() {
 
           <div className="mb-4">
             <label className="text-xs font-medium text-gray-700 block mb-2">Jurisdictions they work in</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mb-3">
               {JURISDICTION_OPTIONS.map(jur => (
                 <button key={jur} onClick={() => toggleJurisdiction(jur)}
                   className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${form.jurisdictions.includes(jur) ? 'bg-brand-600 text-white border-brand-600' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
@@ -276,6 +337,52 @@ export default function Contractors() {
                 </button>
               ))}
             </div>
+            {/* Dynamic portal ID fields — appear when jurisdiction is toggled */}
+            {form.jurisdictions.length > 0 && (
+              <div className="space-y-2 mt-3">
+                {form.jurisdictions.map(jur => {
+                  const cfg = PORTAL_ID_CONFIG[jur]
+                  if (!cfg) return null
+                  return (
+                    <div key={jur} className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-medium text-gray-700">{JURISDICTION_LABELS[jur]} — {cfg.label}</span>
+                        {jur === 'durham' && (
+                          <span className="text-xs bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full font-medium">CID required</span>
+                        )}
+                      </div>
+                      {cfg.idField ? (
+                        <input
+                          value={form.jurisdictionIds?.[jur] || ''}
+                          onChange={e => updateForm('jurisdictionIds', { ...form.jurisdictionIds, [jur]: e.target.value })}
+                          placeholder={cfg.placeholder}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+                        />
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={!!form.jurisdictionIds?.[jur]}
+                              onChange={e => updateForm('jurisdictionIds', { ...form.jurisdictionIds, [jur]: e.target.checked ? 'registered' : '' })}
+                              className="w-4 h-4 rounded border-gray-300 text-brand-600"
+                            />
+                            <span className="text-xs text-gray-600">{cfg.checkboxLabel}</span>
+                          </label>
+                          {cfg.registerUrl && (
+                            <a href={cfg.registerUrl} target="_blank" rel="noreferrer"
+                              className="text-xs text-brand-600 hover:underline flex-shrink-0">
+                              Register ↗
+                            </a>
+                          )}
+                        </div>
+                      )}
+                      {cfg.hint && <div className="text-xs text-gray-400 mt-1">{cfg.hint}</div>}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           <div className="mb-4">

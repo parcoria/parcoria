@@ -47,6 +47,7 @@ export async function addContractor(contractor) {
       phone: contractor.phone || null,
       email: contractor.email || null,
       jurisdictions: contractor.jurisdictions || [],
+      jurisdiction_ids: contractor.jurisdiction_ids || {},
       rating: contractor.rating || null,
       notes: contractor.notes || null,
       is_public: contractor.isPublic || false,

@@ -191,6 +191,8 @@ export default function ApplicationPrefill() {
       contractorCity: parts[1]?.trim() || '',
       contractorZip: parts[2]?.trim() || '',
       signerName: f.signerName || c.company || c.name || '',
+      // Pull jurisdiction-specific portal IDs
+      durhamCID: c.jurisdiction_ids?.durham || f.durhamCID || '',
     }))
   }
 
