@@ -136,6 +136,717 @@ function buildInitialForm(params) {
   }
 }
 
+// ─── Module-level sub-components ─────────────────────────────────────────────
+// MUST be defined outside ApplicationPrefill — defining inside causes remount on every keystroke
+
+function Field({ label, value, onChange, placeholder, half, hint, type = 'text', required }) {
+  return (
+    <div className={half ? 'col-span-1' : 'col-span-2'}>
+      <label className="text-xs font-medium text-gray-500 block mb-1">
+        {label}{required && <span className="text-red-400 ml-0.5">*</span>}
+      </label>
+      <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 print:border-gray-400" />
+      {hint && <div className="text-xs text-gray-400 mt-0.5">{hint}</div>}
+    </div>
+  )
+}
+
+function YesNo({ label, checked, onChange }) {
+  return (
+    <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-none">
+      <span className="text-sm text-gray-700">{label}</span>
+      <div className="flex items-center gap-4">
+        <label className="flex items-center gap-1.5 cursor-pointer">
+          <input type="radio" checked={checked === true} onChange={() => onChange(true)} className="w-4 h-4 text-brand-600" />
+          <span className="text-sm text-gray-600">Yes</span>
+        </label>
+        <label className="flex items-center gap-1.5 cursor-pointer">
+          <input type="radio" checked={checked === false} onChange={() => onChange(false)} className="w-4 h-4 text-brand-600" />
+          <span className="text-sm text-gray-600">No</span>
+        </label>
+      </div>
+    </div>
+  )
+}
+
+function ScopePicker({ options, label, workScope, toggleScope }) {
+  return (
+    <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{label}</h2>
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
+        <div className="text-xs text-gray-400 mb-3">Check all items that apply to this project.</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {options.map(item => (
+            <label key={item} className={`flex items-start gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-colors ${
+              workScope.includes(item) ? 'border-brand-200 bg-brand-50' : 'border-gray-100 hover:border-gray-200'
+            }`}>
+              <input type="checkbox" checked={workScope.includes(item)} onChange={() => toggleScope(item)}
+                className="w-4 h-4 mt-0.5 text-brand-600 rounded border-gray-300 flex-shrink-0" />
+              <span className="text-xs text-gray-700 leading-snug">{item}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function BuildingPermitForm({ form, update, profile, myContractors, savedArchitects, fillFromContractor, fillFromArchitect, totalCost, formatMoney }) {
+return (<>
+      {!form.durhamCID && (
+        <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-5 flex items-start gap-3 print:hidden">
+          <span className="text-base flex-shrink-0">⚠️</span>
+          <div>
+            <div className="text-sm font-semibold text-amber-800">Durham Contractor ID (CID) required</div>
+            <div className="text-xs text-amber-700 mt-0.5">Durham requires a CID for all contractors. Email <span className="font-medium">permittechnicians@durhamnc.gov</span> with your license info to request one.</div>
+          </div>
+        </div>
+      )}
+      {profile && (
+        <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3 mb-5 text-xs text-green-700 print:hidden">
+          ✓ Contractor fields pre-filled from your Parcoria profile. Review and update as needed.
+        </div>
+      )}
+
+      <div className="space-y-6">
+        <section>
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Information</h2>
+          <div className="bg-white border border-gray-100 rounded-xl p-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <label className="text-xs font-medium text-gray-500 block mb-1">Job address<span className="text-red-400 ml-0.5">*</span></label>
+                <input value={form.jobAddress} onChange={e => update('jobAddress', e.target.value)} placeholder="123 Main St, Durham, NC 27701"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              </div>
+              <Field label="Lot / Unit" value={form.lotUnit} onChange={v => update('lotUnit', v)} placeholder="e.g. Lot 14" half />
+              <Field label="Subdivision" value={form.subdivision} onChange={v => update('subdivision', v)} placeholder="e.g. Brightleaf" half />
+              <div className="col-span-2">
+                <label className="text-xs font-medium text-gray-500 block mb-1">Job description<span className="text-red-400 ml-0.5">*</span> <span className="font-normal text-gray-400">(must align with checklist and plans)</span></label>
+                <textarea value={form.jobDescription} onChange={e => update('jobDescription', e.target.value)} rows={3}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+    <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Contractor Information</h2>
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
+        {myContractors.length > 0 && (
+          <div className="mb-4 pb-4 border-b border-gray-100">
+            <label className="text-xs font-medium text-gray-500 block mb-1.5">Quick-fill from my contractor network</label>
+            <select defaultValue="" onChange={e => fillFromContractor(e.target.value)}
+              className="w-full border border-brand-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-brand-50">
+              <option value="" disabled>Select a contractor to auto-fill fields below...</option>
+              {myContractors.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.company ? `${c.company} (${c.name})` : c.name}
+                  {c.trade_type ? ` — ${TRADE_TYPES[c.trade_type] || c.trade_type}` : ''}
+                  {c.license_number ? ` · Lic. ${c.license_number}` : ''}
+                </option>
+              ))}
+            </select>
+            <div className="text-xs text-gray-400 mt-1">Fields below will be filled automatically. Edit anything as needed.</div>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Contractor / business name" value={form.contractorName} onChange={v => update('contractorName', v)} placeholder="Smith Construction LLC" required />
+          <Field label="NC license no." value={form.contractorLicense} onChange={v => update('contractorLicense', v)} placeholder="78234" half required />
+          <div className="col-span-1">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Durham Contractor ID (CID)<span className="text-red-400 ml-0.5">*</span></label>
+            <input value={form.durhamCID} onChange={e => update('durhamCID', e.target.value)} placeholder="Request from Durham if needed"
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 ${!form.durhamCID ? 'border-amber-300 bg-amber-50' : 'border-gray-200'}`} />
+          </div>
+          <Field label="Email" value={form.contractorEmail} onChange={v => update('contractorEmail', v)} placeholder="john@smithconstruction.com" half type="email" />
+          <Field label="Phone" value={form.contractorPhone} onChange={v => update('contractorPhone', v)} placeholder="(919) 555-0100" half />
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Address</label>
+            <div className="grid grid-cols-3 gap-2">
+              <input value={form.contractorAddress} onChange={e => update('contractorAddress', e.target.value)} placeholder="Street address"
+                className="col-span-3 sm:col-span-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              <input value={form.contractorCity} onChange={e => update('contractorCity', e.target.value)} placeholder="City"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              <input value={form.contractorZip} onChange={e => update('contractorZip', e.target.value)} placeholder="ZIP"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+        <section>
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Architect <span className="font-normal normal-case text-gray-400">(if applicable)</span></h2>
+          <div className="bg-white border border-gray-100 rounded-xl p-5">
+            {savedArchitects.length > 0 && (
+              <div className="mb-4 pb-4 border-b border-gray-100">
+                <label className="text-xs font-medium text-gray-500 block mb-1.5">Quick-fill from my contractor network</label>
+                <select defaultValue="" onChange={e => fillFromArchitect(e.target.value)}
+                  className="w-full border border-brand-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-brand-50">
+                  <option value="" disabled>Select an architect to auto-fill fields below...</option>
+                  {savedArchitects.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.company ? `${c.company} (${c.name})` : c.name}
+                      {c.license_number ? ` · Lic. ${c.license_number}` : ''}
+                    </option>
+                  ))}
+                </select>
+                <div className="text-xs text-gray-400 mt-1">Fields below will be filled automatically. Edit anything as needed.</div>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Architect name" value={form.architectName} onChange={v => update('architectName', v)} placeholder="Jane Doe, AIA" half />
+              <Field label="Email" value={form.architectEmail} onChange={v => update('architectEmail', v)} placeholder="jane@doearchitecture.com" half type="email" />
+              <Field label="Phone" value={form.architectPhone} onChange={v => update('architectPhone', v)} placeholder="(919) 555-0200" half />
+            </div>
+          </div>
+        </section>
+
+    <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Property Owner</h2>
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Property owner name<span className="text-red-400 ml-0.5">*</span></label>
+            <input value={form.ownerName} onChange={e => update('ownerName', e.target.value)} placeholder="Full legal name"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+          <Field label="Owner email" value={form.ownerEmail} onChange={v => update('ownerEmail', v)} placeholder="owner@email.com" half type="email" />
+          <Field label="Owner phone" value={form.ownerPhone} onChange={v => update('ownerPhone', v)} placeholder="(919) 555-0300" half />
+        </div>
+      </div>
+    </section>
+
+        <section>
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Construction Costs</h2>
+          <div className="bg-white border border-gray-100 rounded-xl p-5">
+            <div className="text-xs text-gray-400 mb-4 leading-relaxed">
+              Must reflect current market value for all labor and materials. Durham requires no line left blank.
+            </div>
+            <div className="space-y-3">
+              {COST_FIELDS.map(f => (
+                <div key={f.key} className="flex items-center gap-4">
+                  {f.key !== 'building' && (
+                    <input type="checkbox" checked={form[`has${f.key.charAt(0).toUpperCase() + f.key.slice(1)}`] ?? true}
+                      onChange={e => update(`has${f.key.charAt(0).toUpperCase() + f.key.slice(1)}`, e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-brand-600 flex-shrink-0" />
+                  )}
+                  {f.key === 'building' && <div className="w-4 h-4 flex-shrink-0" />}
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-gray-800">{f.label}</div>
+                    <div className="text-xs text-gray-400">{f.hint}</div>
+                  </div>
+                  <input value={form[f.key]} onChange={e => update(f.key, e.target.value)}
+                    onBlur={e => update(f.key, formatMoney(e.target.value))}
+                    placeholder="$0.00" className="w-32 border border-gray-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                </div>
+              ))}
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                <div className="text-sm font-semibold text-gray-900">Total project cost</div>
+                <div className="text-sm font-semibold text-gray-900">${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Required Questions</h2>
+          <div className="bg-white border border-gray-100 rounded-xl p-5">
+            <YesNo label="Does this project exceed 12,000 sq ft of land disturbance?" checked={form.landDisturbance} onChange={v => update('landDisturbance', v)} />
+            <YesNo label="Does this project include public food service areas?" checked={form.publicFood} onChange={v => update('publicFood', v)} />
+            <YesNo label="Is this a single-family, duplex, or townhome that includes a sprinkler system?" checked={form.sprinkler} onChange={v => update('sprinkler', v)} />
+            <YesNo label="Will a sub-slab soil exhaust system be installed?" checked={form.subSlab} onChange={v => update('subSlab', v)} />
+            <YesNo label="Is this property serviced or planned to be serviced by a well or septic tank?" checked={form.wellSeptic} onChange={v => update('wellSeptic', v)} />
+            <YesNo label="Is an alteration to an existing natural or man-made drainage system proposed?" checked={form.drainage} onChange={v => update('drainage', v)} />
+            {form.wellSeptic && <div className="bg-amber-50 border border-amber-100 rounded-lg px-4 py-3 mt-3 text-xs text-amber-700">Well/septic selected: Contact Durham Environmental Health at (919) 560-7800 for approval before proceeding.</div>}
+            {form.drainage && <div className="bg-amber-50 border border-amber-100 rounded-lg px-4 py-3 mt-2 text-xs text-amber-700">Drainage alteration: A separate drainage permit application may be required. Contact (919) 560-4326.</div>}
+          </div>
+        </section>
+
+            <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Authorization</h2>
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
+        <div className="text-xs text-gray-500 leading-relaxed mb-4">The owner or authorized agent signing this application is responsible for determining whether sewer, water, gas and other utilities are available. All easements and restrictions must be shown on the plot plan. The applicant must adhere to all codes and ordinances. Applications which are not completed to 'Issued' status within 6 months will expire.</div>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Print name" value={form.signerName} onChange={v => update('signerName', v)} placeholder="Full name" half required />
+          <Field label="Date" value={form.signDate} onChange={v => update('signDate', v)} placeholder="MM/DD/YYYY" half />
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Signature <span className="font-normal text-gray-400">(sign on printed copy)</span></label>
+            <div className="border border-dashed border-gray-200 rounded-lg h-12 flex items-center justify-center text-xs text-gray-300 print:border-gray-400">
+              Sign here after printing
+            </div>
+          </div>
+        </div>
+        <div className="mt-4">
+          <label className="text-xs font-medium text-gray-500 block mb-1">Additional notes <span className="text-gray-400">(optional)</span></label>
+          <textarea value={form.notes} onChange={e => update('notes', e.target.value)} rows={2} placeholder="Any special conditions or clarifications..."
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
+        </div>
+      </div>
+    </section>
+
+        <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 print:hidden">
+          <div className="text-sm font-semibold text-brand-900 mb-2">How to submit this application</div>
+          <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
+            <li>1. Review every field above — Durham requires no blanks or TBD entries</li>
+            <li>2. Click <strong>"Generate & Download PDF"</strong> above — a filled application PDF will download instantly</li>
+            <li>3. Sign the PDF (wet signature required by Durham)</li>
+            <li>4. Upload to <a href="https://dplans.durhamnc.gov" target="_blank" rel="noreferrer" className="underline font-medium">Dplans (dplans.durhamnc.gov)</a> along with stamped construction drawings</li>
+            <li>5. Also upload the completed <a href="https://www.durhamnc.gov/DocumentCenter/View/22135/Residential-Plan-Review-Checklist-PDF" target="_blank" rel="noreferrer" className="underline font-medium">Residential Plan Review Checklist</a></li>
+            <li>6. Pay the plan review fee at submission (deducted from permit fee at issuance)</li>
+          </ol>
+        </div>
+      </div>
+</> )
+}
+
+function ElectricalPermitForm({ form, update, myContractors, fillFromContractor, toggleScope }) {
+return (<div className="space-y-6">
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Information</h2>
+        <div className="bg-white border border-gray-100 rounded-xl p-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-gray-500 block mb-1">Job address<span className="text-red-400 ml-0.5">*</span></label>
+              <input value={form.jobAddress} onChange={e => update('jobAddress', e.target.value)} placeholder="123 Main St, Durham, NC 27701"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-gray-500 block mb-1">Description of work<span className="text-red-400 ml-0.5">*</span></label>
+              <textarea value={form.jobDescription} onChange={e => update('jobDescription', e.target.value)} rows={2}
+                placeholder="e.g. New electrical service installation for new single-family home construction"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <ScopePicker options={ELECTRICAL_SCOPE_OPTIONS} label="Scope of Electrical Work" workScope={form.workScope} toggleScope={toggleScope} />
+
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Electrical Details</h2>
+        <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1">Service size (amps)</label>
+              <select value={form.serviceAmps} onChange={e => update('serviceAmps', e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                <option value="">Select...</option>
+                {['100A', '150A', '200A', '320A', '400A', 'Not applicable'].map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1">Number of circuits</label>
+              <input value={form.numCircuits} onChange={e => update('numCircuits', e.target.value)} placeholder="e.g. 32"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1">Wiring method</label>
+              <select value={form.wiringMethod} onChange={e => update('wiringMethod', e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                <option value="">Select...</option>
+                {['NM-B (Romex)', 'EMT conduit', 'MC cable', 'PVC conduit', 'Mixed', 'Not yet determined'].map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1">Estimated cost of electrical work</label>
+              <input value={form.estimatedCost} onChange={e => update('estimatedCost', e.target.value)}
+                onBlur={e => update('estimatedCost', formatMoney(e.target.value))} placeholder="$0.00"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+          </div>
+          <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-xs text-blue-700">
+            <strong>NCBEEC license required:</strong> All electrical work in Durham requires a NC-licensed electrical contractor. Verify at <a href="https://www.ncbeec.org/license-lookup" target="_blank" rel="noreferrer" className="underline">ncbeec.org/license-lookup</a> before signing any contract.
+          </div>
+        </div>
+      </section>
+
+    <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Contractor Information</h2>
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
+        {myContractors.length > 0 && (
+          <div className="mb-4 pb-4 border-b border-gray-100">
+            <label className="text-xs font-medium text-gray-500 block mb-1.5">Quick-fill from my contractor network</label>
+            <select defaultValue="" onChange={e => fillFromContractor(e.target.value)}
+              className="w-full border border-brand-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-brand-50">
+              <option value="" disabled>Select a contractor to auto-fill fields below...</option>
+              {myContractors.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.company ? `${c.company} (${c.name})` : c.name}
+                  {c.trade_type ? ` — ${TRADE_TYPES[c.trade_type] || c.trade_type}` : ''}
+                  {c.license_number ? ` · Lic. ${c.license_number}` : ''}
+                </option>
+              ))}
+            </select>
+            <div className="text-xs text-gray-400 mt-1">Fields below will be filled automatically. Edit anything as needed.</div>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Contractor / business name" value={form.contractorName} onChange={v => update('contractorName', v)} placeholder="Smith Construction LLC" required />
+          <Field label="NC license no." value={form.contractorLicense} onChange={v => update('contractorLicense', v)} placeholder="78234" half required />
+          <div className="col-span-1">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Durham Contractor ID (CID)<span className="text-red-400 ml-0.5">*</span></label>
+            <input value={form.durhamCID} onChange={e => update('durhamCID', e.target.value)} placeholder="Request from Durham if needed"
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 ${!form.durhamCID ? 'border-amber-300 bg-amber-50' : 'border-gray-200'}`} />
+          </div>
+          <Field label="Email" value={form.contractorEmail} onChange={v => update('contractorEmail', v)} placeholder="john@smithconstruction.com" half type="email" />
+          <Field label="Phone" value={form.contractorPhone} onChange={v => update('contractorPhone', v)} placeholder="(919) 555-0100" half />
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Address</label>
+            <div className="grid grid-cols-3 gap-2">
+              <input value={form.contractorAddress} onChange={e => update('contractorAddress', e.target.value)} placeholder="Street address"
+                className="col-span-3 sm:col-span-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              <input value={form.contractorCity} onChange={e => update('contractorCity', e.target.value)} placeholder="City"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              <input value={form.contractorZip} onChange={e => update('contractorZip', e.target.value)} placeholder="ZIP"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Property Owner</h2>
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Property owner name<span className="text-red-400 ml-0.5">*</span></label>
+            <input value={form.ownerName} onChange={e => update('ownerName', e.target.value)} placeholder="Full legal name"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+          <Field label="Owner email" value={form.ownerEmail} onChange={v => update('ownerEmail', v)} placeholder="owner@email.com" half type="email" />
+          <Field label="Owner phone" value={form.ownerPhone} onChange={v => update('ownerPhone', v)} placeholder="(919) 555-0300" half />
+        </div>
+      </div>
+    </section>
+          <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Authorization</h2>
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
+        <div className="text-xs text-gray-500 leading-relaxed mb-4">By submitting this application, the applicant certifies that all electrical work will be performed by or under the supervision of a NC-licensed electrical contractor, and that all work will conform to the 2023 NEC as adopted by NC and all applicable Durham codes.</div>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Print name" value={form.signerName} onChange={v => update('signerName', v)} placeholder="Full name" half required />
+          <Field label="Date" value={form.signDate} onChange={v => update('signDate', v)} placeholder="MM/DD/YYYY" half />
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Signature <span className="font-normal text-gray-400">(sign on printed copy)</span></label>
+            <div className="border border-dashed border-gray-200 rounded-lg h-12 flex items-center justify-center text-xs text-gray-300 print:border-gray-400">
+              Sign here after printing
+            </div>
+          </div>
+        </div>
+        <div className="mt-4">
+          <label className="text-xs font-medium text-gray-500 block mb-1">Additional notes <span className="text-gray-400">(optional)</span></label>
+          <textarea value={form.notes} onChange={e => update('notes', e.target.value)} rows={2} placeholder="Any special conditions or clarifications..."
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
+        </div>
+      </div>
+    </section>
+
+      <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 print:hidden">
+        <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Electrical Permit</div>
+        <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
+          <li>1. Review all fields above</li>
+          <li>2. Sign the downloaded PDF (wet signature required by Durham)</li>
+          <li>3. Submit via <a href="https://ldo4.durhamnc.gov/DurhamWeb" target="_blank" rel="noreferrer" className="underline font-medium">Durham LDO Portal (ldo4.durhamnc.gov/DurhamWeb)</a></li>
+          <li>4. LDO portal requires a contractor account — your CID is your login identifier</li>
+          <li>5. Electrical permits are typically issued same-day or next day for residential work</li>
+        </ol>
+      </div>
+</div>)
+}
+
+function PlumbingPermitForm({ form, update, myContractors, fillFromContractor, toggleScope }) {
+return (<div className="space-y-6">
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Information</h2>
+        <div className="bg-white border border-gray-100 rounded-xl p-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-gray-500 block mb-1">Job address<span className="text-red-400 ml-0.5">*</span></label>
+              <input value={form.jobAddress} onChange={e => update('jobAddress', e.target.value)} placeholder="123 Main St, Durham, NC 27701"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-gray-500 block mb-1">Description of work<span className="text-red-400 ml-0.5">*</span></label>
+              <textarea value={form.jobDescription} onChange={e => update('jobDescription', e.target.value)} rows={2}
+                placeholder="e.g. Plumbing rough-in and fixtures for new single-family home — 3 bathrooms, kitchen, laundry"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <ScopePicker options={PLUMBING_SCOPE_OPTIONS} label="Scope of Plumbing Work" workScope={form.workScope} toggleScope={toggleScope} />
+
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Plumbing Details</h2>
+        <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1">Number of fixtures</label>
+              <input value={form.numCircuits} onChange={e => update('numCircuits', e.target.value)} placeholder="e.g. 12 fixtures total"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1">Estimated cost of plumbing work</label>
+              <input value={form.estimatedCost} onChange={e => update('estimatedCost', e.target.value)}
+                onBlur={e => update('estimatedCost', formatMoney(e.target.value))} placeholder="$0.00"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+          </div>
+          <YesNo label="Does scope include gas piping (natural gas or LP)?" checked={form.gasWork} onChange={v => update('gasWork', v)} />
+          {form.gasWork && (
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1">Gas type</label>
+              <select value={form.gasType} onChange={e => update('gasType', e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                <option value="">Select...</option>
+                <option value="Natural gas">Natural gas</option>
+                <option value="LP / propane">LP / propane</option>
+              </select>
+            </div>
+          )}
+          <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-xs text-blue-700">
+            <strong>NC Plumbing/HVAC Board license required.</strong> Verify contractor license at <a href="https://www.nclicensing.org/license-lookup" target="_blank" rel="noreferrer" className="underline">nclicensing.org/license-lookup</a> before signing any contract. Gas piping requires a separate gas license classification.
+          </div>
+        </div>
+      </section>
+
+    <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Contractor Information</h2>
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
+        {myContractors.length > 0 && (
+          <div className="mb-4 pb-4 border-b border-gray-100">
+            <label className="text-xs font-medium text-gray-500 block mb-1.5">Quick-fill from my contractor network</label>
+            <select defaultValue="" onChange={e => fillFromContractor(e.target.value)}
+              className="w-full border border-brand-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-brand-50">
+              <option value="" disabled>Select a contractor to auto-fill fields below...</option>
+              {myContractors.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.company ? `${c.company} (${c.name})` : c.name}
+                  {c.trade_type ? ` — ${TRADE_TYPES[c.trade_type] || c.trade_type}` : ''}
+                  {c.license_number ? ` · Lic. ${c.license_number}` : ''}
+                </option>
+              ))}
+            </select>
+            <div className="text-xs text-gray-400 mt-1">Fields below will be filled automatically. Edit anything as needed.</div>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Contractor / business name" value={form.contractorName} onChange={v => update('contractorName', v)} placeholder="Smith Construction LLC" required />
+          <Field label="NC license no." value={form.contractorLicense} onChange={v => update('contractorLicense', v)} placeholder="78234" half required />
+          <div className="col-span-1">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Durham Contractor ID (CID)<span className="text-red-400 ml-0.5">*</span></label>
+            <input value={form.durhamCID} onChange={e => update('durhamCID', e.target.value)} placeholder="Request from Durham if needed"
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 ${!form.durhamCID ? 'border-amber-300 bg-amber-50' : 'border-gray-200'}`} />
+          </div>
+          <Field label="Email" value={form.contractorEmail} onChange={v => update('contractorEmail', v)} placeholder="john@smithconstruction.com" half type="email" />
+          <Field label="Phone" value={form.contractorPhone} onChange={v => update('contractorPhone', v)} placeholder="(919) 555-0100" half />
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Address</label>
+            <div className="grid grid-cols-3 gap-2">
+              <input value={form.contractorAddress} onChange={e => update('contractorAddress', e.target.value)} placeholder="Street address"
+                className="col-span-3 sm:col-span-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              <input value={form.contractorCity} onChange={e => update('contractorCity', e.target.value)} placeholder="City"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              <input value={form.contractorZip} onChange={e => update('contractorZip', e.target.value)} placeholder="ZIP"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Property Owner</h2>
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Property owner name<span className="text-red-400 ml-0.5">*</span></label>
+            <input value={form.ownerName} onChange={e => update('ownerName', e.target.value)} placeholder="Full legal name"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+          <Field label="Owner email" value={form.ownerEmail} onChange={v => update('ownerEmail', v)} placeholder="owner@email.com" half type="email" />
+          <Field label="Owner phone" value={form.ownerPhone} onChange={v => update('ownerPhone', v)} placeholder="(919) 555-0300" half />
+        </div>
+      </div>
+    </section>
+          <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Authorization</h2>
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
+        <div className="text-xs text-gray-500 leading-relaxed mb-4">By submitting this application, the applicant certifies that all plumbing work will be performed by or under the supervision of a NC-licensed plumbing contractor, and that all work will conform to the 2018 NC Plumbing Code and applicable Durham amendments.</div>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Print name" value={form.signerName} onChange={v => update('signerName', v)} placeholder="Full name" half required />
+          <Field label="Date" value={form.signDate} onChange={v => update('signDate', v)} placeholder="MM/DD/YYYY" half />
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Signature <span className="font-normal text-gray-400">(sign on printed copy)</span></label>
+            <div className="border border-dashed border-gray-200 rounded-lg h-12 flex items-center justify-center text-xs text-gray-300 print:border-gray-400">
+              Sign here after printing
+            </div>
+          </div>
+        </div>
+        <div className="mt-4">
+          <label className="text-xs font-medium text-gray-500 block mb-1">Additional notes <span className="text-gray-400">(optional)</span></label>
+          <textarea value={form.notes} onChange={e => update('notes', e.target.value)} rows={2} placeholder="Any special conditions or clarifications..."
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
+        </div>
+      </div>
+    </section>
+
+      <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 print:hidden">
+        <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Plumbing Permit</div>
+        <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
+          <li>1. Review all fields above</li>
+          <li>2. Sign the downloaded PDF (wet signature required by Durham)</li>
+          <li>3. Submit via <a href="https://ldo4.durhamnc.gov/DurhamWeb" target="_blank" rel="noreferrer" className="underline font-medium">Durham LDO Portal</a> — separate submission from the building permit</li>
+          <li>4. If scope includes gas piping, Durham may require a separate gas permit in addition to plumbing</li>
+          <li>5. Rough-in inspection required before walls are closed — schedule via LDO portal</li>
+        </ol>
+      </div>
+</div>)
+}
+
+function MechanicalPermitForm({ form, update, myContractors, fillFromContractor, toggleScope }) {
+return (<div className="space-y-6">
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Information</h2>
+        <div className="bg-white border border-gray-100 rounded-xl p-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-gray-500 block mb-1">Job address<span className="text-red-400 ml-0.5">*</span></label>
+              <input value={form.jobAddress} onChange={e => update('jobAddress', e.target.value)} placeholder="123 Main St, Durham, NC 27701"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-gray-500 block mb-1">Description of work<span className="text-red-400 ml-0.5">*</span></label>
+              <textarea value={form.jobDescription} onChange={e => update('jobDescription', e.target.value)} rows={2}
+                placeholder="e.g. Install 3-ton heat pump system with air handler and ductwork for new single-family home"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <ScopePicker options={MECHANICAL_SCOPE_OPTIONS} label="Scope of Mechanical Work" workScope={form.workScope} toggleScope={toggleScope} />
+
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Mechanical Details</h2>
+        <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1">System type</label>
+              <select value={form.wiringMethod} onChange={e => update('wiringMethod', e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                <option value="">Select...</option>
+                {['Heat pump (air-to-air)', 'Gas furnace + AC', 'Mini-split / ductless', 'Geothermal heat pump', 'Boiler', 'Not yet determined'].map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1">Estimated cost of mechanical work</label>
+              <input value={form.estimatedCost} onChange={e => update('estimatedCost', e.target.value)}
+                onBlur={e => update('estimatedCost', formatMoney(e.target.value))} placeholder="$0.00"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+          </div>
+          <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-xs text-blue-700">
+            <strong>NC Plumbing/HVAC Board license required.</strong> Verify contractor license at <a href="https://www.nclicensing.org/license-lookup" target="_blank" rel="noreferrer" className="underline">nclicensing.org/license-lookup</a>. Gas appliance connections require both a mechanical and plumbing/gas license.
+          </div>
+        </div>
+      </section>
+
+    <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Contractor Information</h2>
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
+        {myContractors.length > 0 && (
+          <div className="mb-4 pb-4 border-b border-gray-100">
+            <label className="text-xs font-medium text-gray-500 block mb-1.5">Quick-fill from my contractor network</label>
+            <select defaultValue="" onChange={e => fillFromContractor(e.target.value)}
+              className="w-full border border-brand-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-brand-50">
+              <option value="" disabled>Select a contractor to auto-fill fields below...</option>
+              {myContractors.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.company ? `${c.company} (${c.name})` : c.name}
+                  {c.trade_type ? ` — ${TRADE_TYPES[c.trade_type] || c.trade_type}` : ''}
+                  {c.license_number ? ` · Lic. ${c.license_number}` : ''}
+                </option>
+              ))}
+            </select>
+            <div className="text-xs text-gray-400 mt-1">Fields below will be filled automatically. Edit anything as needed.</div>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Contractor / business name" value={form.contractorName} onChange={v => update('contractorName', v)} placeholder="Smith Construction LLC" required />
+          <Field label="NC license no." value={form.contractorLicense} onChange={v => update('contractorLicense', v)} placeholder="78234" half required />
+          <div className="col-span-1">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Durham Contractor ID (CID)<span className="text-red-400 ml-0.5">*</span></label>
+            <input value={form.durhamCID} onChange={e => update('durhamCID', e.target.value)} placeholder="Request from Durham if needed"
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 ${!form.durhamCID ? 'border-amber-300 bg-amber-50' : 'border-gray-200'}`} />
+          </div>
+          <Field label="Email" value={form.contractorEmail} onChange={v => update('contractorEmail', v)} placeholder="john@smithconstruction.com" half type="email" />
+          <Field label="Phone" value={form.contractorPhone} onChange={v => update('contractorPhone', v)} placeholder="(919) 555-0100" half />
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Address</label>
+            <div className="grid grid-cols-3 gap-2">
+              <input value={form.contractorAddress} onChange={e => update('contractorAddress', e.target.value)} placeholder="Street address"
+                className="col-span-3 sm:col-span-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              <input value={form.contractorCity} onChange={e => update('contractorCity', e.target.value)} placeholder="City"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              <input value={form.contractorZip} onChange={e => update('contractorZip', e.target.value)} placeholder="ZIP"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Property Owner</h2>
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Property owner name<span className="text-red-400 ml-0.5">*</span></label>
+            <input value={form.ownerName} onChange={e => update('ownerName', e.target.value)} placeholder="Full legal name"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+          <Field label="Owner email" value={form.ownerEmail} onChange={v => update('ownerEmail', v)} placeholder="owner@email.com" half type="email" />
+          <Field label="Owner phone" value={form.ownerPhone} onChange={v => update('ownerPhone', v)} placeholder="(919) 555-0300" half />
+        </div>
+      </div>
+    </section>
+          <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Authorization</h2>
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
+        <div className="text-xs text-gray-500 leading-relaxed mb-4">By submitting this application, the applicant certifies that all mechanical work will be performed by or under the supervision of a NC-licensed HVAC/mechanical contractor, and that all work will conform to the 2018 NC Mechanical Code and applicable Durham amendments.</div>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Print name" value={form.signerName} onChange={v => update('signerName', v)} placeholder="Full name" half required />
+          <Field label="Date" value={form.signDate} onChange={v => update('signDate', v)} placeholder="MM/DD/YYYY" half />
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Signature <span className="font-normal text-gray-400">(sign on printed copy)</span></label>
+            <div className="border border-dashed border-gray-200 rounded-lg h-12 flex items-center justify-center text-xs text-gray-300 print:border-gray-400">
+              Sign here after printing
+            </div>
+          </div>
+        </div>
+        <div className="mt-4">
+          <label className="text-xs font-medium text-gray-500 block mb-1">Additional notes <span className="text-gray-400">(optional)</span></label>
+          <textarea value={form.notes} onChange={e => update('notes', e.target.value)} rows={2} placeholder="Any special conditions or clarifications..."
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
+        </div>
+      </div>
+    </section>
+
+      <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 print:hidden">
+        <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Mechanical Permit</div>
+        <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
+          <li>1. Review all fields above</li>
+          <li>2. Sign the downloaded PDF (wet signature required by Durham)</li>
+          <li>3. Submit via <a href="https://ldo4.durhamnc.gov/DurhamWeb" target="_blank" rel="noreferrer" className="underline font-medium">Durham LDO Portal</a></li>
+          <li>4. Rough-in inspection required before ductwork or equipment is covered</li>
+          <li>5. Manual J load calculation may be requested by Durham for new construction — have it ready</li>
+        </ol>
+      </div>
+    </div>
+  )
+}
+
+
 export default function ApplicationPrefill() {
   const [params] = useSearchParams()
   const [permitType, setPermitType] = useState(params.get('type') || 'building')
@@ -233,497 +944,13 @@ export default function ApplicationPrefill() {
   }, 0)
 
   // ─── Shared sub-components ──────────────────────────────────────────────
-
-  const Field = ({ label, value, onChange, placeholder, half, hint, type = 'text', required }) => (
-    <div className={half ? 'col-span-1' : 'col-span-2'}>
-      <label className="text-xs font-medium text-gray-500 block mb-1">
-        {label}{required && <span className="text-red-400 ml-0.5">*</span>}
-      </label>
-      <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 print:border-gray-400" />
-      {hint && <div className="text-xs text-gray-400 mt-0.5">{hint}</div>}
-    </div>
-  )
-
-  const YesNo = ({ label, checked, onChange }) => (
-    <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-none">
-      <span className="text-sm text-gray-700">{label}</span>
-      <div className="flex items-center gap-4">
-        <label className="flex items-center gap-1.5 cursor-pointer">
-          <input type="radio" checked={checked === true} onChange={() => onChange(true)} className="w-4 h-4 text-brand-600" />
-          <span className="text-sm text-gray-600">Yes</span>
-        </label>
-        <label className="flex items-center gap-1.5 cursor-pointer">
-          <input type="radio" checked={checked === false} onChange={() => onChange(false)} className="w-4 h-4 text-brand-600" />
-          <span className="text-sm text-gray-600">No</span>
-        </label>
-      </div>
-    </div>
-  )
-
-  // Shared contractor network dropdown + fields
-  const ContractorSection = () => (
-    <section>
-      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Contractor Information</h2>
-      <div className="bg-white border border-gray-100 rounded-xl p-5">
-        {myContractors.length > 0 && (
-          <div className="mb-4 pb-4 border-b border-gray-100">
-            <label className="text-xs font-medium text-gray-500 block mb-1.5">Quick-fill from my contractor network</label>
-            <select defaultValue="" onChange={e => fillFromContractor(e.target.value)}
-              className="w-full border border-brand-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-brand-50">
-              <option value="" disabled>Select a contractor to auto-fill fields below...</option>
-              {myContractors.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.company ? `${c.company} (${c.name})` : c.name}
-                  {c.trade_type ? ` — ${TRADE_TYPES[c.trade_type] || c.trade_type}` : ''}
-                  {c.license_number ? ` · Lic. ${c.license_number}` : ''}
-                </option>
-              ))}
-            </select>
-            <div className="text-xs text-gray-400 mt-1">Fields below will be filled automatically. Edit anything as needed.</div>
-          </div>
-        )}
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Contractor / business name" value={form.contractorName} onChange={v => update('contractorName', v)} placeholder="Smith Construction LLC" required />
-          <Field label="NC license no." value={form.contractorLicense} onChange={v => update('contractorLicense', v)} placeholder="78234" half required />
-          <div className="col-span-1">
-            <label className="text-xs font-medium text-gray-500 block mb-1">Durham Contractor ID (CID)<span className="text-red-400 ml-0.5">*</span></label>
-            <input value={form.durhamCID} onChange={e => update('durhamCID', e.target.value)} placeholder="Request from Durham if needed"
-              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 ${!form.durhamCID ? 'border-amber-300 bg-amber-50' : 'border-gray-200'}`} />
-          </div>
-          <Field label="Email" value={form.contractorEmail} onChange={v => update('contractorEmail', v)} placeholder="john@smithconstruction.com" half type="email" />
-          <Field label="Phone" value={form.contractorPhone} onChange={v => update('contractorPhone', v)} placeholder="(919) 555-0100" half />
-          <div className="col-span-2">
-            <label className="text-xs font-medium text-gray-500 block mb-1">Address</label>
-            <div className="grid grid-cols-3 gap-2">
-              <input value={form.contractorAddress} onChange={e => update('contractorAddress', e.target.value)} placeholder="Street address"
-                className="col-span-3 sm:col-span-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-              <input value={form.contractorCity} onChange={e => update('contractorCity', e.target.value)} placeholder="City"
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-              <input value={form.contractorZip} onChange={e => update('contractorZip', e.target.value)} placeholder="ZIP"
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-
-  const OwnerSection = () => (
-    <section>
-      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Property Owner</h2>
-      <div className="bg-white border border-gray-100 rounded-xl p-5">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <label className="text-xs font-medium text-gray-500 block mb-1">Property owner name<span className="text-red-400 ml-0.5">*</span></label>
-            <input value={form.ownerName} onChange={e => update('ownerName', e.target.value)} placeholder="Full legal name"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-          </div>
-          <Field label="Owner email" value={form.ownerEmail} onChange={v => update('ownerEmail', v)} placeholder="owner@email.com" half type="email" />
-          <Field label="Owner phone" value={form.ownerPhone} onChange={v => update('ownerPhone', v)} placeholder="(919) 555-0300" half />
-        </div>
-      </div>
-    </section>
-  )
-
-  const SignatureSection = ({ disclaimer }) => (
-    <section>
-      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Authorization</h2>
-      <div className="bg-white border border-gray-100 rounded-xl p-5">
-        <div className="text-xs text-gray-500 leading-relaxed mb-4">{disclaimer}</div>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Print name" value={form.signerName} onChange={v => update('signerName', v)} placeholder="Full name" half required />
-          <Field label="Date" value={form.signDate} onChange={v => update('signDate', v)} placeholder="MM/DD/YYYY" half />
-          <div className="col-span-2">
-            <label className="text-xs font-medium text-gray-500 block mb-1">Signature <span className="font-normal text-gray-400">(sign on printed copy)</span></label>
-            <div className="border border-dashed border-gray-200 rounded-lg h-12 flex items-center justify-center text-xs text-gray-300 print:border-gray-400">
-              Sign here after printing
-            </div>
-          </div>
-        </div>
-        {form.notes !== undefined && (
-          <div className="mt-4">
-            <label className="text-xs font-medium text-gray-500 block mb-1">Additional notes <span className="text-gray-400">(optional)</span></label>
-            <textarea value={form.notes} onChange={e => update('notes', e.target.value)} rows={2} placeholder="Any special conditions or clarifications..."
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
-          </div>
-        )}
-      </div>
-    </section>
-  )
+  // Field, YesNo, ScopePicker are defined at module level above to prevent remount on keystroke
 
   // ─── Trade permit scope picker ────────────────────────────────────────────
+  // ScopePicker is defined at module level — pass workScope and toggleScope as props
 
-  const ScopePicker = ({ options, label }) => (
-    <section>
-      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{label}</h2>
-      <div className="bg-white border border-gray-100 rounded-xl p-5">
-        <div className="text-xs text-gray-400 mb-3">Check all items that apply to this project.</div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {options.map(item => (
-            <label key={item} className={`flex items-start gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-colors ${
-              form.workScope.includes(item) ? 'border-brand-200 bg-brand-50' : 'border-gray-100 hover:border-gray-200'
-            }`}>
-              <input type="checkbox" checked={form.workScope.includes(item)} onChange={() => toggleScope(item)}
-                className="w-4 h-4 mt-0.5 text-brand-600 rounded border-gray-300 flex-shrink-0" />
-              <span className="text-xs text-gray-700 leading-snug">{item}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
+  // Form components defined at module level above
 
-  // ─── Permit-specific forms ────────────────────────────────────────────────
-
-  const BuildingForm = () => (
-    <>
-      {!form.durhamCID && (
-        <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-5 flex items-start gap-3 print:hidden">
-          <span className="text-base flex-shrink-0">⚠️</span>
-          <div>
-            <div className="text-sm font-semibold text-amber-800">Durham Contractor ID (CID) required</div>
-            <div className="text-xs text-amber-700 mt-0.5">Durham requires a CID for all contractors. Email <span className="font-medium">permittechnicians@durhamnc.gov</span> with your license info to request one.</div>
-          </div>
-        </div>
-      )}
-      {profile && (
-        <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3 mb-5 text-xs text-green-700 print:hidden">
-          ✓ Contractor fields pre-filled from your Parcoria profile. Review and update as needed.
-        </div>
-      )}
-
-      <div className="space-y-6">
-        <section>
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Information</h2>
-          <div className="bg-white border border-gray-100 rounded-xl p-5">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <label className="text-xs font-medium text-gray-500 block mb-1">Job address<span className="text-red-400 ml-0.5">*</span></label>
-                <input value={form.jobAddress} onChange={e => update('jobAddress', e.target.value)} placeholder="123 Main St, Durham, NC 27701"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-              </div>
-              <Field label="Lot / Unit" value={form.lotUnit} onChange={v => update('lotUnit', v)} placeholder="e.g. Lot 14" half />
-              <Field label="Subdivision" value={form.subdivision} onChange={v => update('subdivision', v)} placeholder="e.g. Brightleaf" half />
-              <div className="col-span-2">
-                <label className="text-xs font-medium text-gray-500 block mb-1">Job description<span className="text-red-400 ml-0.5">*</span> <span className="font-normal text-gray-400">(must align with checklist and plans)</span></label>
-                <textarea value={form.jobDescription} onChange={e => update('jobDescription', e.target.value)} rows={3}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <ContractorSection />
-
-        <section>
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Architect <span className="font-normal normal-case text-gray-400">(if applicable)</span></h2>
-          <div className="bg-white border border-gray-100 rounded-xl p-5">
-            {savedArchitects.length > 0 && (
-              <div className="mb-4 pb-4 border-b border-gray-100">
-                <label className="text-xs font-medium text-gray-500 block mb-1.5">Quick-fill from my contractor network</label>
-                <select defaultValue="" onChange={e => fillFromArchitect(e.target.value)}
-                  className="w-full border border-brand-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-brand-50">
-                  <option value="" disabled>Select an architect to auto-fill fields below...</option>
-                  {savedArchitects.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.company ? `${c.company} (${c.name})` : c.name}
-                      {c.license_number ? ` · Lic. ${c.license_number}` : ''}
-                    </option>
-                  ))}
-                </select>
-                <div className="text-xs text-gray-400 mt-1">Fields below will be filled automatically. Edit anything as needed.</div>
-              </div>
-            )}
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Architect name" value={form.architectName} onChange={v => update('architectName', v)} placeholder="Jane Doe, AIA" half />
-              <Field label="Email" value={form.architectEmail} onChange={v => update('architectEmail', v)} placeholder="jane@doearchitecture.com" half type="email" />
-              <Field label="Phone" value={form.architectPhone} onChange={v => update('architectPhone', v)} placeholder="(919) 555-0200" half />
-            </div>
-          </div>
-        </section>
-
-        <OwnerSection />
-
-        <section>
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Construction Costs</h2>
-          <div className="bg-white border border-gray-100 rounded-xl p-5">
-            <div className="text-xs text-gray-400 mb-4 leading-relaxed">
-              Must reflect current market value for all labor and materials. Durham requires no line left blank.
-            </div>
-            <div className="space-y-3">
-              {COST_FIELDS.map(f => (
-                <div key={f.key} className="flex items-center gap-4">
-                  {f.key !== 'building' && (
-                    <input type="checkbox" checked={form[`has${f.key.charAt(0).toUpperCase() + f.key.slice(1)}`] ?? true}
-                      onChange={e => update(`has${f.key.charAt(0).toUpperCase() + f.key.slice(1)}`, e.target.checked)}
-                      className="w-4 h-4 rounded border-gray-300 text-brand-600 flex-shrink-0" />
-                  )}
-                  {f.key === 'building' && <div className="w-4 h-4 flex-shrink-0" />}
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-800">{f.label}</div>
-                    <div className="text-xs text-gray-400">{f.hint}</div>
-                  </div>
-                  <input value={form[f.key]} onChange={e => update(f.key, e.target.value)}
-                    onBlur={e => update(f.key, formatMoney(e.target.value))}
-                    placeholder="$0.00" className="w-32 border border-gray-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-brand-500" />
-                </div>
-              ))}
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                <div className="text-sm font-semibold text-gray-900">Total project cost</div>
-                <div className="text-sm font-semibold text-gray-900">${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Required Questions</h2>
-          <div className="bg-white border border-gray-100 rounded-xl p-5">
-            <YesNo label="Does this project exceed 12,000 sq ft of land disturbance?" checked={form.landDisturbance} onChange={v => update('landDisturbance', v)} />
-            <YesNo label="Does this project include public food service areas?" checked={form.publicFood} onChange={v => update('publicFood', v)} />
-            <YesNo label="Is this a single-family, duplex, or townhome that includes a sprinkler system?" checked={form.sprinkler} onChange={v => update('sprinkler', v)} />
-            <YesNo label="Will a sub-slab soil exhaust system be installed?" checked={form.subSlab} onChange={v => update('subSlab', v)} />
-            <YesNo label="Is this property serviced or planned to be serviced by a well or septic tank?" checked={form.wellSeptic} onChange={v => update('wellSeptic', v)} />
-            <YesNo label="Is an alteration to an existing natural or man-made drainage system proposed?" checked={form.drainage} onChange={v => update('drainage', v)} />
-            {form.wellSeptic && <div className="bg-amber-50 border border-amber-100 rounded-lg px-4 py-3 mt-3 text-xs text-amber-700">Well/septic selected: Contact Durham Environmental Health at (919) 560-7800 for approval before proceeding.</div>}
-            {form.drainage && <div className="bg-amber-50 border border-amber-100 rounded-lg px-4 py-3 mt-2 text-xs text-amber-700">Drainage alteration: A separate drainage permit application may be required. Contact (919) 560-4326.</div>}
-          </div>
-        </section>
-
-        <SignatureSection disclaimer="The owner or authorized agent signing this application is responsible for determining whether sewer, water, gas and other utilities are available. All easements and restrictions must be shown on the plot plan. The applicant must adhere to all codes and ordinances. Applications which are not completed to 'Issued' status within 6 months will expire." />
-
-        <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 print:hidden">
-          <div className="text-sm font-semibold text-brand-900 mb-2">How to submit this application</div>
-          <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
-            <li>1. Review every field above — Durham requires no blanks or TBD entries</li>
-            <li>2. Click <strong>"Generate & Download PDF"</strong> above — a filled application PDF will download instantly</li>
-            <li>3. Sign the PDF (wet signature required by Durham)</li>
-            <li>4. Upload to <a href="https://dplans.durhamnc.gov" target="_blank" rel="noreferrer" className="underline font-medium">Dplans (dplans.durhamnc.gov)</a> along with stamped construction drawings</li>
-            <li>5. Also upload the completed <a href="https://www.durhamnc.gov/DocumentCenter/View/22135/Residential-Plan-Review-Checklist-PDF" target="_blank" rel="noreferrer" className="underline font-medium">Residential Plan Review Checklist</a></li>
-            <li>6. Pay the plan review fee at submission (deducted from permit fee at issuance)</li>
-          </ol>
-        </div>
-      </div>
-    </>
-  )
-
-  const ElectricalForm = () => (
-    <div className="space-y-6">
-      <section>
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Information</h2>
-        <div className="bg-white border border-gray-100 rounded-xl p-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="text-xs font-medium text-gray-500 block mb-1">Job address<span className="text-red-400 ml-0.5">*</span></label>
-              <input value={form.jobAddress} onChange={e => update('jobAddress', e.target.value)} placeholder="123 Main St, Durham, NC 27701"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-            </div>
-            <div className="col-span-2">
-              <label className="text-xs font-medium text-gray-500 block mb-1">Description of work<span className="text-red-400 ml-0.5">*</span></label>
-              <textarea value={form.jobDescription} onChange={e => update('jobDescription', e.target.value)} rows={2}
-                placeholder="e.g. New electrical service installation for new single-family home construction"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <ScopePicker options={ELECTRICAL_SCOPE_OPTIONS} label="Scope of Electrical Work" />
-
-      <section>
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Electrical Details</h2>
-        <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Service size (amps)</label>
-              <select value={form.serviceAmps} onChange={e => update('serviceAmps', e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
-                <option value="">Select...</option>
-                {['100A', '150A', '200A', '320A', '400A', 'Not applicable'].map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Number of circuits</label>
-              <input value={form.numCircuits} onChange={e => update('numCircuits', e.target.value)} placeholder="e.g. 32"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Wiring method</label>
-              <select value={form.wiringMethod} onChange={e => update('wiringMethod', e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
-                <option value="">Select...</option>
-                {['NM-B (Romex)', 'EMT conduit', 'MC cable', 'PVC conduit', 'Mixed', 'Not yet determined'].map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Estimated cost of electrical work</label>
-              <input value={form.estimatedCost} onChange={e => update('estimatedCost', e.target.value)}
-                onBlur={e => update('estimatedCost', formatMoney(e.target.value))} placeholder="$0.00"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-brand-500" />
-            </div>
-          </div>
-          <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-xs text-blue-700">
-            <strong>NCBEEC license required:</strong> All electrical work in Durham requires a NC-licensed electrical contractor. Verify at <a href="https://www.ncbeec.org/license-lookup" target="_blank" rel="noreferrer" className="underline">ncbeec.org/license-lookup</a> before signing any contract.
-          </div>
-        </div>
-      </section>
-
-      <ContractorSection />
-      <OwnerSection />
-      <SignatureSection disclaimer="By submitting this application, the applicant certifies that all electrical work will be performed by or under the supervision of a NC-licensed electrical contractor, and that all work will conform to the 2023 NEC as adopted by NC and all applicable Durham codes." />
-
-      <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 print:hidden">
-        <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Electrical Permit</div>
-        <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
-          <li>1. Review all fields above</li>
-          <li>2. Sign the downloaded PDF (wet signature required by Durham)</li>
-          <li>3. Submit via <a href="https://ldo4.durhamnc.gov/DurhamWeb" target="_blank" rel="noreferrer" className="underline font-medium">Durham LDO Portal (ldo4.durhamnc.gov/DurhamWeb)</a></li>
-          <li>4. LDO portal requires a contractor account — your CID is your login identifier</li>
-          <li>5. Electrical permits are typically issued same-day or next day for residential work</li>
-        </ol>
-      </div>
-    </div>
-  )
-
-  const PlumbingForm = () => (
-    <div className="space-y-6">
-      <section>
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Information</h2>
-        <div className="bg-white border border-gray-100 rounded-xl p-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="text-xs font-medium text-gray-500 block mb-1">Job address<span className="text-red-400 ml-0.5">*</span></label>
-              <input value={form.jobAddress} onChange={e => update('jobAddress', e.target.value)} placeholder="123 Main St, Durham, NC 27701"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-            </div>
-            <div className="col-span-2">
-              <label className="text-xs font-medium text-gray-500 block mb-1">Description of work<span className="text-red-400 ml-0.5">*</span></label>
-              <textarea value={form.jobDescription} onChange={e => update('jobDescription', e.target.value)} rows={2}
-                placeholder="e.g. Plumbing rough-in and fixtures for new single-family home — 3 bathrooms, kitchen, laundry"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <ScopePicker options={PLUMBING_SCOPE_OPTIONS} label="Scope of Plumbing Work" />
-
-      <section>
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Plumbing Details</h2>
-        <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Number of fixtures</label>
-              <input value={form.numCircuits} onChange={e => update('numCircuits', e.target.value)} placeholder="e.g. 12 fixtures total"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Estimated cost of plumbing work</label>
-              <input value={form.estimatedCost} onChange={e => update('estimatedCost', e.target.value)}
-                onBlur={e => update('estimatedCost', formatMoney(e.target.value))} placeholder="$0.00"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-brand-500" />
-            </div>
-          </div>
-          <YesNo label="Does scope include gas piping (natural gas or LP)?" checked={form.gasWork} onChange={v => update('gasWork', v)} />
-          {form.gasWork && (
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Gas type</label>
-              <select value={form.gasType} onChange={e => update('gasType', e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
-                <option value="">Select...</option>
-                <option value="Natural gas">Natural gas</option>
-                <option value="LP / propane">LP / propane</option>
-              </select>
-            </div>
-          )}
-          <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-xs text-blue-700">
-            <strong>NC Plumbing/HVAC Board license required.</strong> Verify contractor license at <a href="https://www.nclicensing.org/license-lookup" target="_blank" rel="noreferrer" className="underline">nclicensing.org/license-lookup</a> before signing any contract. Gas piping requires a separate gas license classification.
-          </div>
-        </div>
-      </section>
-
-      <ContractorSection />
-      <OwnerSection />
-      <SignatureSection disclaimer="By submitting this application, the applicant certifies that all plumbing work will be performed by or under the supervision of a NC-licensed plumbing contractor, and that all work will conform to the 2018 NC Plumbing Code and applicable Durham amendments." />
-
-      <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 print:hidden">
-        <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Plumbing Permit</div>
-        <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
-          <li>1. Review all fields above</li>
-          <li>2. Sign the downloaded PDF (wet signature required by Durham)</li>
-          <li>3. Submit via <a href="https://ldo4.durhamnc.gov/DurhamWeb" target="_blank" rel="noreferrer" className="underline font-medium">Durham LDO Portal</a> — separate submission from the building permit</li>
-          <li>4. If scope includes gas piping, Durham may require a separate gas permit in addition to plumbing</li>
-          <li>5. Rough-in inspection required before walls are closed — schedule via LDO portal</li>
-        </ol>
-      </div>
-    </div>
-  )
-
-  const MechanicalForm = () => (
-    <div className="space-y-6">
-      <section>
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Information</h2>
-        <div className="bg-white border border-gray-100 rounded-xl p-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="text-xs font-medium text-gray-500 block mb-1">Job address<span className="text-red-400 ml-0.5">*</span></label>
-              <input value={form.jobAddress} onChange={e => update('jobAddress', e.target.value)} placeholder="123 Main St, Durham, NC 27701"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-            </div>
-            <div className="col-span-2">
-              <label className="text-xs font-medium text-gray-500 block mb-1">Description of work<span className="text-red-400 ml-0.5">*</span></label>
-              <textarea value={form.jobDescription} onChange={e => update('jobDescription', e.target.value)} rows={2}
-                placeholder="e.g. Install 3-ton heat pump system with air handler and ductwork for new single-family home"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <ScopePicker options={MECHANICAL_SCOPE_OPTIONS} label="Scope of Mechanical Work" />
-
-      <section>
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Mechanical Details</h2>
-        <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">System type</label>
-              <select value={form.wiringMethod} onChange={e => update('wiringMethod', e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
-                <option value="">Select...</option>
-                {['Heat pump (air-to-air)', 'Gas furnace + AC', 'Mini-split / ductless', 'Geothermal heat pump', 'Boiler', 'Not yet determined'].map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Estimated cost of mechanical work</label>
-              <input value={form.estimatedCost} onChange={e => update('estimatedCost', e.target.value)}
-                onBlur={e => update('estimatedCost', formatMoney(e.target.value))} placeholder="$0.00"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-brand-500" />
-            </div>
-          </div>
-          <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-xs text-blue-700">
-            <strong>NC Plumbing/HVAC Board license required.</strong> Verify contractor license at <a href="https://www.nclicensing.org/license-lookup" target="_blank" rel="noreferrer" className="underline">nclicensing.org/license-lookup</a>. Gas appliance connections require both a mechanical and plumbing/gas license.
-          </div>
-        </div>
-      </section>
-
-      <ContractorSection />
-      <OwnerSection />
-      <SignatureSection disclaimer="By submitting this application, the applicant certifies that all mechanical work will be performed by or under the supervision of a NC-licensed HVAC/mechanical contractor, and that all work will conform to the 2018 NC Mechanical Code and applicable Durham amendments." />
-
-      <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 print:hidden">
-        <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Mechanical Permit</div>
-        <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
-          <li>1. Review all fields above</li>
-          <li>2. Sign the downloaded PDF (wet signature required by Durham)</li>
-          <li>3. Submit via <a href="https://ldo4.durhamnc.gov/DurhamWeb" target="_blank" rel="noreferrer" className="underline font-medium">Durham LDO Portal</a></li>
-          <li>4. Rough-in inspection required before ductwork or equipment is covered</li>
-          <li>5. Manual J load calculation may be requested by Durham for new construction — have it ready</li>
-        </ol>
-      </div>
-    </div>
-  )
 
   // ─── Page header metadata per type ───────────────────────────────────────
 
@@ -735,21 +962,35 @@ export default function ApplicationPrefill() {
       await new Promise(r => setTimeout(r, 80))
 
       if (permitType === 'building') {
-        // Use the official Durham fillable PDF via server API
+        // Use the official jurisdiction fillable PDF via server API
         const res = await fetch('/api/fill-permit-pdf', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...form, totalCost }),
+          body: JSON.stringify({
+            form: { ...form, jurisdiction: params.get('j') || 'durham' },
+            permitType,
+            totalCost,
+          }),
         })
+
         if (!res.ok) {
           const err = await res.json().catch(() => ({}))
-          throw new Error(err.error || 'Could not generate PDF')
+          // Jurisdiction PDF not yet available — fall back to jsPDF
+          if (err.error === 'coming_soon' || err.error === 'unsupported_jurisdiction') {
+            const filename = downloadPermitPDF(permitType, form, totalCost)
+            setLastFilename(filename)
+            setShowChecklist(true)
+            return
+          }
+          throw new Error(err.message || err.error || 'Could not generate PDF')
         }
+
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
-        const address = (form.jobAddress || 'durham').replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 30)
-        a.download = `durham-building-permit-${address}.pdf`
+        const jur = params.get('j') || 'durham'
+        const address = (form.jobAddress || jur).replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 30)
+        a.download = `${jur}-building-permit-${address}.pdf`
         a.href = url
         a.click()
         URL.revokeObjectURL(url)
@@ -968,10 +1209,10 @@ export default function ApplicationPrefill() {
       </div>
 
       {/* Permit form */}
-      {permitType === 'building'    && <BuildingForm />}
-      {permitType === 'electrical'  && <ElectricalForm />}
-      {permitType === 'plumbing'    && <PlumbingForm />}
-      {permitType === 'mechanical'  && <MechanicalForm />}
+      {permitType === 'building'   && <BuildingPermitForm form={form} update={update} profile={profile} myContractors={myContractors} savedArchitects={savedArchitects} fillFromContractor={fillFromContractor} fillFromArchitect={fillFromArchitect} totalCost={totalCost} formatMoney={formatMoney} />}
+      {permitType === 'electrical' && <ElectricalPermitForm form={form} update={update} myContractors={myContractors} fillFromContractor={fillFromContractor} toggleScope={toggleScope} />}
+      {permitType === 'plumbing'   && <PlumbingPermitForm form={form} update={update} myContractors={myContractors} fillFromContractor={fillFromContractor} toggleScope={toggleScope} />}
+      {permitType === 'mechanical' && <MechanicalPermitForm form={form} update={update} myContractors={myContractors} fillFromContractor={fillFromContractor} toggleScope={toggleScope} />}
 
       <style>{`
         @media print {
