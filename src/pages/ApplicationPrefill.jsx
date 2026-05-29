@@ -8,6 +8,7 @@ import { useSearchParams, Link } from 'react-router-dom'
 import { getProfile } from '../lib/contractor-profile'
 import { getMyContractors, TRADE_TYPES } from '../lib/contractors'
 import { getUser } from '../lib/supabase'
+import { downloadPermitPDF } from '../lib/permit-pdf'
 
 // ─── Shared data ──────────────────────────────────────────────────────────────
 
@@ -141,6 +142,9 @@ export default function ApplicationPrefill() {
   const [profile, setProfile] = useState(null)
   const [myContractors, setMyContractors] = useState([])
   const [loading, setLoading] = useState(true)
+  const [pdfGenerating, setPdfGenerating] = useState(false)
+  const [showChecklist, setShowChecklist] = useState(false)
+  const [lastFilename, setLastFilename] = useState('')
   const [form, setForm] = useState(() => buildInitialForm(params))
 
   useEffect(() => { loadProfile() }, [])
@@ -460,8 +464,8 @@ export default function ApplicationPrefill() {
           <div className="text-sm font-semibold text-brand-900 mb-2">How to submit this application</div>
           <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
             <li>1. Review every field above — Durham requires no blanks or TBD entries</li>
-            <li>2. Print this page or save as PDF using the button above</li>
-            <li>3. Sign the printed copy</li>
+            <li>2. Click <strong>"Generate & Download PDF"</strong> above — a filled application PDF will download instantly</li>
+            <li>3. Sign the PDF (wet signature required by Durham)</li>
             <li>4. Upload to <a href="https://dplans.durhamnc.gov" target="_blank" rel="noreferrer" className="underline font-medium">Dplans (dplans.durhamnc.gov)</a> along with stamped construction drawings</li>
             <li>5. Also upload the completed <a href="https://www.durhamnc.gov/DocumentCenter/View/22135/Residential-Plan-Review-Checklist-PDF" target="_blank" rel="noreferrer" className="underline font-medium">Residential Plan Review Checklist</a></li>
             <li>6. Pay the plan review fee at submission (deducted from permit fee at issuance)</li>
@@ -540,7 +544,7 @@ export default function ApplicationPrefill() {
         <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Electrical permit</div>
         <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
           <li>1. Review all fields above</li>
-          <li>2. Print or save as PDF</li>
+          <li>2. Sign the downloaded PDF (wet signature required by Durham)</li>
           <li>3. Submit via <a href="https://ldo4.durhamnc.gov/DurhamWeb" target="_blank" rel="noreferrer" className="underline font-medium">Durham LDO Portal (ldo4.durhamnc.gov/DurhamWeb)</a></li>
           <li>4. LDO portal requires a contractor account — your CID is your login identifier</li>
           <li>5. Electrical permits are typically issued same-day or next day for residential work</li>
@@ -614,7 +618,7 @@ export default function ApplicationPrefill() {
         <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Plumbing permit</div>
         <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
           <li>1. Review all fields above</li>
-          <li>2. Print or save as PDF</li>
+          <li>2. Sign the downloaded PDF (wet signature required by Durham)</li>
           <li>3. Submit via <a href="https://ldo4.durhamnc.gov/DurhamWeb" target="_blank" rel="noreferrer" className="underline font-medium">Durham LDO Portal</a> — separate submission from the building permit</li>
           <li>4. If scope includes gas piping, Durham may require a separate gas permit in addition to plumbing</li>
           <li>5. Rough-in inspection required before walls are closed — schedule via LDO portal</li>
@@ -679,7 +683,7 @@ export default function ApplicationPrefill() {
         <div className="text-sm font-semibold text-brand-900 mb-2">How to submit — Mechanical permit</div>
         <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
           <li>1. Review all fields above</li>
-          <li>2. Print or save as PDF</li>
+          <li>2. Sign the downloaded PDF (wet signature required by Durham)</li>
           <li>3. Submit via <a href="https://ldo4.durhamnc.gov/DurhamWeb" target="_blank" rel="noreferrer" className="underline font-medium">Durham LDO Portal</a></li>
           <li>4. Rough-in inspection required before ductwork or equipment is covered</li>
           <li>5. Manual J load calculation may be requested by Durham for new construction — have it ready</li>
@@ -689,6 +693,147 @@ export default function ApplicationPrefill() {
   )
 
   // ─── Page header metadata per type ───────────────────────────────────────
+
+  // ─── PDF generation ───────────────────────────────────────────────────────
+
+  async function handleGeneratePDF() {
+    setPdfGenerating(true)
+    try {
+      // Small delay so the button state renders before jsPDF blocks the thread
+      await new Promise(r => setTimeout(r, 80))
+      const filename = downloadPermitPDF(permitType, form, totalCost)
+      setLastFilename(filename)
+      setShowChecklist(true)
+    } catch (err) {
+      console.error('PDF generation error:', err)
+      alert('Could not generate PDF. Please try again.')
+    } finally {
+      setPdfGenerating(false)
+    }
+  }
+
+  // ─── Submission checklist modal ───────────────────────────────────────────
+
+  const PORTAL_URLS = {
+    building:   'https://dplans.durhamnc.gov',
+    electrical: 'https://ldo4.durhamnc.gov/DurhamWeb',
+    plumbing:   'https://ldo4.durhamnc.gov/DurhamWeb',
+    mechanical: 'https://ldo4.durhamnc.gov/DurhamWeb',
+  }
+
+  const SUBMISSION_STEPS = {
+    building: [
+      { done: true,  text: `PDF generated — "${lastFilename}"` },
+      { done: false, text: 'Sign the PDF (wet signature required by Durham)' },
+      { done: false, text: 'Log in to Dplans at dplans.durhamnc.gov' },
+      { done: false, text: 'Click "New Project" → select "Residential Building Permit"' },
+      { done: false, text: 'Upload your signed permit application (this PDF)' },
+      { done: false, text: 'Upload stamped architectural + structural drawings' },
+      { done: false, text: 'Upload completed Residential Plan Review Checklist' },
+      { done: false, text: 'Pay plan review fee at submission' },
+      { done: false, text: 'Note your application number — Durham will email status updates' },
+    ],
+    electrical: [
+      { done: true,  text: `PDF generated — "${lastFilename}"` },
+      { done: false, text: 'Sign the PDF' },
+      { done: false, text: 'Log in to LDO portal at ldo4.durhamnc.gov/DurhamWeb (use your CID)' },
+      { done: false, text: 'Click "Apply for Permit" → "Electrical"' },
+      { done: false, text: 'Upload your signed application' },
+      { done: false, text: 'Pay permit fee — residential electrical typically $80–$300' },
+      { done: false, text: 'Note permit number — schedule rough-in inspection when ready' },
+    ],
+    plumbing: [
+      { done: true,  text: `PDF generated — "${lastFilename}"` },
+      { done: false, text: 'Sign the PDF' },
+      { done: false, text: 'Log in to LDO portal at ldo4.durhamnc.gov/DurhamWeb (use your CID)' },
+      { done: false, text: 'Click "Apply for Permit" → "Plumbing"' },
+      { done: false, text: form.gasWork ? 'If gas piping is in scope, apply for a separate Gas permit' : 'Upload your signed application' },
+      { done: false, text: 'Pay permit fee' },
+      { done: false, text: 'Note permit number — schedule rough-in inspection before closing walls' },
+    ],
+    mechanical: [
+      { done: true,  text: `PDF generated — "${lastFilename}"` },
+      { done: false, text: 'Sign the PDF' },
+      { done: false, text: 'Log in to LDO portal at ldo4.durhamnc.gov/DurhamWeb (use your CID)' },
+      { done: false, text: 'Click "Apply for Permit" → "Mechanical"' },
+      { done: false, text: 'Upload your signed application' },
+      { done: false, text: 'Have Manual J load calculation ready — Durham may request it' },
+      { done: false, text: 'Pay permit fee' },
+      { done: false, text: 'Note permit number — schedule rough-in inspection before covering ductwork' },
+    ],
+  }
+
+  function SubmissionChecklist() {
+    if (!showChecklist) return null
+    const steps = SUBMISSION_STEPS[permitType] || SUBMISSION_STEPS.building
+    const portalUrl = PORTAL_URLS[permitType]
+    const portalName = permitType === 'building' ? 'Open Dplans portal' : 'Open LDO portal'
+
+    return (
+      <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4" onClick={() => setShowChecklist(false)}>
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+          {/* Header */}
+          <div className="bg-green-600 rounded-t-2xl px-6 py-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">✅</div>
+              <div>
+                <div className="text-white font-semibold text-base">PDF ready to submit</div>
+                <div className="text-green-100 text-xs mt-0.5">{lastFilename}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Steps */}
+          <div className="px-6 py-5">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+              Next steps — {current?.label}
+            </div>
+            <div className="space-y-3">
+              {steps.map((step, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 ${
+                    step.done ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {step.done ? '✓' : i + 1}
+                  </div>
+                  <div className={`text-sm leading-snug ${step.done ? 'text-green-700 font-medium' : 'text-gray-700'}`}>
+                    {step.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* CID warning if missing */}
+            {!form.durhamCID && (
+              <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800">
+                <strong>⚠️ CID missing.</strong> Email <span className="font-medium">permittechnicians@durhamnc.gov</span> with your license number to get your Durham Contractor ID before logging into the portal.
+              </div>
+            )}
+
+            {/* Coming soon pill */}
+            <div className="mt-4 flex items-center gap-2 bg-brand-50 border border-brand-100 rounded-xl px-4 py-3">
+              <div className="w-2 h-2 rounded-full bg-brand-500 flex-shrink-0 animate-pulse"></div>
+              <div className="text-xs text-brand-700">
+                <span className="font-semibold">Submission Agent coming soon</span> — Parcoria will submit directly to {permitType === 'building' ? 'Dplans' : 'LDO'} for you.
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="px-6 pb-6 flex gap-3">
+            <button onClick={() => setShowChecklist(false)}
+              className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:border-gray-300 transition-colors">
+              Back to form
+            </button>
+            <a href={portalUrl} target="_blank" rel="noreferrer"
+              className="flex-1 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors text-center">
+              {portalName} ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const current = PERMIT_TYPES.find(t => t.id === permitType)
 
@@ -701,17 +846,31 @@ export default function ApplicationPrefill() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
 
+      <SubmissionChecklist />
+
       {/* Action bar */}
       <div className="flex items-center justify-between gap-3 mb-6 print:hidden">
         <Link to="/wizard" className="text-xs text-gray-400 hover:text-gray-600">&larr; Back to wizard</Link>
         <div className="flex items-center gap-2">
-          <div className="text-xs text-gray-400 hidden sm:block">Review all fields, then print or save as PDF</div>
-          <button onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-xs font-medium rounded-lg hover:bg-brand-700 transition-colors">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Print / Save PDF
+          <div className="text-xs text-gray-400 hidden sm:block">Fill all fields, then generate your submit-ready PDF</div>
+          <button onClick={handleGeneratePDF} disabled={pdfGenerating}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60">
+            {pdfGenerating ? (
+              <>
+                <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+                Generating...
+              </>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Generate & Download PDF
+              </>
+            )}
           </button>
         </div>
       </div>

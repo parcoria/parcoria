@@ -13,6 +13,7 @@
     "@supabase/supabase-js": "^2.105.4",
     "@tabler/icons-react": "^3.44.0",
     "@tailwindcss/typography": "^0.5.19",
+    "jspdf": "^4.2.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-markdown": "^10.1.0",
