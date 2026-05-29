@@ -732,14 +732,37 @@ export default function ApplicationPrefill() {
   async function handleGeneratePDF() {
     setPdfGenerating(true)
     try {
-      // Small delay so the button state renders before jsPDF blocks the thread
       await new Promise(r => setTimeout(r, 80))
-      const filename = downloadPermitPDF(permitType, form, totalCost)
-      setLastFilename(filename)
+
+      if (permitType === 'building') {
+        // Use the official Durham fillable PDF via server API
+        const res = await fetch('/api/fill-permit-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...form, totalCost }),
+        })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error(err.error || 'Could not generate PDF')
+        }
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        const address = (form.jobAddress || 'durham').replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 30)
+        a.download = `durham-building-permit-${address}.pdf`
+        a.href = url
+        a.click()
+        URL.revokeObjectURL(url)
+        setLastFilename(a.download)
+      } else {
+        // Trade permits use client-side jsPDF
+        const filename = downloadPermitPDF(permitType, form, totalCost)
+        setLastFilename(filename)
+      }
       setShowChecklist(true)
     } catch (err) {
       console.error('PDF generation error:', err)
-      alert('Could not generate PDF. Please try again.')
+      alert(`Could not generate PDF: ${err.message}`)
     } finally {
       setPdfGenerating(false)
     }
