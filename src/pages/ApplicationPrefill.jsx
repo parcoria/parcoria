@@ -135,6 +135,9 @@ function buildInitialForm(params) {
     newService: false,
     existingPanelAmps: '',
     estimatedCost: '',
+    // Raleigh-specific
+    renovationSqFt: '',
+    newSqFt: '',
   }
 }
 
@@ -400,6 +403,176 @@ return (<>
         </div>
       </div>
 </> )
+}
+
+
+// ─── Raleigh Building Permit Form ────────────────────────────────────────────
+// Matches the official Raleigh Residential Permit Application Rev.08-20-2025
+// Fields: General Info, Project Info, Site Info, Building Info, Cost Info, Contractor, Signature
+
+function RaleighBuildingPermitForm({ form, update, profile, myContractors, fillFromContractor, totalCost, formatMoney }) {
+  return (<>
+    {profile && (
+      <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3 mb-5 text-xs text-green-700 print:hidden">
+        ✓ Contractor fields pre-filled from your Parcoria profile. Review and update as needed.
+      </div>
+    )}
+
+    <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 mb-5 text-xs text-blue-800 print:hidden">
+      <strong>Raleigh Permit Portal:</strong> Register at <a href="https://permitportal.raleighnc.gov" target="_blank" rel="noreferrer" className="underline font-medium">permitportal.raleighnc.gov</a> before submitting. All contractors must be registered in the portal.
+    </div>
+
+    <div className="space-y-6">
+      {/* General Information */}
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">General Information</h2>
+        <div className="bg-white border border-gray-100 rounded-xl p-5">
+          <div className="text-xs text-gray-400 mb-3">The project contact is the primary contact in the Permit and Development Portal.</div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-gray-500 block mb-1">Project contact (contractor filing)<span className="text-red-400 ml-0.5">*</span></label>
+              <input value={form.contractorName} onChange={e => update('contractorName', e.target.value)} placeholder="Smith Construction LLC"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+            <Field label="Contact email" value={form.contractorEmail} onChange={v => update('contractorEmail', v)} placeholder="contact@email.com" half type="email" required />
+            <Field label="Contact phone" value={form.contractorPhone} onChange={v => update('contractorPhone', v)} placeholder="(919) 555-0100" half />
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-gray-500 block mb-1">Property owner<span className="text-red-400 ml-0.5">*</span></label>
+              <input value={form.ownerName} onChange={e => update('ownerName', e.target.value)} placeholder="Full legal name"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+            <Field label="Owner email" value={form.ownerEmail} onChange={v => update('ownerEmail', v)} placeholder="owner@email.com" half type="email" />
+            <Field label="Owner phone" value={form.ownerPhone} onChange={v => update('ownerPhone', v)} placeholder="(919) 555-0200" half />
+          </div>
+        </div>
+      </section>
+
+      {/* Project Information */}
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Information</h2>
+        <div className="bg-white border border-gray-100 rounded-xl p-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-gray-500 block mb-1">Project address<span className="text-red-400 ml-0.5">*</span></label>
+              <input value={form.jobAddress} onChange={e => update('jobAddress', e.target.value)} placeholder="123 Main St, Raleigh, NC 27601"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-gray-500 block mb-1">Detailed project description<span className="text-red-400 ml-0.5">*</span></label>
+              <textarea value={form.jobDescription} onChange={e => update('jobDescription', e.target.value)} rows={3}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Building Information */}
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Building Information</h2>
+        <div className="bg-white border border-gray-100 rounded-xl p-5">
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Renovation square feet" value={form.renovationSqFt} onChange={v => update('renovationSqFt', v)} placeholder="0" half />
+            <Field label="New square feet" value={form.newSqFt} onChange={v => update('newSqFt', v)} placeholder="0" half />
+          </div>
+        </div>
+      </section>
+
+      {/* Cost Information */}
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Cost Information</h2>
+        <div className="bg-white border border-gray-100 rounded-xl p-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1">Total construction cost<span className="text-red-400 ml-0.5">*</span></label>
+              <input value={form.building} onChange={e => update('building', e.target.value)} onBlur={e => update('building', formatMoney(e.target.value))}
+                placeholder="$0.00" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1">Total electrical cost</label>
+              <input value={form.electrical} onChange={e => update('electrical', e.target.value)} onBlur={e => update('electrical', formatMoney(e.target.value))}
+                placeholder="$0.00" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contractor Information */}
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Building Contractor</h2>
+        <div className="bg-white border border-gray-100 rounded-xl p-5">
+          {myContractors.length > 0 && (
+            <div className="mb-4 pb-4 border-b border-gray-100">
+              <label className="text-xs font-medium text-gray-500 block mb-1.5">Quick-fill from my contractor network</label>
+              <select defaultValue="" onChange={e => fillFromContractor(e.target.value)}
+                className="w-full border border-brand-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-brand-50">
+                <option value="" disabled>Select a contractor to auto-fill fields below...</option>
+                {myContractors.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.company ? `${c.company} (${c.name})` : c.name}
+                    {c.trade_type ? ` — ${TRADE_TYPES[c.trade_type] || c.trade_type}` : ''}
+                    {c.license_number ? ` · Lic. ${c.license_number}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Contractor / business name" value={form.contractorName} onChange={v => update('contractorName', v)} placeholder="Smith Construction LLC" required />
+            <Field label="NC license no." value={form.contractorLicense} onChange={v => update('contractorLicense', v)} placeholder="78234" half required />
+            <Field label="Email" value={form.contractorEmail} onChange={v => update('contractorEmail', v)} placeholder="john@smithconstruction.com" half type="email" />
+            <Field label="Phone" value={form.contractorPhone} onChange={v => update('contractorPhone', v)} placeholder="(919) 555-0100" half />
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-gray-500 block mb-1">Address</label>
+              <div className="grid grid-cols-3 gap-2">
+                <input value={form.contractorAddress} onChange={e => update('contractorAddress', e.target.value)} placeholder="Street address"
+                  className="col-span-3 sm:col-span-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                <input value={form.contractorCity} onChange={e => update('contractorCity', e.target.value)} placeholder="City"
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                <input value={form.contractorZip} onChange={e => update('contractorZip', e.target.value)} placeholder="ZIP"
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-gray-400">
+            Contractors must be registered in the Raleigh Permit and Development Portal before managing a project, paying fees, or scheduling inspections. Use the <a href="https://raleighnc.gov/permits/services/development-forms" target="_blank" rel="noreferrer" className="underline">Contractor Addendum Form</a> for additional contractors.
+          </div>
+        </div>
+      </section>
+
+      {/* Signature */}
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Signature</h2>
+        <div className="bg-white border border-gray-100 rounded-xl p-5">
+          <div className="text-xs text-gray-500 leading-relaxed mb-4">
+            The undersigned applicant confirms having obtained permission from the property owner, certifies that all information provided is true and accurate, and acknowledges that failure to respond to city requests for six consecutive months will result in cessation of review.
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Applicant name" value={form.signerName} onChange={v => update('signerName', v)} placeholder="Full name" half required />
+            <Field label="Date" value={form.signDate} onChange={v => update('signDate', v)} placeholder="MM/DD/YYYY" half />
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-gray-500 block mb-1">Signature <span className="font-normal text-gray-400">(sign on printed copy)</span></label>
+              <div className="border border-dashed border-gray-200 rounded-lg h-12 flex items-center justify-center text-xs text-gray-300 print:border-gray-400">
+                Sign here after printing
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How to submit */}
+      <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 print:hidden">
+        <div className="text-sm font-semibold text-brand-900 mb-2">How to submit this application</div>
+        <ol className="text-xs text-brand-700 leading-relaxed space-y-1">
+          <li>1. Review every field above for accuracy</li>
+          <li>2. Click <strong>"Generate & Download PDF"</strong> — a pre-filled Raleigh Residential Permit Application will download</li>
+          <li>3. Sign the PDF (wet signature required)</li>
+          <li>4. Submit online at <a href="https://permitportal.raleighnc.gov" target="_blank" rel="noreferrer" className="underline font-medium">permitportal.raleighnc.gov</a> — or email to <a href="mailto:downtownds@raleighnc.gov" className="underline font-medium">downtownds@raleighnc.gov</a> for project types not on the portal</li>
+          <li>5. Include stamped construction drawings with your building permit submission</li>
+          <li>6. Pay permit fees at submission</li>
+        </ol>
+      </div>
+    </div>
+  </>)
 }
 
 function ElectricalPermitForm({ form, update, myContractors, fillFromContractor, toggleScope }) {
@@ -1026,6 +1199,35 @@ export default function ApplicationPrefill() {
     mechanical: 'https://ldo4.durhamnc.gov/DurhamWeb',
   }
 
+  const RALEIGH_SUBMISSION_STEPS = {
+    building: [
+      { done: true,  text: `PDF generated — "${lastFilename}"` },
+      { done: false, text: 'Sign the PDF' },
+      { done: false, text: 'Submit online at permitportal.raleighnc.gov — or email to downtownds@raleighnc.gov' },
+      { done: false, text: 'Include stamped construction drawings with your submission' },
+      { done: false, text: 'Pay permit fees at submission' },
+      { done: false, text: 'Note your application number — Raleigh will email status updates' },
+    ],
+    electrical: [
+      { done: true,  text: `PDF generated — "${lastFilename}"` },
+      { done: false, text: 'Submit via the Raleigh Permit and Development Portal' },
+      { done: false, text: 'Pay permit fee' },
+      { done: false, text: 'Schedule rough-in inspection when ready' },
+    ],
+    plumbing: [
+      { done: true,  text: `PDF generated — "${lastFilename}"` },
+      { done: false, text: 'Submit via the Raleigh Permit and Development Portal' },
+      { done: false, text: 'Pay permit fee' },
+      { done: false, text: 'Schedule rough-in inspection before closing walls' },
+    ],
+    mechanical: [
+      { done: true,  text: `PDF generated — "${lastFilename}"` },
+      { done: false, text: 'Submit via the Raleigh Permit and Development Portal' },
+      { done: false, text: 'Pay permit fee' },
+      { done: false, text: 'Schedule rough-in inspection before covering ductwork' },
+    ],
+  }
+
   const SUBMISSION_STEPS = {
     building: [
       { done: true,  text: `PDF generated — "${lastFilename}"` },
@@ -1070,9 +1272,9 @@ export default function ApplicationPrefill() {
 
   function SubmissionChecklist() {
     if (!showChecklist) return null
-    const steps = SUBMISSION_STEPS[permitType] || SUBMISSION_STEPS.building
+    const steps = (jurisdiction === 'raleigh' ? RALEIGH_SUBMISSION_STEPS : SUBMISSION_STEPS)[permitType] || (jurisdiction === 'raleigh' ? RALEIGH_SUBMISSION_STEPS : SUBMISSION_STEPS).building
     const portalUrl = PORTAL_URLS[permitType]
-    const portalName = permitType === 'building' ? 'Open Dplans portal' : 'Open LDO portal'
+    const portalName = jurisdiction === 'raleigh' ? 'Open Raleigh portal' : permitType === 'building' ? 'Open Dplans portal' : 'Open LDO portal'
 
     return (
       <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4" onClick={() => setShowChecklist(false)}>
@@ -1183,20 +1385,11 @@ export default function ApplicationPrefill() {
         </div>
       </div>
 
-      {/* Raleigh info banner */}
-      {(params.get('j') || 'durham') === 'raleigh' && (
-        <div className="mb-4 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-xs text-blue-800 flex gap-2">
-          <span className="flex-shrink-0">ℹ️</span>
-          <span>{t('apply_raleigh_note')}</span>
-        </div>
-      )}
-
-      {/* Raleigh submission steps modal overrides — PORTAL_URLS and SUBMISSION_STEPS handle Durham by default */}
-      {/* For Raleigh, the checklist modal shows Raleigh portal URL (set below in PORTAL_URLS) */}
+      {/* Jurisdiction-specific banners are inside the form components */}
 
       {/* Permit type switcher */}
       <div className="mb-6 print:hidden">
-        <div className="text-xs font-medium text-gray-500 mb-2">Durham permit type</div>
+        <div className="text-xs font-medium text-gray-500 mb-2">{jurisdiction === 'raleigh' ? 'Raleigh' : 'Durham'} permit type</div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {PERMIT_TYPES.map(t => (
             <button key={t.id} onClick={() => setPermitType(t.id)}
@@ -1222,16 +1415,19 @@ export default function ApplicationPrefill() {
       <div className="bg-gray-900 text-white rounded-xl px-6 py-5 mb-6 print:bg-white print:text-gray-900 print:border-2 print:border-gray-900 print:rounded-none">
         <div className="text-xs font-medium text-gray-400 print:text-gray-500 mb-1">{current.doc}</div>
         <div className="text-lg font-semibold mb-0.5">{current.icon} {current.label} Application</div>
-        <div className="text-sm text-gray-300 print:text-gray-600">City-County Building & Safety Department - 101 City Hall Plaza, Suite 400, Durham NC 27701</div>
+        <div className="text-sm text-gray-300 print:text-gray-600">{jurisdiction === 'raleigh' ? 'Planning and Development Customer Service Center - One Exchange Plaza, Suite 400, Raleigh NC 27601' : 'City-County Building & Safety Department - 101 City Hall Plaza, Suite 400, Durham NC 27701'}</div>
         <div className="text-xs text-gray-400 print:text-gray-500 mt-1">
-          {permitType === 'building'
-            ? 'Submit to: durhamnc.gov/467/Dplans - Phone: (919) 560-4144'
-            : 'Submit to: LDO Portal — ldo4.durhamnc.gov/DurhamWeb - Phone: (919) 560-4144'}
+          {jurisdiction === 'raleigh'
+            ? 'Submit to: permitportal.raleighnc.gov — or email downtownds@raleighnc.gov — Phone: 919-996-2500'
+            : permitType === 'building'
+              ? 'Submit to: durhamnc.gov/467/Dplans - Phone: (919) 560-4144'
+              : 'Submit to: LDO Portal — ldo4.durhamnc.gov/DurhamWeb - Phone: (919) 560-4144'}
         </div>
       </div>
 
-      {/* Permit form */}
-      {permitType === 'building'   && <BuildingPermitForm form={form} update={update} profile={profile} myContractors={myContractors} savedArchitects={savedArchitects} fillFromContractor={fillFromContractor} fillFromArchitect={fillFromArchitect} totalCost={totalCost} formatMoney={formatMoney} />}
+      {/* Permit form — jurisdiction-aware */}
+      {permitType === 'building' && jurisdiction === 'raleigh' && <RaleighBuildingPermitForm form={form} update={update} profile={profile} myContractors={myContractors} fillFromContractor={fillFromContractor} totalCost={totalCost} formatMoney={formatMoney} />}
+      {permitType === 'building' && jurisdiction !== 'raleigh' && <BuildingPermitForm form={form} update={update} profile={profile} myContractors={myContractors} savedArchitects={savedArchitects} fillFromContractor={fillFromContractor} fillFromArchitect={fillFromArchitect} totalCost={totalCost} formatMoney={formatMoney} />}
       {permitType === 'electrical' && <ElectricalPermitForm form={form} update={update} myContractors={myContractors} fillFromContractor={fillFromContractor} toggleScope={toggleScope} />}
       {permitType === 'plumbing'   && <PlumbingPermitForm form={form} update={update} myContractors={myContractors} fillFromContractor={fillFromContractor} toggleScope={toggleScope} />}
       {permitType === 'mechanical' && <MechanicalPermitForm form={form} update={update} myContractors={myContractors} fillFromContractor={fillFromContractor} toggleScope={toggleScope} />}
