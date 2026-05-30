@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { getGuideBySlug, GUIDES } from '../data/learn'
+import { t, useLang } from '../lib/i18n'
 
 const CATEGORY_COLORS = {
   'Fundamentals':     'bg-blue-50 text-blue-700 border-blue-100',
@@ -11,6 +12,7 @@ const CATEGORY_COLORS = {
 }
 
 export default function Guide() {
+  useLang() // re-render on language change
   const { slug } = useParams()
   const guide = getGuideBySlug(slug)
 
@@ -18,8 +20,8 @@ export default function Guide() {
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-20 text-center">
         <div className="text-4xl mb-4">🔍</div>
-        <h1 className="text-xl font-semibold text-gray-900 mb-2">Guide not found</h1>
-        <Link to="/learn" className="text-sm text-brand-600 hover:text-brand-700">← Back to Learning Center</Link>
+        <h1 className="text-xl font-semibold text-gray-900 mb-2">{t('guide_not_found')}</h1>
+        <Link to="/learn" className="text-sm text-brand-600 hover:text-brand-700">{t('guide_back')}</Link>
       </div>
     )
   }
@@ -32,7 +34,7 @@ export default function Guide() {
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-gray-400 mb-8">
-        <Link to="/learn" className="hover:text-gray-600">Learning Center</Link>
+        <Link to="/learn" className="hover:text-gray-600">{t('guide_breadcrumb')}</Link>
         <span>›</span>
         <span className={`px-2 py-0.5 rounded-full border font-medium ${CATEGORY_COLORS[guide.category] || 'bg-gray-50 text-gray-600 border-gray-100'}`}>
           {guide.category}
@@ -46,11 +48,11 @@ export default function Guide() {
           {guide.title}
         </h1>
         <div className="flex items-center gap-3 text-xs text-gray-400">
-          <span>{guide.readTime} read</span>
+          <span>{guide.readTime} {t('learn_read')}</span>
           <span>·</span>
-          <span>Research Triangle, NC</span>
+          <span>{t('guide_triangle')}</span>
           <span>·</span>
-          <span>Free guide</span>
+          <span>{t('guide_free')}</span>
         </div>
       </div>
 
@@ -126,7 +128,7 @@ export default function Guide() {
       {/* Related guides */}
       {related.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Related guides</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-4">{t('guide_related')}</h3>
           <div className="space-y-3">
             {related.map(g => (
               <Link key={g.slug} to={`/learn/${g.slug}`}
@@ -134,7 +136,7 @@ export default function Guide() {
                 <span className="text-xl">{g.icon}</span>
                 <div>
                   <div className="text-sm font-medium text-gray-900">{g.title}</div>
-                  <div className="text-xs text-gray-400">{g.readTime} read</div>
+                  <div className="text-xs text-gray-400">{g.readTime} {t('learn_read')}</div>
                 </div>
               </Link>
             ))}
@@ -143,7 +145,7 @@ export default function Guide() {
       )}
 
       <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-        <Link to="/learn" className="text-xs text-gray-400 hover:text-gray-600">← Back to Learning Center</Link>
+        <Link to="/learn" className="text-xs text-gray-400 hover:text-gray-600">{t('guide_back')}</Link>
       </div>
     </div>
   )

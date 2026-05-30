@@ -640,9 +640,207 @@ function buildMechanicalPDF(form) {
   return pdf
 }
 
+// ─── Raleigh Residential Building Permit (Rev. 08-20-2025) ──────────────────
+// Raleigh does not publish an interactive fillable PDF — the official form is
+// a flat Word-based PDF emailed to downtownds@raleighnc.gov or submitted via
+// the Permit and Development Portal. This jsPDF generator mirrors the official
+// form layout (Revision 08-20-2025) so applicants have a pre-filled starting point.
+
+function buildRaleighBuildingPDF(form) {
+  const pdf = newDoc()
+  let y = ML
+
+  // ── Revision notice banner ────────────────────────────────────────────────
+  pdf.setDrawColor(200, 150, 0)
+  pdf.setFillColor(255, 248, 220)
+  pdf.rect(ML, y, CW, 8, 'FD')
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(8)
+  pdf.setTextColor(180, 100, 0)
+  pdf.text('Submit to: downtownds@raleighnc.gov — or apply online at permitportal.raleighnc.gov', PW / 2, y + 3.5, { align: 'center' })
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(6.5)
+  pdf.setTextColor(80, 80, 80)
+  pdf.text('Revision 08-20-2025 — raleighnc.gov — Residential Permit Application', PW / 2, y + 6.5, { align: 'center' })
+  y += 12
+
+  // Title
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(14)
+  pdf.setTextColor(0, 0, 0)
+  pdf.text('RESIDENTIAL PERMIT APPLICATION', PW / 2, y + 5, { align: 'center' })
+  y += 9
+  pdf.setFontSize(8)
+  pdf.setFont('helvetica', 'normal')
+  pdf.text('Planning and Development Customer Service Center  |  One Exchange Plaza, Suite 400  |  Raleigh, NC 27601  |  919-996-2500', PW / 2, y + 4, { align: 'center' })
+  y += 9
+  const useNote = 'Use this form for residential projects. For further instructions, see How to Submit a Permit Application. Refer to the Permit and Development Portal to apply for all other permits.'
+  y = disclaimerBox(pdf, y, useNote) + 3
+
+  // ── GENERAL INFORMATION ──────────────────────────────────────────────────
+  y = sectionHeader(pdf, y, 'GENERAL INFORMATION')
+  y += 1
+  field(pdf, ML, y, CW - 60, '*Project Contact:', form.contractorName || form.ownerName)
+  field(pdf, ML + CW - 58, y, 58, 'Application Date:', form.signDate)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW - 60, 'Email:', form.contractorEmail || form.ownerEmail)
+  field(pdf, ML + CW - 58, y, 58, 'Phone:', form.contractorPhone || form.ownerPhone)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW, 'Property Owner:', form.ownerName)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW - 60, 'Email:', form.ownerEmail)
+  field(pdf, ML + CW - 58, y, 58, 'Phone:', form.ownerPhone)
+  y += ROW_H + 3
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(6.5)
+  pdf.setTextColor(80, 80, 80)
+  pdf.text('*The name listed as project contact will be the primary contact within the Permit and Development Portal for the submitted project.', ML, y)
+  y += 6
+
+  // ── PROJECT INFORMATION ──────────────────────────────────────────────────
+  y = sectionHeader(pdf, y, 'PROJECT INFORMATION')
+  y += 1
+  field(pdf, ML, y, CW, 'Project Address:', form.jobAddress)
+  y += ROW_H + 3
+
+  // Work type checkboxes — pre-check based on jobDescription
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(FS_LABEL)
+  pdf.setTextColor(30, 30, 30)
+  pdf.text('Select the primary type of work:', ML, y + 3)
+  y += 5
+  const workTypes = [
+    'Accessory Structure less than 12 ft. in any dimension',
+    'Change of Use',
+    'Changeouts',
+    'Single Trade Permits',
+    'Retaining Walls',
+    'Water/Sewer Service',
+    'Other',
+  ]
+  let wx = ML
+  workTypes.forEach((wt, i) => {
+    if (wx + wt.length * 1.5 + 8 > ML + CW && i > 0) { wx = ML; y += 5.5 }
+    checkbox(pdf, wx, y + 0.5, false)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(FS_LABEL)
+    pdf.setTextColor(30, 30, 30)
+    pdf.text(wt, wx + 5, y + 3)
+    wx += Math.min(wt.length * 1.5 + 10, 55)
+  })
+  y += 8
+
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(FS_LABEL)
+  pdf.setTextColor(30, 30, 30)
+  pdf.text('Provide a detailed project description:', ML, y + 3)
+  y += 5
+  pdf.setDrawColor(150, 150, 150)
+  pdf.line(ML, y + 2, ML + CW, y + 2)
+  if (form.jobDescription) {
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(FS_VALUE)
+    pdf.setTextColor(0, 0, 0)
+    const lines = pdf.splitTextToSize(form.jobDescription, CW - 2)
+    pdf.text(lines[0], ML + 0.5, y + 1.5)
+  }
+  y += 7
+
+  // ── SITE INFORMATION ──────────────────────────────────────────────────────
+  y = sectionHeader(pdf, y, 'SITE INFORMATION')
+  y += 1
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(FS_LABEL)
+  pdf.setTextColor(30, 30, 30)
+  pdf.text('Does this project qualify as a frequent transit development option?', ML, y + 3)
+  yesNo(pdf, ML + CW - 26, y + 3, null)
+  y += ROW_H + 2
+  pdf.text('*Will impervious surface change?', ML, y + 3)
+  yesNo(pdf, ML + CW - 26, y + 3, null)
+  y += ROW_H + 2
+  field(pdf, ML, y, 70, 'Existing Impervious Surface (sq.ft.):', '')
+  field(pdf, ML + 74, y, 60, 'Overlay District:', '')
+  field(pdf, ML + 138, y, CW - 138, 'Proposed Total Impervious Surface (sq.ft.):', '')
+  y += ROW_H + 2
+  pdf.text('Need New Water Service?', ML, y + 3)
+  yesNo(pdf, ML + 47, y + 3, null)
+  field(pdf, ML + 76, y, CW - 76, 'Total Disturbed Area (sq.ft.):', '')
+  y += ROW_H + 3
+
+  // ── BUILDING INFORMATION ──────────────────────────────────────────────────
+  y = sectionHeader(pdf, y, 'BUILDING INFORMATION')
+  y += 1
+  field(pdf, ML, y, CW / 2 - 2, 'Renovation Square Feet:', '')
+  field(pdf, ML + CW / 2 + 2, y, CW / 2 - 2, 'New Square Feet:', '')
+  y += ROW_H + 3
+
+  // ── COST INFORMATION ──────────────────────────────────────────────────────
+  y = sectionHeader(pdf, y, 'COST INFORMATION')
+  y += 1
+  const totalCostStr = form.building
+    ? '$' + (parseFloat(form.building.replace(/[^0-9.]/g, '') || 0) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })
+    : ''
+  field(pdf, ML, y, CW / 2 - 2, 'Total Construction Cost: $', totalCostStr)
+  const totalElecStr = form.electrical
+    ? '$' + (parseFloat(form.electrical.replace(/[^0-9.]/g, '') || 0) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })
+    : ''
+  field(pdf, ML + CW / 2 + 2, y, CW / 2 - 2, 'Total Electrical Cost: $', totalElecStr)
+  y += ROW_H + 3
+
+  // ── CONTRACTOR INFORMATION ───────────────────────────────────────────────
+  y = sectionHeader(pdf, y, 'CONTRACTOR INFORMATION')
+  y += 2
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(6.5)
+  pdf.setTextColor(80, 80, 80)
+  const contractorNote = 'Contractors or contractor companies must be registered in the Permit and Development Portal before managing a project, paying fees, or scheduling inspections. See final review for project approval requirements. Use the Contractor Addendum Form if contractors are not listed on this application.'
+  const contractorLines = pdf.splitTextToSize(contractorNote, CW)
+  pdf.text(contractorLines, ML, y)
+  y += contractorLines.length * 3.5 + 2
+
+  // Building contractor
+  field(pdf, ML, y, CW / 2 - 2, '*Contractor (Building / Site / Zoning):', form.contractorName)
+  field(pdf, ML + CW / 2 + 2, y, CW / 2 - 2, 'NC License #:', form.contractorLicense)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW - 60, 'Email:', form.contractorEmail)
+  field(pdf, ML + CW - 58, y, 58, 'Phone:', form.contractorPhone)
+  y += ROW_H + 2
+  field(pdf, ML, y, CW, 'Address:', form.contractorAddress)
+  y += ROW_H + 3
+
+  // Electrical contractor
+  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(FS_LABEL); pdf.setTextColor(30,30,30)
+  pdf.text('Electrical', ML, y + 3)
+  y += 5
+  field(pdf, ML, y, CW / 2 - 2, 'Contractor:', '')
+  field(pdf, ML + CW / 2 + 2, y, CW / 2 - 2, 'NC License #:', '')
+  y += ROW_H + 2
+  field(pdf, ML, y, CW - 60, 'Email:', '')
+  field(pdf, ML + CW - 58, y, 58, 'Phone:', '')
+  y += ROW_H + 3
+
+  // ── PROPERTY OWNER ───────────────────────────────────────────────────────
+  y = sectionHeader(pdf, y, 'SIGNATURE')
+  y += 2
+  const authText = 'The undersigned applicant hereby authorizes the filing of this application and confirms having obtained permission from the property owner/occupant. The undersigned certifies that all information provided is true, accurate, and complete. False information may result in rejection of the application or revocation of the permit or plan.'
+  y = disclaimerBox(pdf, y, authText, true) + 4
+  field(pdf, ML, y, 65, 'Applicant Name:', form.contractorName || form.ownerName)
+  field(pdf, ML + 68, y, 80, 'Applicant Signature:', '')
+  field(pdf, ML + 152, y, CW - 152, 'Date:', form.signDate)
+
+  pageFooter(pdf, 'Raleigh Residential Permit Application — Rev. 08-20-2025 — Generated by Parcoria')
+  return pdf
+}
+
 // ─── Public API ──────────────────────────────────────────────────────────────
 
-export function generatePermitPDF(permitType, form, totalCost) {
+export function generatePermitPDF(permitType, form, totalCost, jurisdiction = 'durham') {
+  // Raleigh: primary path is the server API (fill-permit-pdf.js) using the real fillable PDF.
+  // This jsPDF path is a client-side fallback if the API call fails or for offline use.
+  if (jurisdiction === 'raleigh') {
+    return buildRaleighBuildingPDF(form)
+  }
+  // Durham (default)
   switch (permitType) {
     case 'electrical':  return buildElectricalPDF(form)
     case 'plumbing':    return buildPlumbingPDF(form)
@@ -651,10 +849,10 @@ export function generatePermitPDF(permitType, form, totalCost) {
   }
 }
 
-export function downloadPermitPDF(permitType, form, totalCost) {
-  const pdf = generatePermitPDF(permitType, form, totalCost)
-  const address = (form.jobAddress || 'durham-permit').replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 30)
-  const filename = `durham-${permitType}-permit-${address}.pdf`
+export function downloadPermitPDF(permitType, form, totalCost, jurisdiction = 'durham') {
+  const pdf = generatePermitPDF(permitType, form, totalCost, jurisdiction)
+  const address = (form.jobAddress || `${jurisdiction}-permit`).replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 30)
+  const filename = `${jurisdiction}-${permitType}-permit-${address}.pdf`
   pdf.save(filename)
   return filename
 }

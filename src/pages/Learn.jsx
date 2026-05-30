@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { GUIDES, CATEGORIES } from '../data/learn'
 import { useState } from 'react'
+import { t, useLang } from '../lib/i18n'
 
 const CATEGORY_COLORS = {
   'Fundamentals':     'bg-blue-50 text-blue-700 border-blue-100',
@@ -12,6 +13,7 @@ const CATEGORY_COLORS = {
 }
 
 export default function Learn() {
+  useLang() // re-render on language change
   const [activeCategory, setActiveCategory] = useState('All')
 
   const filtered = activeCategory === 'All'
@@ -24,31 +26,34 @@ export default function Learn() {
       {/* Header */}
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-2 text-xs px-3 py-1.5 bg-brand-50 text-brand-700 border border-brand-100 rounded-full font-medium mb-4">
-          Free for everyone · No account required
+          {t('learn_badge')}
         </div>
         <h1 className="text-3xl font-semibold text-gray-900 mb-3">
-          Learn how permitting works
+          {t('learn_heading')}
         </h1>
         <p className="text-gray-500 text-base max-w-xl mx-auto leading-relaxed">
-          Plain-English guides to residential construction permitting in the Research Triangle. Written for first-time builders, owner-builders, and anyone who's ever been confused by the process.
+          {t('learn_sub')}
         </p>
       </div>
 
       {/* Category filter */}
       <div className="flex items-center gap-2 flex-wrap mb-8 justify-center">
-        {['All', ...CATEGORIES].map(cat => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${
-              activeCategory === cat
-                ? 'bg-gray-900 text-white border-gray-900'
-                : 'border-gray-200 text-gray-600 hover:border-gray-300'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+        {[t('learn_filter_all'), ...CATEGORIES].map((cat, i) => {
+          const rawCat = i === 0 ? 'All' : CATEGORIES[i - 1]
+          return (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(rawCat)}
+              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${
+                activeCategory === rawCat
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
+              }`}
+            >
+              {cat}
+            </button>
+          )
+        })}
       </div>
 
       {/* Guide cards */}
@@ -66,7 +71,7 @@ export default function Learn() {
                   <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${CATEGORY_COLORS[guide.category] || 'bg-gray-50 text-gray-600 border-gray-100'}`}>
                     {guide.category}
                   </span>
-                  <span className="text-xs text-gray-400">{guide.readTime} read</span>
+                  <span className="text-xs text-gray-400">{guide.readTime} {t('learn_read')}</span>
                 </div>
                 <h2 className="text-sm font-semibold text-gray-900 leading-snug group-hover:text-brand-700 transition-colors">
                   {guide.title}
@@ -75,7 +80,7 @@ export default function Learn() {
             </div>
             <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{guide.description}</p>
             <div className="mt-3 text-xs text-brand-600 font-medium group-hover:text-brand-700">
-              Read guide →
+              {t('learn_read_guide')}
             </div>
           </Link>
         ))}
@@ -84,16 +89,16 @@ export default function Learn() {
       {/* Bottom CTA */}
       <div className="bg-brand-600 rounded-2xl p-8 text-center">
         <div className="text-white text-xl font-semibold mb-2">
-          Ready to see your specific permit roadmap?
+          {t('learn_cta_title')}
         </div>
         <div className="text-brand-200 text-sm mb-6 max-w-md mx-auto">
-          Enter your address and project type. Parcoria maps every permit, in the right order, for your jurisdiction — in under 2 minutes.
+          {t('learn_cta_sub')}
         </div>
         <Link
           to="/wizard"
           className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand-700 text-sm font-semibold rounded-xl hover:bg-brand-50 transition-colors"
         >
-          Start my permit roadmap →
+          {t('learn_cta_btn')}
         </Link>
       </div>
     </div>

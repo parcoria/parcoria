@@ -215,21 +215,38 @@ const GENERIC_PLAN = [
   },
 ]
 
+import { t, useLang } from '../lib/i18n'
+
 export default function ActionPlan() {
+  useLang() // re-render on language change
   const { state } = useLocation()
   const proj = state?.proj || 'sfh'
   const addr = state?.addr || 'Raleigh, NC'
   const isSFH = proj === 'sfh'
   const plan = isSFH ? SFH_PLAN : GENERIC_PLAN
 
-  const PROJ_LABELS = { sfh: 'New single-family home', adu: 'Accessory dwelling unit', addition: 'Addition', deck: 'Deck or porch', reno: 'Major renovation', pool: 'Pool or spa', shed: 'Shed / garage', townhouse: 'Townhouse / duplex' }
+  const PROJ_LABELS = { sfh: t('proj_sfh'), adu: t('proj_adu'), addition: t('proj_addition'), deck: t('proj_deck'), reno: t('proj_reno'), pool: t('proj_pool'), shed: t('proj_shed'), townhouse: t('proj_townhouse') }
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
       <div className="mb-8">
-        <p className="text-xs text-gray-400 mb-1">Parcoria · Week-by-week action plan</p>
-        <h1 className="text-2xl font-semibold text-gray-900 mb-1">{PROJ_LABELS[proj] || 'Your project'}</h1>
+        <p className="text-xs text-gray-400 mb-1">Parcoria · {t('action_sub')}</p>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-1">{PROJ_LABELS[proj] || t('action_title')}</h1>
         <p className="text-sm text-gray-400">{addr}</p>
+      </div>
+
+      {/* Print button */}
+      <div className="flex justify-end mb-4">
+        <button onClick={() => window.print()}
+          className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1.5">
+          🖨️ {t('action_print')}
+        </button>
+      </div>
+
+      {/* Warning banner */}
+      <div className="flex gap-3 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-8 text-xs text-amber-700">
+        <span className="flex-shrink-0 font-semibold">{t('action_warning_hdr')}:</span>
+        {t('action_warning_txt')}
       </div>
 
       {/* Summary stats */}
@@ -263,22 +280,22 @@ export default function ActionPlan() {
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${w.badgeColor}`}>{w.badge}</span>
               </div>
               <ul className="flex flex-col gap-2 mb-3">
-                {w.tasks.map((t, ti) => (
+                {w.tasks.map((task, ti) => (
                   <li key={ti} className="flex gap-2 items-start text-sm text-gray-600 leading-relaxed">
                     <span className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0 mt-2" />
-                    {t}
+                    {task}
                   </li>
                 ))}
               </ul>
               {w.warning && (
                 <div className="flex gap-2 bg-amber-50 border border-amber-100 rounded-lg p-3 text-xs text-amber-700 leading-relaxed">
-                  <span className="flex-shrink-0">⚠️</span>
+                  <span className="flex-shrink-0">⚠️ {t('action_warning')}:</span>
                   {w.warning}
                 </div>
               )}
               {w.tip && (
                 <div className="flex gap-2 bg-gray-50 rounded-lg p-3 text-xs text-gray-500 leading-relaxed">
-                  <span className="flex-shrink-0">💡</span>
+                  <span className="flex-shrink-0">💡 {t('action_tip')}:</span>
                   {w.tip}
                 </div>
               )}
@@ -289,10 +306,10 @@ export default function ActionPlan() {
 
       <div className="flex flex-col sm:flex-row gap-2 mt-8">
         <Link to="/wizard" className="flex-1 py-3 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:border-gray-300 transition-colors text-center">
-          ← Back to wizard
+          {t('action_start_over')}
         </Link>
         <Link to="/" className="flex-1 py-3 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors text-center">
-          Back to Parcoria home
+          {t('nav_home')}
         </Link>
       </div>
     </div>

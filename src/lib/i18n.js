@@ -173,6 +173,77 @@ export const STRINGS = {
   // Pricing page
   price_already_paid: { en: 'Already paid? Restore access', es: '¿Ya pagaste? Restaurar acceso' },
   price_see_plans:    { en: 'See all plans', es: 'Ver todos los planes' },
+
+  // Learn center
+  learn_badge:        { en: 'Free for everyone · No account required', es: 'Gratis para todos · Sin cuenta requerida' },
+  learn_heading:      { en: 'Learn how permitting works', es: 'Aprende cómo funcionan los permisos' },
+  learn_sub:          { en: 'Plain-English guides to residential construction permitting in the Research Triangle. Written for first-time builders, owner-builders, and anyone who\'s ever been confused by the process.', es: 'Guías en lenguaje sencillo sobre permisos de construcción residencial en el Research Triangle. Escritas para constructores primerizos, propietarios-constructores y cualquiera que haya tenido dudas sobre el proceso.' },
+  learn_filter_all:   { en: 'All', es: 'Todos' },
+  learn_read_guide:   { en: 'Read guide →', es: 'Leer guía →' },
+  learn_read:         { en: 'read', es: 'lectura' },
+  learn_cta_title:    { en: 'Ready to see your specific permit roadmap?', es: '¿Listo para ver tu hoja de ruta de permisos específica?' },
+  learn_cta_sub:      { en: 'Enter your address and project type. Parcoria maps every permit, in the right order, for your jurisdiction — in under 2 minutes.', es: 'Ingresa tu dirección y tipo de proyecto. Parcoria mapea todos los permisos, en el orden correcto, para tu jurisdicción — en menos de 2 minutos.' },
+  learn_cta_btn:      { en: 'Start my permit roadmap →', es: 'Iniciar mi hoja de ruta de permisos →' },
+
+  // Guide page
+  guide_not_found:    { en: 'Guide not found', es: 'Guía no encontrada' },
+  guide_back:         { en: '← Back to Learning Center', es: '← Volver al Centro de Aprendizaje' },
+  guide_breadcrumb:   { en: 'Learning Center', es: 'Centro de Aprendizaje' },
+  guide_related:      { en: 'Related guides', es: 'Guías relacionadas' },
+  guide_triangle:     { en: 'Research Triangle, NC', es: 'Research Triangle, NC' },
+  guide_free:         { en: 'Free guide', es: 'Guía gratuita' },
+
+  // Sample roadmap
+  sample_warning:     { en: 'Always verify current requirements directly with your jurisdiction before submitting any permit application.', es: 'Siempre verifica los requisitos actuales directamente con tu jurisdicción antes de enviar cualquier solicitud de permiso.' },
+  sample_permit_count:{ en: 'permits required', es: 'permisos requeridos' },
+  sample_timeline_lbl:{ en: 'Est. timeline', es: 'Plazo estimado' },
+  sample_fees_lbl:    { en: 'Est. permit fees', es: 'Tarifas estimadas' },
+  sample_apply_link:  { en: 'Apply at portal →', es: 'Solicitar en portal →' },
+  sample_view_full:   { en: 'View full action plan →', es: 'Ver plan de acción completo →' },
+  sample_cta_title:   { en: 'This is a sample. Your roadmap will be specific to your address.', es: 'Este es un ejemplo. Tu hoja de ruta será específica para tu dirección.' },
+  sample_cta_btn:     { en: 'Run my permit roadmap →', es: 'Obtener mi hoja de ruta de permisos →' },
+  sample_phase_lbl:   { en: 'Phase', es: 'Fase' },
+  sample_weeks_lbl:   { en: 'wks', es: 'sem.' },
+
+  // Action plan
+  action_title:       { en: 'Your Permit Action Plan', es: 'Tu Plan de Acción para Permisos' },
+  action_sub:         { en: 'Week-by-week roadmap from empty lot to certificate of occupancy', es: 'Hoja de ruta semana a semana desde el lote vacío hasta el certificado de ocupación' },
+  action_print:       { en: 'Print / save as PDF', es: 'Imprimir / guardar como PDF' },
+  action_warning_hdr: { en: 'Always verify', es: 'Verifica siempre' },
+  action_warning_txt: { en: 'Permit requirements, fees, and timelines change. Verify all details directly with your jurisdiction before submitting anything.', es: 'Los requisitos, tarifas y plazos de permisos cambian. Verifica todos los detalles directamente con tu jurisdicción antes de enviar cualquier solicitud.' },
+  action_tip:         { en: 'Tip', es: 'Consejo' },
+  action_warning:     { en: 'Warning', es: 'Advertencia' },
+  action_tasks:       { en: 'Tasks', es: 'Tareas' },
+  action_start_over:  { en: '← Run a new roadmap', es: '← Ejecutar una nueva hoja de ruta' },
+  action_get_full:    { en: 'Get full permit roadmap →', es: 'Obtener hoja de ruta completa →' },
+
+  // ApplicationPrefill
+  apply_title:        { en: 'Permit Application Pre-fill', es: 'Pre-llenado de Solicitud de Permiso' },
+  apply_sub:          { en: 'We pre-fill your permit application from your Parcoria wizard answers. Download, review, and submit to your jurisdiction.', es: 'Pre-llenamos tu solicitud de permiso con las respuestas del asistente de Parcoria. Descarga, revisa y envía a tu jurisdicción.' },
+  apply_permit_type:  { en: 'Permit type', es: 'Tipo de permiso' },
+  apply_job_info:     { en: 'Job information', es: 'Información del trabajo' },
+  apply_job_address:  { en: 'Job address', es: 'Dirección del trabajo' },
+  apply_lot_unit:     { en: 'Lot / Unit', es: 'Lote / Unidad' },
+  apply_subdivision:  { en: 'Subdivision', es: 'Subdivisión' },
+  apply_description:  { en: 'Job description', es: 'Descripción del trabajo' },
+  apply_contractor:   { en: 'Contractor information', es: 'Información del contratista' },
+  apply_contractor_nm:{ en: 'Contractor name', es: 'Nombre del contratista' },
+  apply_license:      { en: 'NC License #', es: 'Licencia NC #' },
+  apply_cid:          { en: 'Durham CID', es: 'CID de Durham' },
+  apply_address:      { en: 'Address', es: 'Dirección' },
+  apply_city:         { en: 'City', es: 'Ciudad' },
+  apply_state:        { en: 'State', es: 'Estado' },
+  apply_zip:          { en: 'ZIP', es: 'Código postal' },
+  apply_owner:        { en: 'Property owner information', es: 'Información del propietario' },
+  apply_owner_name:   { en: 'Owner name', es: 'Nombre del propietario' },
+  apply_costs:        { en: 'Construction costs', es: 'Costos de construcción' },
+  apply_quick_fill:   { en: 'Quick-fill from saved profile', es: 'Llenado rápido desde perfil guardado' },
+  apply_download:     { en: 'Download pre-filled PDF', es: 'Descargar PDF pre-llenado' },
+  apply_submit_me:    { en: 'Submit for me', es: 'Enviar por mí' },
+  apply_review_note:  { en: 'Review all fields before submitting. You are responsible for accuracy.', es: 'Revisa todos los campos antes de enviar. Eres responsable de la exactitud.' },
+  apply_scope_work:   { en: 'Scope of work', es: 'Alcance del trabajo' },
+  apply_est_cost:     { en: 'Estimated cost ($)', es: 'Costo estimado ($)' },
+  apply_raleigh_note: { en: 'Raleigh uses an online portal for most permit types. Download the pre-filled form and submit via email to downtownds@raleighnc.gov or through the Permit and Development Portal.', es: 'Raleigh usa un portal en línea para la mayoría de los tipos de permisos. Descarga el formulario pre-llenado y envíalo por correo a downtownds@raleighnc.gov o a través del Portal de Permisos y Desarrollo.' },
 }
 
 // Main translation function

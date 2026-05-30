@@ -10,6 +10,7 @@ import { getMyContractors, TRADE_TYPES } from '../lib/contractors'
 import { getUser } from '../lib/supabase'
 import { downloadPermitPDF } from '../lib/permit-pdf'
 import SubmissionAgent from '../components/SubmissionAgent'
+import { t, useLang } from '../lib/i18n'
 
 // ─── Shared data ──────────────────────────────────────────────────────────────
 
@@ -849,6 +850,7 @@ return (<div className="space-y-6">
 
 
 export default function ApplicationPrefill() {
+  useLang() // re-render on language change
   const [params] = useSearchParams()
   const [permitType, setPermitType] = useState(params.get('type') || 'building')
   const [profile, setProfile] = useState(null)
@@ -968,7 +970,7 @@ export default function ApplicationPrefill() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            form: { ...form, jurisdiction: params.get('j') || 'durham' },
+            form: { ...form, jurisdiction },
             permitType,
             totalCost,
           }),
@@ -976,9 +978,9 @@ export default function ApplicationPrefill() {
 
         if (!res.ok) {
           const err = await res.json().catch(() => ({}))
-          // Jurisdiction PDF not yet available — fall back to jsPDF
-          if (err.error === 'coming_soon' || err.error === 'unsupported_jurisdiction') {
-            const filename = downloadPermitPDF(permitType, form, totalCost)
+          // Jurisdiction uses client-side jsPDF (e.g. Raleigh) or PDF not yet available
+          if (err.error === 'coming_soon' || err.error === 'jspdf' || err.error === 'unsupported_jurisdiction') {
+            const filename = downloadPermitPDF(permitType, form, totalCost, jurisdiction)
             setLastFilename(filename)
             setShowChecklist(true)
             return
@@ -989,16 +991,15 @@ export default function ApplicationPrefill() {
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
-        const jur = params.get('j') || 'durham'
-        const address = (form.jobAddress || jur).replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 30)
-        a.download = `${jur}-building-permit-${address}.pdf`
+        const address = (form.jobAddress || jurisdiction).replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 30)
+        a.download = `${jurisdiction}-building-permit-${address}.pdf`
         a.href = url
         a.click()
         URL.revokeObjectURL(url)
         setLastFilename(a.download)
       } else {
         // Trade permits use client-side jsPDF
-        const filename = downloadPermitPDF(permitType, form, totalCost)
+        const filename = downloadPermitPDF(permitType, form, totalCost, jurisdiction)
         setLastFilename(filename)
       }
       setShowChecklist(true)
@@ -1012,7 +1013,13 @@ export default function ApplicationPrefill() {
 
   // ─── Submission checklist modal ───────────────────────────────────────────
 
-  const PORTAL_URLS = {
+  const jurisdiction = params.get('j') || 'durham'
+  const PORTAL_URLS = jurisdiction === 'raleigh' ? {
+    building:   'https://permitportal.raleighnc.gov',
+    electrical: 'https://permitportal.raleighnc.gov',
+    plumbing:   'https://permitportal.raleighnc.gov',
+    mechanical: 'https://permitportal.raleighnc.gov',
+  } : {
     building:   'https://dplans.durhamnc.gov',
     electrical: 'https://ldo4.durhamnc.gov/DurhamWeb',
     plumbing:   'https://ldo4.durhamnc.gov/DurhamWeb',
@@ -1151,9 +1158,9 @@ export default function ApplicationPrefill() {
 
       {/* Action bar */}
       <div className="flex items-center justify-between gap-3 mb-6 print:hidden">
-        <Link to="/wizard" className="text-xs text-gray-400 hover:text-gray-600">&larr; Back to wizard</Link>
+        <Link to="/wizard" className="text-xs text-gray-400 hover:text-gray-600">&larr; {t('wiz_back')}</Link>
         <div className="flex items-center gap-2">
-          <div className="text-xs text-gray-400 hidden sm:block">Fill all fields, then generate your submit-ready PDF</div>
+          <div className="text-xs text-gray-400 hidden sm:block">{t('apply_review_note')}</div>
           <button onClick={handleGeneratePDF} disabled={pdfGenerating}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60">
             {pdfGenerating ? (
@@ -1169,12 +1176,23 @@ export default function ApplicationPrefill() {
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Generate & Download PDF
+                {t('apply_download')}
               </>
             )}
           </button>
         </div>
       </div>
+
+      {/* Raleigh info banner */}
+      {(params.get('j') || 'durham') === 'raleigh' && (
+        <div className="mb-4 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-xs text-blue-800 flex gap-2">
+          <span className="flex-shrink-0">ℹ️</span>
+          <span>{t('apply_raleigh_note')}</span>
+        </div>
+      )}
+
+      {/* Raleigh submission steps modal overrides — PORTAL_URLS and SUBMISSION_STEPS handle Durham by default */}
+      {/* For Raleigh, the checklist modal shows Raleigh portal URL (set below in PORTAL_URLS) */}
 
       {/* Permit type switcher */}
       <div className="mb-6 print:hidden">

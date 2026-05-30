@@ -169,7 +169,11 @@ const PRO_STYLES = {
   recommended: { dot: 'bg-amber-500', badge: 'bg-amber-50 text-amber-700 border border-amber-100', label: 'Strongly recommended' },
 }
 
+import { t, useLang } from '../lib/i18n'
+
 export default function SampleRoadmap() {
+  useLang() // re-render on language change
+
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
 
@@ -177,16 +181,16 @@ export default function SampleRoadmap() {
       <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-6 flex items-center gap-3">
         <span className="text-base flex-shrink-0">📋</span>
         <div>
-          <div className="text-xs font-semibold text-amber-800">This is a sample roadmap</div>
+          <div className="text-xs font-semibold text-amber-800">{t('sample_banner')}</div>
           <div className="text-xs text-amber-700 leading-relaxed">
-            This shows exactly what paying customers see - a real permit sequence for a real project type. Enter your address to get your specific roadmap.{' '}
+            {t('sample_banner_sub')}{' '}
             <Link to="/wizard" className="underline font-medium">Try it free ↗</Link>
           </div>
         </div>
       </div>
 
       {/* Header */}
-      <p className="text-xs text-gray-400 mb-1">Sample permit roadmap</p>
+      <p className="text-xs text-gray-400 mb-1">{t('sample_banner')}</p>
       <h1 className="text-xl font-semibold text-gray-900 mb-1">
         Permit roadmap - {SAMPLE.proj}
       </h1>
@@ -195,9 +199,9 @@ export default function SampleRoadmap() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-8">
         {[
-          { n: SAMPLE.permitCount, l: 'Permits required' },
-          { n: SAMPLE.timeline, l: 'Est. timeline' },
-          { n: SAMPLE.fees, l: 'Est. permit fees' },
+          { n: SAMPLE.permitCount, l: t('sample_permit_count') },
+          { n: SAMPLE.timeline, l: t('sample_timeline_lbl') },
+          { n: SAMPLE.fees, l: t('sample_fees_lbl') },
         ].map((s, i) => (
           <div key={i} className="bg-gray-50 rounded-xl p-3 text-center">
             <div className="text-lg font-semibold text-gray-900">{s.n}</div>
@@ -224,7 +228,7 @@ export default function SampleRoadmap() {
                 </div>
                 <a href={pm.url} target="_blank" rel="noreferrer"
                   className="text-xs text-brand-600 hover:text-brand-700 mt-1.5 inline-block">
-                  Apply / view details ↗
+                  {t('sample_apply_link')}
                 </a>
               </div>
             </div>
@@ -269,21 +273,21 @@ export default function SampleRoadmap() {
 
       {/* CTA */}
       <div className="bg-brand-600 rounded-2xl p-6 text-center">
-        <div className="text-white font-semibold text-lg mb-1">Get your specific permit roadmap</div>
+        <div className="text-white font-semibold text-lg mb-1">{t('sample_get_yours')}</div>
         <div className="text-brand-200 text-sm mb-5 leading-relaxed">
-          This sample is for a Raleigh new construction. Your project - different address, different type, different jurisdiction - will have a different sequence. Enter your address and get the exact roadmap for your build.
+          {t('sample_cta_title')}
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link to="/pricing"
             className="px-6 py-3 bg-white text-brand-700 text-sm font-semibold rounded-xl hover:bg-brand-50 transition-colors">
-            Get started ↗
+            {t('price_get_started')} ↗
           </Link>
         </div>
       </div>
 
       <div className="text-center mt-6">
         <Link to="/learn" className="text-xs text-gray-400 hover:text-gray-600">
-          ← Learn how the permit process works
+          ← {t('nav_learn')}
         </Link>
       </div>
     </div>
