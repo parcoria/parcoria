@@ -27,6 +27,16 @@ const PROJ_LABELS = {
   deck: 'Deck', reno: 'Renovation', pool: 'Pool',
   shed: 'Shed', townhouse: 'Townhouse',
 }
+const PROJ_COLORS = {
+  sfh:       'bg-brand-50 text-brand-700 border-brand-200',
+  adu:       'bg-purple-50 text-purple-700 border-purple-200',
+  addition:  'bg-blue-50 text-blue-700 border-blue-200',
+  deck:      'bg-teal-50 text-teal-700 border-teal-200',
+  reno:      'bg-orange-50 text-orange-700 border-orange-200',
+  pool:      'bg-cyan-50 text-cyan-700 border-cyan-200',
+  shed:      'bg-lime-50 text-lime-700 border-lime-200',
+  townhouse: 'bg-rose-50 text-rose-700 border-rose-200',
+}
 const STATUS_STYLES = {
   active: 'bg-green-50 text-green-700 border-green-100',
   planning: 'bg-blue-50 text-blue-700 border-blue-100',
@@ -146,15 +156,16 @@ export default function Dashboard() {
     } else {
       next = [...current.filter(p => !SOLO_TYPES.includes(p)), typeId]
     }
-    const updated = { ...project, projs: next, project_type: next[0] }
+    const newName = next.length > 1
+      ? next.map(p => PROJ_LABELS[p] || p).join(' + ') + ' — ' + (project.address || project.jurisdiction)
+      : project.name
+    const updated = { ...project, projs: next, project_type: next[0], name: newName }
     setProjects(prev => prev.map(p => p.id === project.id ? updated : p))
     try {
       await supabase.from('projects').update({
         projs: next,
         project_type: next[0],
-        name: next.length > 1
-          ? next.map(p => PROJ_LABELS[p] || p).join(' + ') + ' — ' + (project.address || project.jurisdiction)
-          : project.name,
+        name: newName,
       }).eq('id', project.id)
     } catch (err) {
       console.error('Toggle project type error:', err)
@@ -450,7 +461,7 @@ export default function Dashboard() {
                 </span>
                 {/* Show all project types */}
                 {(project.projs?.length > 0 ? project.projs : project.project_type ? [project.project_type] : []).map(pt => (
-                  <span key={pt} className="text-xs bg-gray-50 border border-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                  <span key={pt} className={`text-xs px-2 py-0.5 rounded-full border font-medium ${PROJ_COLORS[pt] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
                     {PROJ_LABELS[pt] || pt}
                   </span>
                 ))}
