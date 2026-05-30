@@ -83,12 +83,51 @@ export default function Wizard() {
   useLang() // re-render on language change
   const [step, setStep] = useState(1)
   const [state, setState] = useState({
-    jurisdiction: '', addr: '', proj: '', cost: '',
+    jurisdiction: '', addr: '', proj: '', projs: [], cost: '',
     historic: false, septic: false, flood: false, corner: false,
   })
+  const [activeProj, setActiveProj] = useState(null) // which tab is active in multi-project roadmap
   const [saveStatus, setSaveStatus] = useState('idle') // idle | saving | saved | error
 
   function update(key, val) { setState(s => ({ ...s, [key]: val })) }
+
+  // Toggle a project type on/off in multi-select
+  // Some types are mutually exclusive — can't build SFH + ADU + Townhouse together
+  const SOLO_TYPES = ['sfh', 'adu', 'townhouse'] // these are standalone, can't be combined
+  function toggleProj(id) {
+    setState(s => {
+      const current = s.projs || []
+      if (current.includes(id)) {
+        // Deselect
+        const next = current.filter(p => p !== id)
+        return { ...s, projs: next, proj: next[0] || '' }
+      }
+      // Selecting a solo type clears everything else; selecting a non-solo clears solo types
+      let next
+      if (SOLO_TYPES.includes(id)) {
+        next = [id] // solo — replace all
+      } else {
+        next = [...current.filter(p => !SOLO_TYPES.includes(p)), id]
+      }
+      return { ...s, projs: next, proj: next[0] || '' }
+    })
+    // Set active tab to the newly selected project
+    setActiveProj(id)
+  }
+
+  function getDataForProj(projId) {
+    const p = projId || state.proj
+    if (isDurham) return DURHAM_PERMIT_DATA[p] || DURHAM_PERMIT_DATA.sfh
+    if (isChapelHill) return CHAPEL_HILL_PERMIT_DATA[p] || CHAPEL_HILL_PERMIT_DATA.sfh
+    if (isApex) return APEX_PERMIT_DATA[p] || APEX_PERMIT_DATA.sfh
+    if (isHollySprings) return HOLLY_SPRINGS_PERMIT_DATA[p] || HOLLY_SPRINGS_PERMIT_DATA.sfh
+    if (isWakeForest) return WAKE_FOREST_PERMIT_DATA[p] || WAKE_FOREST_PERMIT_DATA.sfh
+    if (isMorrisville) return MORRISVILLE_PERMIT_DATA[p] || MORRISVILLE_PERMIT_DATA.sfh
+    if (isGarner) return GARNER_PERMIT_DATA[p] || GARNER_PERMIT_DATA.sfh
+    if (isFuquayVarina) return FUQUAY_VARINA_PERMIT_DATA[p] || FUQUAY_VARINA_PERMIT_DATA.sfh
+    if (isCary) return CARY_PERMIT_DATA[p] || CARY_PERMIT_DATA.sfh
+    return PERMIT_DATA[p] || PERMIT_DATA.sfh
+  }
   async function next() {
     // When moving from step 4 to step 5 and user has access, save project
     if (step === 3 && hasAccess() && state.proj && state.jurisdiction) {
@@ -96,18 +135,21 @@ export default function Wizard() {
         const user = await getUser()
         if (user) {
           await saveProject({
-            name: `${state.proj === 'sfh' ? 'New Home' : state.proj} - ${state.addr || state.jurisdiction}`,
+            name: allProjs.length > 1
+              ? `${allProjs.map(p => PROJ_LABELS[p] || p).join(' + ')} - ${state.addr || state.jurisdiction}`
+              : `${state.proj === 'sfh' ? 'New Home' : state.proj} - ${state.addr || state.jurisdiction}`,
             jurisdiction: state.jurisdiction,
             addr: state.addr,
             proj: state.proj,
+            projs: state.projs || [state.proj],
             cost: state.cost,
             historic: state.historic,
             septic: state.septic,
             flood: state.flood,
             corner: state.corner,
-            permitCount: (data?.count || 0) + (state.historic ? 1 : 0) + (state.septic ? 1 : 0) + (state.flood ? 1 : 0),
-            timeline: data?.timeline,
-            fees: data?.fees,
+            permitCount: totalPermitCount,
+            timeline: allProjs.length > 1 ? maxTimeline : data?.timeline,
+            fees: allProjs.length > 1 ? combinedFees : data?.fees,
             status: 'active',
           })
         }
@@ -131,18 +173,7 @@ export default function Wizard() {
   const isFuquayVarina = state.jurisdiction === 'fuquayvarina'
   const isCary = state.jurisdiction === 'cary'
 
-  function getPermitData() {
-    if (isDurham) return DURHAM_PERMIT_DATA[state.proj] || DURHAM_PERMIT_DATA.sfh
-    if (isChapelHill) return CHAPEL_HILL_PERMIT_DATA[state.proj] || CHAPEL_HILL_PERMIT_DATA.sfh
-    if (isApex) return APEX_PERMIT_DATA[state.proj] || APEX_PERMIT_DATA.sfh
-    if (isHollySprings) return HOLLY_SPRINGS_PERMIT_DATA[state.proj] || HOLLY_SPRINGS_PERMIT_DATA.sfh
-    if (isWakeForest) return WAKE_FOREST_PERMIT_DATA[state.proj] || WAKE_FOREST_PERMIT_DATA.sfh
-    if (isMorrisville) return MORRISVILLE_PERMIT_DATA[state.proj] || MORRISVILLE_PERMIT_DATA.sfh
-    if (isGarner) return GARNER_PERMIT_DATA[state.proj] || GARNER_PERMIT_DATA.sfh
-    if (isFuquayVarina) return FUQUAY_VARINA_PERMIT_DATA[state.proj] || FUQUAY_VARINA_PERMIT_DATA.sfh
-    if (isCary) return CARY_PERMIT_DATA[state.proj] || CARY_PERMIT_DATA.sfh
-    return PERMIT_DATA[state.proj] || PERMIT_DATA.sfh
-  }
+  function getPermitData() { return getDataForProj(state.proj) }
 
   function getPros() {
     if (isDurham) return DURHAM_PROFESSIONALS[state.proj] || DURHAM_PROFESSIONALS.sfh
@@ -210,9 +241,28 @@ export default function Wizard() {
   const data = getPermitData()
   const pros = getPros()
   const insps = getInsps()
-  const permitCount = (data?.count || 0) + (state.historic ? 1 : 0) + (state.septic ? 1 : 0) + (state.flood ? 1 : 0)
+
+  // Multi-project: aggregate permit counts, combine timelines, sum fees
+  const allProjs = state.projs?.length > 0 ? state.projs : (state.proj ? [state.proj] : [])
+  const allProjData = allProjs.map(p => getDataForProj(p))
+  const totalPermitCount = allProjData.reduce((sum, d) => sum + (d?.count || 0), 0)
+    + (state.historic ? 1 : 0) + (state.septic ? 1 : 0) + (state.flood ? 1 : 0)
+  const permitCount = totalPermitCount
+  // Timeline: take the longest single project timeline (they run in parallel on the same site)
+  const maxTimeline = allProjData.reduce((max, d) => {
+    const weeks = parseInt(d?.timeline) || 0
+    return weeks > parseInt(max) ? d?.timeline : max
+  }, data?.timeline || '0')
+  // Fees: sum all project fees
+  const totalFees = allProjData.reduce((sum, d) => {
+    const fee = parseInt((d?.fees || '0').replace(/[^0-9]/g, '')) || 0
+    return sum + fee
+  }, 0)
+  const combinedFees = totalFees > 0 ? `$${totalFees.toLocaleString()}` : data?.fees
+
   const over40k = parseInt((state.cost || '0').replace(/[^0-9]/g, '')) >= 40000 || ['sfh', 'adu', 'townhouse'].includes(state.proj)
   const jLabels = JURISDICTION_LABELS[state.jurisdiction] || JURISDICTION_LABELS.raleigh
+  const displayActiveProj = activeProj || allProjs[0] || state.proj
   const cityName = isChapelHill ? 'Chapel Hill' : isDurham ? 'Durham' : isApex ? 'Apex' : isHollySprings ? 'Holly Springs' : isWakeForest ? 'Wake Forest' : isMorrisville ? 'Morrisville' : isGarner ? 'Garner' : isFuquayVarina ? 'Fuquay-Varina' : isCary ? 'Cary' : 'Raleigh'
 
   return (
@@ -296,20 +346,61 @@ export default function Wizard() {
         <div>
           <p className="text-xs text-gray-400 mb-1">Step 3 of 5</p>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">What are you building?</h2>
-          <p className="text-sm text-gray-500 mb-5">Your project type determines every permit and professional required.</p>
+          <p className="text-sm text-gray-500 mb-1">Select all that apply — multiple projects on the same site get a combined permit roadmap.</p>
+          <p className="text-xs text-gray-400 mb-5">Note: SFH, ADU, and Townhouse are standalone projects and can't be combined.</p>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
-            {PROJECT_TYPES.map(pt => (
-              <button key={pt.id} onClick={() => update('proj', pt.id)}
-                className={`text-left border rounded-xl p-3 transition-all ${state.proj === pt.id ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
-                <div className={`text-xs font-semibold mb-0.5 ${state.proj === pt.id ? 'text-brand-700' : 'text-gray-800'}`}>{pt.label}</div>
-                <div className="text-xs text-gray-400">{pt.sub}</div>
-              </button>
-            ))}
+            {PROJECT_TYPES.map(pt => {
+              const selected = (state.projs || []).includes(pt.id)
+              const isSolo = SOLO_TYPES.includes(pt.id)
+              const otherSoloSelected = (state.projs || []).some(p => SOLO_TYPES.includes(p) && p !== pt.id)
+              const disabled = !selected && otherSoloSelected && !isSolo
+              return (
+                <button key={pt.id} onClick={() => !disabled && toggleProj(pt.id)}
+                  disabled={disabled}
+                  className={`text-left border rounded-xl p-3 transition-all relative ${
+                    selected
+                      ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500'
+                      : disabled
+                        ? 'border-gray-100 bg-gray-50 opacity-40 cursor-not-allowed'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}>
+                  {selected && (
+                    <div className="absolute top-2 right-2 w-4 h-4 bg-brand-600 rounded-full flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                  <div className={`text-xs font-semibold mb-0.5 ${selected ? 'text-brand-700' : 'text-gray-800'}`}>{pt.label}</div>
+                  <div className="text-xs text-gray-400">{pt.sub}</div>
+                </button>
+              )
+            })}
           </div>
 
+          {/* Selected summary */}
+          {(state.projs || []).length > 1 && (
+            <div className="bg-brand-50 border border-brand-100 rounded-xl px-4 py-3 mb-5">
+              <div className="text-xs font-semibold text-brand-800 mb-1">
+                {state.projs.length} projects selected — combined roadmap
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {state.projs.map(p => (
+                  <span key={p} className="text-xs bg-white border border-brand-200 text-brand-700 px-2 py-0.5 rounded-full">
+                    {PROJ_LABELS[p] || p}
+                    <button onClick={() => toggleProj(p)} className="ml-1 text-brand-400 hover:text-brand-700">×</button>
+                  </span>
+                ))}
+              </div>
+              <div className="text-xs text-brand-600 mt-2">
+                Each project gets its own permit application. Timeline shows longest project; fees are combined.
+              </div>
+            </div>
+          )}
+
           <div className="mb-5">
-            <label className="text-xs font-medium text-gray-700 block mb-1">Estimated project cost</label>
+            <label className="text-xs font-medium text-gray-700 block mb-1">Total estimated project cost</label>
             <p className="text-xs text-gray-400 mb-2">NC law requires a licensed GC and lien agent for projects $40,000+</p>
             <input className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               placeholder="e.g. $280,000" value={state.cost} onChange={e => update('cost', e.target.value)} />
@@ -317,9 +408,9 @@ export default function Wizard() {
 
           <div className="flex gap-2">
             <button onClick={back} className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">← {t('wiz_back')}</button>
-            <button onClick={next} disabled={!state.proj}
+            <button onClick={next} disabled={!(state.projs?.length > 0 || state.proj)}
               className="flex-1 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-              Generate permit roadmap
+              Generate permit roadmap{(state.projs?.length || 0) > 1 ? ` for ${state.projs.length} projects` : ''}
             </button>
           </div>
         </div>
@@ -328,15 +419,40 @@ export default function Wizard() {
       {/* ── Step 4 - Permits (GATED) ── */}
       {step === 4 && (
         <div>
+          {/* Multi-project tab bar */}
+          {allProjs.length > 1 && (
+            <div className="flex gap-1 bg-gray-100 rounded-lg p-1 mb-4">
+              {allProjs.map(p => (
+                <button key={p} onClick={() => setActiveProj(p)}
+                  className={`flex-1 text-xs px-2 py-1.5 rounded-md font-medium transition-all ${
+                    displayActiveProj === p ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  }`}>
+                  {PROJ_LABELS[p] || p}
+                </button>
+              ))}
+              <button onClick={() => setActiveProj('combined')}
+                className={`flex-1 text-xs px-2 py-1.5 rounded-md font-medium transition-all ${
+                  displayActiveProj === 'combined' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}>
+                All permits
+              </button>
+            </div>
+          )}
           {!hasAccess() ? (
             <>
               <p className="text-xs text-gray-400 mb-1">Step 4 of 5</p>
-              <h2 className="text-xl font-semibold text-gray-900 mb-1">Permit roadmap - {PROJ_LABELS[state.proj] || 'your project'}</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-1">
+                {allProjs.length > 1 ? `Combined permit roadmap — ${allProjs.length} projects` : `Permit roadmap - ${PROJ_LABELS[state.proj] || 'your project'}`}
+              </h2>
               <p className="text-xs text-gray-400 mb-5">{state.addr || `${cityName}, NC`}</p>
 
               {/* Stats - always visible */}
               <div className="grid grid-cols-3 gap-3 mb-5">
-                {[{ n: permitCount, l: t('wiz_permits_req') }, { n: data.timeline, l: t('wiz_est_timeline') }, { n: data.fees, l: t('wiz_est_fees') }].map((s, i) => (
+                {[
+                  { n: permitCount, l: t('wiz_permits_req') },
+                  { n: allProjs.length > 1 ? maxTimeline : data.timeline, l: t('wiz_est_timeline') },
+                  { n: allProjs.length > 1 ? combinedFees : data.fees, l: t('wiz_est_fees') },
+                ].map((s, i) => (
                   <div key={i} className="bg-gray-50 rounded-xl p-3 text-center">
                     <div className="text-lg font-semibold text-gray-900">{s.n}</div>
                     <div className="text-xs text-gray-500 mt-0.5">{s.l}</div>
@@ -408,7 +524,9 @@ export default function Wizard() {
           ) : (
             <>
               <p className="text-xs text-gray-400 mb-1">Step 4 of 5</p>
-              <h2 className="text-xl font-semibold text-gray-900 mb-1">Permit roadmap - {PROJ_LABELS[state.proj] || 'your project'}</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-1">
+                {allProjs.length > 1 ? `Combined permit roadmap — ${allProjs.length} projects` : `Permit roadmap - ${PROJ_LABELS[state.proj] || 'your project'}`}
+              </h2>
               <p className="text-xs text-gray-400 mb-5">{state.addr || `${cityName}, NC`}</p>
 
               {isDurham && (
@@ -425,7 +543,11 @@ export default function Wizard() {
               )}
 
               <div className="grid grid-cols-3 gap-3 mb-6">
-                {[{ n: permitCount, l: t('wiz_permits_req') }, { n: data.timeline, l: t('wiz_est_timeline') }, { n: data.fees, l: t('wiz_est_fees') }].map((s, i) => (
+                {[
+                  { n: permitCount, l: t('wiz_permits_req') },
+                  { n: allProjs.length > 1 ? maxTimeline : data.timeline, l: t('wiz_est_timeline') },
+                  { n: allProjs.length > 1 ? combinedFees : data.fees, l: t('wiz_est_fees') },
+                ].map((s, i) => (
                   <div key={i} className="bg-gray-50 rounded-xl p-3 text-center">
                     <div className="text-lg font-semibold text-gray-900">{s.n}</div>
                     <div className="text-xs text-gray-500 mt-0.5">{s.l}</div>
@@ -433,11 +555,25 @@ export default function Wizard() {
                 ))}
               </div>
 
-              {data.phases.map((ph, pi) => (
-                <div key={pi} className="mb-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{ph.label}</span>
-                    <div className="flex-1 h-px bg-gray-100" />
+              {/* In multi-project mode, show active tab's data OR all combined */}
+              {(() => {
+                const renderProjs = displayActiveProj === 'combined'
+                  ? allProjs
+                  : [displayActiveProj || state.proj]
+                return renderProjs.map(projId => {
+                  const projData = getDataForProj(projId)
+                  return (
+                    <div key={projId}>
+                      {allProjs.length > 1 && displayActiveProj === 'combined' && (
+                        <div className="text-xs font-semibold text-brand-700 bg-brand-50 border border-brand-100 rounded-lg px-3 py-1.5 mb-3">
+                          {PROJ_LABELS[projId] || projId}
+                        </div>
+                      )}
+                      {projData.phases.map((ph, pi) => (
+                        <div key={pi} className="mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{ph.label}</span>
+                            <div className="flex-1 h-px bg-gray-100" />
                   </div>
                   {ph.permits.map((pm, i) => (
                     <div key={i} className={`flex gap-3 items-start border rounded-lg p-3 mb-2 ${pm.warn ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-100'}`}>
@@ -455,6 +591,10 @@ export default function Wizard() {
                   ))}
                 </div>
               ))}
+                    </div>
+                  )
+                })
+              })()}
 
               {state.historic && (
                 <div className="mb-4">
@@ -624,21 +764,45 @@ export default function Wizard() {
             {t('wiz_generate_brief')}
           </button>
           {state.jurisdiction === 'durham' && (
-            <button
-              onClick={() => {
-                const params = new URLSearchParams({
-                  a: state.addr || '', p: state.proj || 'sfh',
-                  s: state.septic ? '1' : '0',
-                })
-                window.open(`/apply?${params.toString()}`, '_blank')
-              }}
-              className="w-full mt-2 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              Pre-fill Durham permit application
-            </button>
+            allProjs.length > 1 ? (
+              <div className="mt-2">
+                <div className="text-xs font-medium text-gray-600 mb-1.5">Pre-fill Durham permit applications:</div>
+                <div className="space-y-1.5">
+                  {allProjs.map(projId => (
+                    <button key={projId}
+                      onClick={() => {
+                        const params = new URLSearchParams({
+                          a: state.addr || '', p: projId,
+                          s: state.septic ? '1' : '0', j: 'durham',
+                        })
+                        window.open(`/apply?${params.toString()}`, '_blank')
+                      }}
+                      className="w-full py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Pre-fill — {PROJ_LABELS[projId] || projId}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    a: state.addr || '', p: state.proj || 'sfh',
+                    s: state.septic ? '1' : '0', j: 'durham',
+                  })
+                  window.open(`/apply?${params.toString()}`, '_blank')
+                }}
+                className="w-full mt-2 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Pre-fill Durham permit application
+              </button>
+            )
           )}
           <button onClick={() => window.location.href = '/'}
             className="w-full mt-2 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:border-gray-300 transition-colors">

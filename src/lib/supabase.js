@@ -49,6 +49,7 @@ export async function saveProject(project) {
       jurisdiction: project.jurisdiction,
       address: project.addr,
       project_type: project.proj,
+      projs: project.projs || (project.proj ? [project.proj] : []),
       cost: project.cost,
       flags: {
         historic: project.historic,

@@ -44,6 +44,7 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(false)
   const [error, setError] = useState('')
+  const [expandedProject, setExpandedProject] = useState(null) // project id showing the type picker
   const [activeTab, setActiveTab] = useState('projects')
   const [devProfile, setDevProfile] = useState({ name: '', company: '', phone: '', email: '' })
   const [savingProfile, setSavingProfile] = useState(false)
@@ -131,6 +132,35 @@ export default function Dashboard() {
       setSendingLink(false)
     }
   }
+
+  const SOLO_TYPES = ['sfh', 'adu', 'townhouse']
+
+  async function handleToggleProjType(project, typeId) {
+    const current = project.projs || (project.project_type ? [project.project_type] : [])
+    let next
+    if (current.includes(typeId)) {
+      next = current.filter(p => p !== typeId)
+      if (next.length === 0) return // must keep at least one type
+    } else if (SOLO_TYPES.includes(typeId)) {
+      next = [typeId]
+    } else {
+      next = [...current.filter(p => !SOLO_TYPES.includes(p)), typeId]
+    }
+    const updated = { ...project, projs: next, project_type: next[0] }
+    setProjects(prev => prev.map(p => p.id === project.id ? updated : p))
+    try {
+      await supabase.from('projects').update({
+        projs: next,
+        project_type: next[0],
+        name: next.length > 1
+          ? next.map(p => PROJ_LABELS[p] || p).join(' + ') + ' — ' + (project.address || project.jurisdiction)
+          : project.name,
+      }).eq('id', project.id)
+    } catch (err) {
+      console.error('Toggle project type error:', err)
+    }
+  }
+
 
   async function handleDeleteProject(id) {
     if (!confirm('Delete this project? This cannot be undone.')) return
@@ -413,14 +443,17 @@ export default function Dashboard() {
                   </button>
                 </div>
               </div>
-              {/* Row 2 - metadata: jurisdiction, type, address, stats */}
+              {/* Row 2 - metadata */}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${JUR_COLORS[project.jurisdiction] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
                   {JUR_LABELS[project.jurisdiction] || project.jurisdiction}
                 </span>
-                {project.project_type && (
-                  <span className="text-xs text-gray-400">{PROJ_LABELS[project.project_type] || project.project_type}</span>
-                )}
+                {/* Show all project types */}
+                {(project.projs?.length > 0 ? project.projs : project.project_type ? [project.project_type] : []).map(pt => (
+                  <span key={pt} className="text-xs bg-gray-50 border border-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                    {PROJ_LABELS[pt] || pt}
+                  </span>
+                ))}
                 {project.address && (
                   <span className="text-xs text-gray-400 truncate max-w-xs">{project.address}</span>
                 )}
@@ -428,7 +461,59 @@ export default function Dashboard() {
                 {project.permit_count && <span className="text-xs text-gray-400">{project.permit_count} permits</span>}
                 {project.timeline && <span className="text-xs text-gray-400">{project.timeline}</span>}
                 {project.fees && <span className="text-xs text-gray-400">{project.fees}</span>}
+                {/* Add project type button */}
+                <button
+                  onClick={() => setExpandedProject(expandedProject === project.id ? null : project.id)}
+                  className="text-xs text-brand-500 hover:text-brand-700 font-medium ml-1"
+                >
+                  {expandedProject === project.id ? '↑ Done' : '+ Add project type'}
+                </button>
               </div>
+
+              {/* Inline project type picker */}
+              {expandedProject === project.id && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="text-xs font-medium text-gray-500 mb-2">Select all project types for this job site:</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.entries(PROJ_LABELS).map(([id, label]) => {
+                      const current = project.projs || (project.project_type ? [project.project_type] : [])
+                      const selected = current.includes(id)
+                      const isSolo = SOLO_TYPES.includes(id)
+                      const otherSoloSelected = current.some(p => SOLO_TYPES.includes(p) && p !== id)
+                      const disabled = !selected && otherSoloSelected && !isSolo
+                      return (
+                        <button key={id} onClick={() => !disabled && handleToggleProjType(project, id)}
+                          disabled={disabled}
+                          className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${
+                            selected
+                              ? 'bg-brand-600 text-white border-brand-600'
+                              : disabled
+                                ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-brand-300 hover:text-brand-600'
+                          }`}>
+                          {selected ? '✓ ' : ''}{label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {/* Multi-project pre-fill buttons for Durham */}
+                  {project.jurisdiction === 'durham' && (project.projs?.length > 1) && (
+                    <div className="mt-3">
+                      <div className="text-xs text-gray-500 mb-1.5">Pre-fill a permit application:</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(project.projs || []).map(pt => (
+                          <Link key={pt}
+                            to={`/apply?a=${encodeURIComponent(project.address || '')}&p=${pt}&s=${project.flags?.septic ? '1' : '0'}&j=durham`}
+                            className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors"
+                          >
+                            📋 {PROJ_LABELS[pt] || pt}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
