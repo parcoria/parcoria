@@ -428,11 +428,11 @@ export default function Dashboard() {
                   >
                     🔒 Vault
                   </Link>
-                  {project.jurisdiction === 'durham' && (
+                  {['durham', 'raleigh'].includes(project.jurisdiction) && (
                     <Link
-                      to={`/apply?a=${encodeURIComponent(project.address || '')}&p=${project.project_type || 'sfh'}&s=${project.flags?.septic ? '1' : '0'}`}
+                      to={`/apply?a=${encodeURIComponent(project.address || '')}&p=${project.project_type || 'sfh'}&s=${project.flags?.septic ? '1' : '0'}&j=${project.jurisdiction}`}
                       className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                      title="Pre-fill Durham permit application"
+                      title="Pre-fill permit application"
                     >
                       📋 Pre-fill app
                     </Link>
@@ -507,14 +507,14 @@ export default function Dashboard() {
                       )
                     })}
                   </div>
-                  {/* Multi-project pre-fill buttons for Durham */}
-                  {project.jurisdiction === 'durham' && (project.projs?.length > 1) && (
+                  {/* Multi-project pre-fill buttons */}
+                  {['durham', 'raleigh'].includes(project.jurisdiction) && (project.projs?.length > 1) && (
                     <div className="mt-3">
                       <div className="text-xs text-gray-500 mb-1.5">Pre-fill a permit application:</div>
                       <div className="flex flex-wrap gap-1.5">
                         {(project.projs || []).map(pt => (
                           <Link key={pt}
-                            to={`/apply?a=${encodeURIComponent(project.address || '')}&p=${pt}&s=${project.flags?.septic ? '1' : '0'}&j=durham`}
+                            to={`/apply?a=${encodeURIComponent(project.address || '')}&p=${pt}&s=${project.flags?.septic ? '1' : '0'}&j=${project.jurisdiction}`}
                             className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors"
                           >
                             📋 {PROJ_LABELS[pt] || pt}

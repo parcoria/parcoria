@@ -763,17 +763,17 @@ export default function Wizard() {
             </svg>
             {t('wiz_generate_brief')}
           </button>
-          {state.jurisdiction === 'durham' && (
+          {['durham', 'raleigh'].includes(state.jurisdiction) && (
             allProjs.length > 1 ? (
               <div className="mt-2">
-                <div className="text-xs font-medium text-gray-600 mb-1.5">Pre-fill Durham permit applications:</div>
+                <div className="text-xs font-medium text-gray-600 mb-1.5">Pre-fill {state.jurisdiction === 'raleigh' ? 'Raleigh' : 'Durham'} permit applications:</div>
                 <div className="space-y-1.5">
                   {allProjs.map(projId => (
                     <button key={projId}
                       onClick={() => {
                         const params = new URLSearchParams({
                           a: state.addr || '', p: projId,
-                          s: state.septic ? '1' : '0', j: 'durham',
+                          s: state.septic ? '1' : '0', j: state.jurisdiction,
                         })
                         window.open(`/apply?${params.toString()}`, '_blank')
                       }}
@@ -791,7 +791,7 @@ export default function Wizard() {
                 onClick={() => {
                   const params = new URLSearchParams({
                     a: state.addr || '', p: state.proj || 'sfh',
-                    s: state.septic ? '1' : '0', j: 'durham',
+                    s: state.septic ? '1' : '0', j: state.jurisdiction,
                   })
                   window.open(`/apply?${params.toString()}`, '_blank')
                 }}
@@ -800,7 +800,7 @@ export default function Wizard() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
-                Pre-fill Durham permit application
+                Pre-fill {state.jurisdiction === 'raleigh' ? 'Raleigh' : 'Durham'} permit application
               </button>
             )
           )}
