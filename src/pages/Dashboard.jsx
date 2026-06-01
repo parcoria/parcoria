@@ -87,14 +87,26 @@ const PORTAL_URLS = {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function PermitStageButton({ event, onStageChange, projectType }) {
-  const [open, setOpen] = useState(false)
+function PermitStageButton({ event, onStageChange, projectType, openId, setOpenId }) {
+  const isOpen = openId === event.id
   const current = PERMIT_STAGES.find(s => s.id === event.stage) || PERMIT_STAGES[0]
 
+  // Close on click outside
+  useEffect(() => {
+    if (!isOpen) return
+    function handleOutside(e) {
+      if (!e.target.closest(`[data-permit-dropdown="${event.id}"]`)) {
+        setOpenId(null)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [isOpen, event.id, setOpenId])
+
   return (
-    <div className="relative">
+    <div className="relative" data-permit-dropdown={event.id}>
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => setOpenId(isOpen ? null : event.id)}
         className={`text-xs px-2.5 py-1 rounded-full border font-medium flex items-center gap-1 ${current.color}`}
       >
         {current.label}
@@ -102,12 +114,12 @@ function PermitStageButton({ event, onStageChange, projectType }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      {open && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-20 min-w-[140px] py-1">
+      {isOpen && (
+        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-20 min-w-[140px] py-1">
           {PERMIT_STAGES.map(s => (
             <button
               key={s.id}
-              onClick={() => { onStageChange(event.id, s.id, projectType); setOpen(false) }}
+              onClick={() => { onStageChange(event.id, s.id, projectType); setOpenId(null) }}
               className={`w-full text-left text-xs px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 ${s.id === event.stage ? 'font-semibold text-brand-600' : 'text-gray-700'}`}
             >
               {s.id === event.stage && <span className="w-1.5 h-1.5 rounded-full bg-brand-600 flex-shrink-0" />}
@@ -123,6 +135,7 @@ function PermitStageButton({ event, onStageChange, projectType }) {
 
 function LifecyclePanel({ project, lifecycle, onStageChange, onInspectionChange, loading }) {
   const [view, setView] = useState('permits') // permits | inspections | deadlines
+  const [openDropdownId, setOpenDropdownId] = useState(null) // only one open at a time
 
   if (loading) {
     return (
@@ -228,6 +241,8 @@ function LifecyclePanel({ project, lifecycle, onStageChange, onInspectionChange,
                 event={event}
                 onStageChange={onStageChange}
                 projectType={project.project_type}
+                openId={openDropdownId}
+                setOpenId={setOpenDropdownId}
               />
             </div>
           ))}
