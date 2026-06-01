@@ -1360,7 +1360,12 @@ export default function ApplicationPrefill() {
 
       {/* Action bar */}
       <div className="flex items-center justify-between gap-3 mb-6 print:hidden">
-        <Link to="/wizard" className="text-xs text-gray-400 hover:text-gray-600">&larr; {t('wiz_back')}</Link>
+        <Link
+          to={`/roadmap?j=${params.get('j') || 'durham'}&p=${params.get('p') || 'sfh'}&a=${encodeURIComponent(params.get('a') || '')}&s=${params.get('s') || '0'}`}
+          className="text-xs text-gray-400 hover:text-gray-600"
+        >
+          &larr; Back to permit roadmap
+        </Link>
         <div className="flex items-center gap-2">
           <div className="text-xs text-gray-400 hidden sm:block">{t('apply_review_note')}</div>
           <button onClick={handleGeneratePDF} disabled={pdfGenerating}
