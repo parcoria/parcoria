@@ -287,12 +287,15 @@ export async function updatePermitStage(eventId, stage, extraFields = {}) {
   if (stage === 'issued')     dateFields.issued_date   = extraFields.issued_date   || new Date().toISOString().split('T')[0]
   if (stage === 'complete')   dateFields.co_date       = extraFields.co_date       || new Date().toISOString().split('T')[0]
 
+  // Strip fields that don't belong on permit_events before sending to Supabase
+  const { project_type: _projectType, ...permitFields } = extraFields
+
   const { data, error } = await supabase
     .from('permit_events')
     .update({
       stage,
       ...dateFields,
-      ...extraFields,
+      ...permitFields,
       updated_at: now,
     })
     .eq('id', eventId)
@@ -307,17 +310,27 @@ export async function updatePermitStage(eventId, stage, extraFields = {}) {
     if (issueDate) {
       const expiry = new Date(issueDate)
       expiry.setMonth(expiry.getMonth() + 6)
-      await supabase.from('project_deadlines').upsert({
-        project_id:       data.project_id,
-        user_id:          data.user_id,
-        permit_event_id:  eventId,
-        deadline_type:    'permit_expiry',
-        label:            `${data.permit_name} expires — schedule inspections before this date`,
-        due_date:         expiry.toISOString().split('T')[0],
-        alert_days_before: 30,
-        auto_generated:   true,
-        source:           'permit_issue_date',
-      }, { onConflict: 'permit_event_id,deadline_type' })
+      // Check if a permit_expiry deadline already exists for this event before inserting
+      const { data: existingDl } = await supabase
+        .from('project_deadlines')
+        .select('id')
+        .eq('permit_event_id', eventId)
+        .eq('deadline_type', 'permit_expiry')
+        .maybeSingle()
+
+      if (!existingDl) {
+        await supabase.from('project_deadlines').insert({
+          project_id:       data.project_id,
+          user_id:          data.user_id,
+          permit_event_id:  eventId,
+          deadline_type:    'permit_expiry',
+          label:            `${data.permit_name} expires — schedule inspections before this date`,
+          due_date:         expiry.toISOString().split('T')[0],
+          alert_days_before: 30,
+          auto_generated:   true,
+          source:           'permit_issue_date',
+        })
+      }
     }
   }
 
@@ -332,7 +345,7 @@ export async function updatePermitStage(eventId, stage, extraFields = {}) {
       project_id:        data.project_id,
       permit_event_id:   eventId,
       jurisdiction:      data.jurisdiction,
-      project_type:      extraFields.project_type || 'sfh',
+      project_type:      _projectType || 'sfh',
       permit_type:       data.permit_type,
       applied_date:      data.applied_date,
       approved_date:     data.approved_date,
