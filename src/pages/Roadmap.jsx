@@ -4,6 +4,11 @@ import { DURHAM_PERMIT_DATA } from '../data/durham'
 import { CHAPEL_HILL_PERMIT_DATA } from '../data/chapelhill'
 import { APEX_PERMIT_DATA } from '../data/apex'
 import { HOLLY_SPRINGS_PERMIT_DATA } from '../data/hollysprings'
+import { CARY_PERMIT_DATA } from '../data/cary'
+import { WAKE_FOREST_PERMIT_DATA } from '../data/wakeforest'
+import { MORRISVILLE_PERMIT_DATA } from '../data/morrisville'
+import { GARNER_PERMIT_DATA } from '../data/garner'
+import { FUQUAY_VARINA_PERMIT_DATA } from '../data/fuquayvarina'
 
 const PROJ_LABELS = {
   sfh: 'New single-family home', adu: 'Accessory dwelling unit',
@@ -13,8 +18,16 @@ const PROJ_LABELS = {
 }
 
 const JUR_LABELS = {
-  raleigh: 'Raleigh, NC', durham: 'Durham, NC',
-  chapelhill: 'Chapel Hill, NC', apex: 'Apex, NC', hollysprings: 'Holly Springs, NC',
+  raleigh:      'Raleigh, NC',
+  durham:       'Durham, NC',
+  chapelhill:   'Chapel Hill, NC',
+  apex:         'Apex, NC',
+  hollysprings: 'Holly Springs, NC',
+  cary:         'Cary, NC',
+  wakeforest:   'Wake Forest, NC',
+  morrisville:  'Morrisville, NC',
+  garner:       'Garner, NC',
+  fuquayvarina: 'Fuquay-Varina, NC',
 }
 
 const JURISDICTION_STYLES = {
@@ -24,22 +37,58 @@ const JURISDICTION_STYLES = {
 }
 
 const JUR_CITY_LABELS = {
-  raleigh:     { city: 'City of Raleigh',     county: 'Wake County',    state: 'NC State' },
-  durham:      { city: 'City of Durham',      county: 'Durham County',  state: 'NC State' },
-  chapelhill:  { city: 'Town of Chapel Hill', county: 'Orange County',  state: 'NC State' },
-  apex:        { city: 'Town of Apex',        county: 'Wake County',    state: 'NC State' },
-  hollysprings:{ city: 'Town of Holly Springs', county: 'Wake County', state: 'NC State' },
+  raleigh:     { city: 'City of Raleigh',          county: 'Wake County',    state: 'NC State' },
+  durham:      { city: 'City of Durham',            county: 'Durham County',  state: 'NC State' },
+  chapelhill:  { city: 'Town of Chapel Hill',       county: 'Orange County',  state: 'NC State' },
+  apex:        { city: 'Town of Apex',              county: 'Wake County',    state: 'NC State' },
+  hollysprings:{ city: 'Town of Holly Springs',     county: 'Wake County',    state: 'NC State' },
+  cary:        { city: 'Town of Cary',              county: 'Wake County',    state: 'NC State' },
+  wakeforest:  { city: 'Town of Wake Forest',       county: 'Wake County',    state: 'NC State' },
+  morrisville: { city: 'Town of Morrisville',       county: 'Wake County',    state: 'NC State' },
+  garner:      { city: 'Town of Garner',            county: 'Wake County',    state: 'NC State' },
+  fuquayvarina:{ city: 'Town of Fuquay-Varina',     county: 'Wake County',    state: 'NC State' },
 }
+
+// Jurisdictions where Parcoria can pre-fill the permit application
+const PREFILL_CAPABLE = ['durham', 'raleigh']
 
 function getPermitData(jurisdiction, proj) {
   const map = {
-    durham: DURHAM_PERMIT_DATA,
-    chapelhill: CHAPEL_HILL_PERMIT_DATA,
-    apex: APEX_PERMIT_DATA,
+    durham:       DURHAM_PERMIT_DATA,
+    chapelhill:   CHAPEL_HILL_PERMIT_DATA,
+    apex:         APEX_PERMIT_DATA,
     hollysprings: HOLLY_SPRINGS_PERMIT_DATA,
+    cary:         CARY_PERMIT_DATA,
+    wakeforest:   WAKE_FOREST_PERMIT_DATA,
+    morrisville:  MORRISVILLE_PERMIT_DATA,
+    garner:       GARNER_PERMIT_DATA,
+    fuquayvarina: FUQUAY_VARINA_PERMIT_DATA,
   }
   const source = map[jurisdiction] || PERMIT_DATA
   return source[proj] || source.sfh
+}
+
+// Resolve the apply URL — either a Parcoria prefill route or the external portal
+function resolveApplyUrl(pm, jurisdiction, proj, addr) {
+  if (pm.applyUrl === 'PREFILL') {
+    const params = new URLSearchParams({
+      j: jurisdiction,
+      p: proj,
+      a: addr || '',
+    })
+    // Map permit name to permit type param
+    const name = (pm.name || '').toLowerCase()
+    if (name.includes('electrical'))  params.set('permit', 'electrical')
+    else if (name.includes('plumbing')) params.set('permit', 'plumbing')
+    else if (name.includes('mechanical') || name.includes('hvac')) params.set('permit', 'mechanical')
+    else params.set('permit', 'building')
+    return `/apply?${params.toString()}`
+  }
+  return pm.applyUrl || pm.url || '#'
+}
+
+function isPrefill(pm) {
+  return pm.applyUrl === 'PREFILL'
 }
 
 export default function Roadmap() {
@@ -54,6 +103,7 @@ export default function Roadmap() {
   const data = getPermitData(jurisdiction, proj)
   const permitCount = (data?.count || 0) + (historic ? 1 : 0) + (septic ? 1 : 0) + (flood ? 1 : 0)
   const jLabels = JUR_CITY_LABELS[jurisdiction] || JUR_CITY_LABELS.raleigh
+  const canPrefill = PREFILL_CAPABLE.includes(jurisdiction)
 
   function copyLink() {
     navigator.clipboard.writeText(window.location.href)
@@ -66,11 +116,11 @@ export default function Roadmap() {
       {/* Header */}
       <div className="mb-6">
         <div className="inline-flex items-center gap-2 text-xs text-brand-700 bg-brand-50 border border-brand-100 rounded-full px-3 py-1 mb-4">
-          <span className="w-1.5 h-1.5 rounded-full bg-brand-600"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-600" />
           Parcoria · Shareable Permit Roadmap
         </div>
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">
-          {PROJ_LABELS[proj] || 'Your project'}
+          Permit roadmap — {PROJ_LABELS[proj] || 'Your project'}
         </h1>
         <p className="text-sm text-gray-400">
           {addr || JUR_LABELS[jurisdiction]} · {JUR_LABELS[jurisdiction]}
@@ -80,9 +130,9 @@ export default function Roadmap() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[
-          { n: permitCount, l: 'Permits required' },
-          { n: data.timeline, l: 'Est. timeline' },
-          { n: data.fees, l: 'Est. permit fees' },
+          { n: permitCount,    l: 'Permits required' },
+          { n: data.timeline,  l: 'Est. timeline' },
+          { n: data.fees,      l: 'Est. permit fees' },
         ].map((s, i) => (
           <div key={i} className="bg-gray-50 rounded-xl p-3 text-center">
             <div className="text-lg font-semibold text-gray-900">{s.n}</div>
@@ -95,8 +145,28 @@ export default function Roadmap() {
       {(historic || septic || flood) && (
         <div className="mb-4 flex flex-wrap gap-2">
           {historic && <span className="text-xs px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">⚠️ Historic district</span>}
-          {septic && <span className="text-xs px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">⚠️ Private well/septic</span>}
-          {flood && <span className="text-xs px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-100">🔴 Floodplain — elevation cert required</span>}
+          {septic   && <span className="text-xs px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">⚠️ Private well/septic</span>}
+          {flood    && <span className="text-xs px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-100">🔴 Floodplain — elevation cert required</span>}
+        </div>
+      )}
+
+      {/* Prefill CTA banner — Durham and Raleigh only */}
+      {canPrefill && (
+        <div className="mb-5 bg-green-50 border border-green-100 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold text-green-800">
+              Pre-fill your permit applications
+            </div>
+            <div className="text-xs text-green-600 mt-0.5">
+              Parcoria pre-fills the official {JUR_LABELS[jurisdiction]} forms with your project details. Download, sign, and submit.
+            </div>
+          </div>
+          <Link
+            to={`/apply?j=${jurisdiction}&p=${proj}&a=${encodeURIComponent(addr)}&permit=building`}
+            className="flex-shrink-0 px-3 py-2 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Pre-fill app →
+          </Link>
         </div>
       )}
 
@@ -107,23 +177,64 @@ export default function Roadmap() {
             <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{ph.label}</span>
             <div className="flex-1 h-px bg-gray-100" />
           </div>
-          {ph.permits.map((pm, i) => (
-            <div key={i} className="flex gap-3 items-start bg-white border border-gray-100 rounded-lg p-3 mb-2">
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-gray-900 mb-0.5">{pm.name}</div>
-                <div className="text-xs text-gray-500 leading-relaxed mb-2">{pm.desc}</div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${JURISDICTION_STYLES[pm.jurisdiction]}`}>
-                    {jLabels[pm.jurisdiction]}
-                  </span>
-                  <span className="text-xs text-gray-400">⏱ {pm.time}</span>
+          {ph.permits.map((pm, i) => {
+            const applyHref = resolveApplyUrl(pm, jurisdiction, proj, addr)
+            const detailsHref = pm.detailsUrl || null
+            const prefill = isPrefill(pm)
+
+            return (
+              <div key={i} className={`flex gap-3 items-start bg-white border rounded-lg p-3 mb-2 ${pm.warn ? 'border-amber-200 bg-amber-50' : 'border-gray-100'}`}>
+                <div className="flex-1 min-w-0">
+                  <div className={`text-sm font-medium mb-0.5 ${pm.warn ? 'text-amber-800' : 'text-gray-900'}`}>
+                    {pm.name}
+                  </div>
+                  <div className={`text-xs leading-relaxed mb-2 ${pm.warn ? 'text-amber-700' : 'text-gray-500'}`}>
+                    {pm.desc}
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${JURISDICTION_STYLES[pm.jurisdiction]}`}>
+                      {jLabels[pm.jurisdiction]}
+                    </span>
+                    <span className="text-xs text-gray-400">⏱ {pm.time}</span>
+                  </div>
+
+                  {/* Action links — two distinct buttons */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {/* Apply / Pre-fill */}
+                    {prefill ? (
+                      <Link
+                        to={applyHref}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-colors"
+                      >
+                        📋 Pre-fill application
+                      </Link>
+                    ) : (
+                      <a
+                        href={applyHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-2.5 py-1 rounded-md transition-colors"
+                      >
+                        Apply ↗
+                      </a>
+                    )}
+
+                    {/* View requirements — only if we have a specific page */}
+                    {detailsHref && detailsHref !== applyHref && (
+                      <a
+                        href={detailsHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        View requirements ↗
+                      </a>
+                    )}
+                  </div>
                 </div>
-                <a href={pm.url} target="_blank" rel="noreferrer" className="text-xs text-brand-600 hover:text-brand-700 mt-1.5 inline-block">
-                  Apply / view details ↗
-                </a>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       ))}
 

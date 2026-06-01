@@ -47,7 +47,8 @@ const SAMPLE = {
           jLabel: 'City of Raleigh',
           jColor: 'bg-blue-50 text-blue-700 border border-blue-100',
           time: '5–10 days',
-          url: 'https://raleighnc.gov/permits',
+          applyUrl: 'https://permitportal.raleighnc.gov',
+          detailsUrl: 'https://raleighnc.gov/permits/services/how-get-residential-permit',
         },
       ],
     },
@@ -61,7 +62,8 @@ const SAMPLE = {
           jLabel: 'City of Raleigh',
           jColor: 'bg-blue-50 text-blue-700 border border-blue-100',
           time: '10–15 working days',
-          url: 'https://raleighnc.gov/permits',
+          applyUrl: 'https://permitportal.raleighnc.gov',
+          detailsUrl: 'https://raleighnc.gov/permits/services/how-get-residential-permit',
         },
         {
           name: 'Electrical permit',
@@ -70,7 +72,8 @@ const SAMPLE = {
           jLabel: 'City of Raleigh',
           jColor: 'bg-blue-50 text-blue-700 border border-blue-100',
           time: 'Concurrent with building',
-          url: 'https://raleighnc.gov/permits',
+          applyUrl: 'https://permitportal.raleighnc.gov',
+          detailsUrl: 'https://raleighnc.gov/permits/services/how-get-residential-permit',
         },
         {
           name: 'Plumbing permit',
@@ -79,7 +82,8 @@ const SAMPLE = {
           jLabel: 'City of Raleigh',
           jColor: 'bg-blue-50 text-blue-700 border border-blue-100',
           time: 'Concurrent with building',
-          url: 'https://raleighnc.gov/permits',
+          applyUrl: 'https://permitportal.raleighnc.gov',
+          detailsUrl: 'https://raleighnc.gov/permits/services/how-get-residential-permit',
         },
         {
           name: 'Mechanical / HVAC permit',
@@ -88,7 +92,8 @@ const SAMPLE = {
           jLabel: 'City of Raleigh',
           jColor: 'bg-blue-50 text-blue-700 border border-blue-100',
           time: 'Concurrent with building',
-          url: 'https://raleighnc.gov/permits',
+          applyUrl: 'https://permitportal.raleighnc.gov',
+          detailsUrl: 'https://raleighnc.gov/permits/services/how-get-residential-permit',
         },
       ],
     },
@@ -102,7 +107,8 @@ const SAMPLE = {
           jLabel: 'City of Raleigh',
           jColor: 'bg-blue-50 text-blue-700 border border-blue-100',
           time: '5–10 days',
-          url: 'https://raleighnc.gov/permits',
+          applyUrl: 'https://permitportal.raleighnc.gov',
+          detailsUrl: 'https://raleighnc.gov/permits/services/how-get-residential-permit',
         },
         {
           name: 'Land disturbance / grading permit',
@@ -111,7 +117,8 @@ const SAMPLE = {
           jLabel: 'City of Raleigh',
           jColor: 'bg-blue-50 text-blue-700 border border-blue-100',
           time: '5–10 days',
-          url: 'https://raleighnc.gov/permits',
+          applyUrl: 'https://permitportal.raleighnc.gov',
+          detailsUrl: 'https://raleighnc.gov/permits/services/how-get-residential-permit',
         },
       ],
     },
@@ -134,7 +141,8 @@ const SAMPLE = {
           jLabel: 'City of Raleigh',
           jColor: 'bg-blue-50 text-blue-700 border border-blue-100',
           time: '3–5 days after final inspection',
-          url: 'https://raleighnc.gov/permits',
+          applyUrl: 'https://permitportal.raleighnc.gov',
+          detailsUrl: 'https://raleighnc.gov/permits/services/how-get-residential-permit',
         },
       ],
     },
@@ -226,10 +234,18 @@ export default function SampleRoadmap() {
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${pm.jColor}`}>{pm.jLabel}</span>
                   <span className="text-xs text-gray-400">⏱ {pm.time}</span>
                 </div>
-                <a href={pm.url} target="_blank" rel="noreferrer"
-                  className="text-xs text-brand-600 hover:text-brand-700 mt-1.5 inline-block">
+                <div className="flex items-center gap-3 flex-wrap mt-1.5">
+                <a href={pm.applyUrl || pm.url || '#'} target="_blank" rel="noreferrer"
+                  className="text-xs font-medium text-brand-600 hover:text-brand-700">
                   {t('sample_apply_link')}
                 </a>
+                {pm.detailsUrl && pm.detailsUrl !== (pm.applyUrl || pm.url) && (
+                  <a href={pm.detailsUrl} target="_blank" rel="noreferrer"
+                    className="text-xs text-gray-400 hover:text-gray-600">
+                    View requirements ↗
+                  </a>
+                )}
+              </div>
               </div>
             </div>
           ))}

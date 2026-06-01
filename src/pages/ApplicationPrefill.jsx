@@ -486,6 +486,7 @@ function RaleighBuildingPermitForm({ form, update, profile, myContractors, fillF
               <label className="text-xs font-medium text-gray-500 block mb-1">Total construction cost<span className="text-red-400 ml-0.5">*</span></label>
               <input value={form.building} onChange={e => update('building', e.target.value)} onBlur={e => update('building', formatMoney(e.target.value))}
                 placeholder="$0.00" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-brand-500" />
+
             </div>
             <div>
               <label className="text-xs font-medium text-gray-500 block mb-1">Total electrical cost</label>
@@ -1025,7 +1026,7 @@ return (<div className="space-y-6">
 export default function ApplicationPrefill() {
   useLang() // re-render on language change
   const [params] = useSearchParams()
-  const [permitType, setPermitType] = useState(params.get('type') || 'building')
+  const [permitType, setPermitType] = useState(params.get('permit') || params.get('type') || 'building')
   const [profile, setProfile] = useState(null)
   const [myContractors, setMyContractors] = useState([])
   const [loading, setLoading] = useState(true)
@@ -1033,7 +1034,6 @@ export default function ApplicationPrefill() {
   const [showChecklist, setShowChecklist] = useState(false)
   const [lastFilename, setLastFilename] = useState('')
   const [form, setForm] = useState(() => buildInitialForm(params))
-
   useEffect(() => { loadProfile() }, [])
 
   async function loadProfile() {

@@ -244,6 +244,17 @@ export const STRINGS = {
   apply_scope_work:   { en: 'Scope of work', es: 'Alcance del trabajo' },
   apply_est_cost:     { en: 'Estimated cost ($)', es: 'Costo estimado ($)' },
   apply_raleigh_note: { en: 'Raleigh uses an online portal for most permit types. Download the pre-filled form and submit via email to downtownds@raleighnc.gov or through the Permit and Development Portal.', es: 'Raleigh usa un portal en línea para la mayoría de los tipos de permisos. Descarga el formulario pre-llenado y envíalo por correo a downtownds@raleighnc.gov o a través del Portal de Permisos y Desarrollo.' },
+
+  // SampleRoadmap — missing keys
+  sample_banner:      { en: 'Sample roadmap', es: 'Hoja de ruta de ejemplo' },
+  sample_banner_sub:  { en: 'This is a sample based on a typical Raleigh new SFH project. Your roadmap will be specific to your address and project.', es: 'Este es un ejemplo basado en un proyecto típico de nueva vivienda unifamiliar en Raleigh. Tu hoja de ruta será específica para tu dirección y proyecto.' },
+  sample_get_yours:   { en: 'Get your personalized roadmap', es: 'Obtén tu hoja de ruta personalizada' },
+
+  // Nav — missing keys
+  nav_learn:          { en: 'Learning Center', es: 'Centro de Aprendizaje' },
+
+  // Pricing — missing keys
+  price_get_started:  { en: 'Get started', es: 'Comenzar' },
 }
 
 // Main translation function
