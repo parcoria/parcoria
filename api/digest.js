@@ -11,6 +11,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
+import Stripe from 'stripe'
 import { buildDigestData } from '../src/lib/prompt-engine.js'
 
 const supabase = createClient(
@@ -231,44 +232,64 @@ export default async function handler(req, res) {
   const targetEmail = req.query.email || null // send to a single user for testing
 
   try {
-    // 1. Get all active subscribers from subscription_events
-    // A user is an "active subscriber" if their most recent subscription event is
-    // checkout_completed or invoice.payment_succeeded, not subscription_cancelled
-    const { data: activeEmails, error: subError } = await supabase
-      .from('subscription_events')
-      .select('customer_email, tier')
-      .in('event_type', ['checkout_completed', 'subscription_renewed'])
-      .order('occurred_at', { ascending: false })
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' })
 
-    if (subError) throw subError
+    // 1. Get all active subscribers directly from Stripe — source of truth
+    // This works whether or not subscription_events table is populated
+    let subscribers = []
 
-    // Dedupe — keep most recent event per email
-    const subscriberMap = {}
-    for (const row of (activeEmails || [])) {
-      if (!subscriberMap[row.customer_email]) {
-        subscriberMap[row.customer_email] = row.tier
-      }
-    }
-
-    // Remove cancelled users
-    const { data: cancelledRows } = await supabase
-      .from('subscription_events')
-      .select('customer_email')
-      .eq('event_type', 'subscription_cancelled')
-
-    for (const row of (cancelledRows || [])) {
-      delete subscriberMap[row.customer_email]
-    }
-
-    let subscribers = Object.entries(subscriberMap).map(([email, tier]) => ({ email, tier }))
-
-    // Filter to single user if testing
     if (targetEmail) {
-      subscribers = subscribers.filter(s => s.email === targetEmail)
-      if (subscribers.length === 0) {
-        // Allow testing with any email — add it manually
-        subscribers = [{ email: targetEmail, tier: 'developer' }]
+      // Test path — send to a single email regardless of subscription status
+      const { data: { users: allUsers } } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+      const testUser = allUsers?.find(u => u.email === targetEmail)
+      if (!testUser) {
+        return res.status(400).json({ error: `No auth user found for email: ${targetEmail}. Make sure this email has signed in to Parcoria at least once.` })
       }
+      subscribers = [{ email: targetEmail, tier: 'developer', user_id: testUser.id }]
+    } else {
+      // Production path — query Stripe for all active subscriptions
+      const stripeSubscriptions = await stripe.subscriptions.list({
+        status: 'active',
+        limit: 100,
+        expand: ['data.customer'],
+      })
+
+      for (const sub of stripeSubscriptions.data) {
+        const customer = sub.customer
+        if (!customer || typeof customer === 'string') continue
+        const email = customer.email
+        if (!email) continue
+
+        // Determine tier from price ID
+        const priceId = sub.items.data[0]?.price?.id
+        let tier = 'contractor'
+        if (priceId === process.env.STRIPE_DEVELOPER_PRICE_ID ||
+            priceId === process.env.STRIPE_DEVELOPER_ANNUAL_PRICE_ID) {
+          tier = 'developer'
+        } else if (priceId === process.env.STRIPE_CONTRACTOR_PRICE_ID) {
+          tier = 'contractor'
+        }
+
+        subscribers.push({ email, tier, stripeCustomerId: customer.id })
+      }
+
+      // Also include active homeowner one-time purchases
+      // (they paid once, they get the digest too)
+      const sessions = await stripe.checkout.sessions.list({
+        status: 'complete',
+        limit: 100,
+      })
+      const homeownerEmails = new Set(subscribers.map(s => s.email))
+      for (const session of sessions.data) {
+        if (session.payment_status === 'paid' &&
+            session.metadata?.tier === 'homeowner' &&
+            session.customer_email &&
+            !homeownerEmails.has(session.customer_email)) {
+          subscribers.push({ email: session.customer_email, tier: 'homeowner' })
+        }
+      }
+
+      console.log(`Found ${subscribers.length} active subscribers from Stripe`)
     }
 
     const results = { sent: 0, skipped: 0, errors: [] }
@@ -287,12 +308,24 @@ export default async function handler(req, res) {
           continue
         }
 
-        // Get their Supabase auth user
-        const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers()
-        const authUser = users?.find(u => u.email === subscriber.email)
-        if (!authUser) { results.skipped++; continue }
+        // Resolve auth user — use pre-looked-up user_id if available (test path)
+        // otherwise look up by email from auth.users
+        let authUser = null
+        if (subscriber.user_id) {
+          const { data: { user } } = await supabase.auth.admin.getUserById(subscriber.user_id)
+          authUser = user
+        }
+        if (!authUser) {
+          const { data: { users: allUsers } } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+          authUser = allUsers?.find(u => u.email === subscriber.email)
+        }
+        if (!authUser) {
+          console.log(`User not found in auth for email: ${subscriber.email}`)
+          results.skipped++
+          continue
+        }
 
-        // Get their projects
+        // Get their projects — query by email match on user_id via auth lookup
         const { data: projects } = await supabase
           .from('projects')
           .select('*')
