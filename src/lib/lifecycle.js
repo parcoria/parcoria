@@ -363,6 +363,23 @@ export async function updatePermitStage(eventId, stage, extraFields = {}) {
   return data
 }
 
+// Update a single editable field on a permit event (permit_number, notes, actual_fee)
+export async function updatePermitField(eventId, field, value) {
+  // Whitelist — only allow editing specific safe fields
+  const EDITABLE_FIELDS = ['permit_number', 'notes', 'actual_fee', 'rejection_reason', 'rejection_category']
+  if (!EDITABLE_FIELDS.includes(field)) throw new Error(`Field '${field}' is not editable`)
+
+  const { data, error } = await supabase
+    .from('permit_events')
+    .update({ [field]: value, updated_at: new Date().toISOString() })
+    .eq('id', eventId)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
 // ─── INSPECTION LOG ───────────────────────────────────────────────────────────
 
 // Seed inspection log for a project (called after building permit is issued)

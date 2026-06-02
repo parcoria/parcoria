@@ -7,7 +7,9 @@ import {
   seedPermitEvents, seedInspectionLog,
   getProjectLifecycle, updatePermitStage, updateInspectionStatus,
   getDocumentExpiry, upsertDocument, updateDeadlineStatus,
+  updatePermitField,
 } from '../lib/lifecycle'
+import { getProjectWeeklyPrompt } from '../lib/prompt-engine'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -133,9 +135,11 @@ function PermitStageButton({ event, onStageChange, projectType, openId, setOpenI
   )
 }
 
-function LifecyclePanel({ project, lifecycle, onStageChange, onInspectionChange, loading }) {
+function LifecyclePanel({ project, lifecycle, onStageChange, onInspectionChange, onFieldUpdate, loading }) {
   const [view, setView] = useState('permits') // permits | inspections | deadlines
   const [openDropdownId, setOpenDropdownId] = useState(null) // only one open at a time
+  const [editingField, setEditingField] = useState(null) // { eventId, field }
+  const [editValues, setEditValues] = useState({}) // { [eventId_field]: value }
 
   if (loading) {
     return (
@@ -211,14 +215,30 @@ function LifecyclePanel({ project, lifecycle, onStageChange, onInspectionChange,
         <div className="space-y-1.5">
           {events.length === 0 ? (
             <div className="text-xs text-gray-400 py-2">No permits tracked yet.</div>
-          ) : events.map(event => (
-            <div key={event.id} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium text-gray-800 truncate">{event.permit_name}</div>
-                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  {event.permit_number && (
-                    <span className="text-xs text-gray-400">#{event.permit_number}</span>
-                  )}
+          ) : events.map(event => {
+            const permitNumKey = `${event.id}_permit_number`
+            const notesKey     = `${event.id}_notes`
+            const isEditingNum = editingField?.eventId === event.id && editingField?.field === 'permit_number'
+            const isEditingNotes = editingField?.eventId === event.id && editingField?.field === 'notes'
+
+            return (
+              <div key={event.id} className="bg-gray-50 rounded-lg px-3 py-2.5 space-y-1.5">
+                {/* Row 1 — name + stage */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-gray-800 truncate">{event.permit_name}</div>
+                  </div>
+                  <PermitStageButton
+                    event={event}
+                    onStageChange={onStageChange}
+                    projectType={project.project_type}
+                    openId={openDropdownId}
+                    setOpenId={setOpenDropdownId}
+                  />
+                </div>
+
+                {/* Row 2 — metadata */}
+                <div className="flex items-center gap-2 flex-wrap">
                   {event.portal && (
                     <a href={PORTAL_URLS[event.portal]} target="_blank" rel="noreferrer"
                       className="text-xs text-brand-500 hover:text-brand-700">
@@ -236,16 +256,80 @@ function LifecyclePanel({ project, lifecycle, onStageChange, onInspectionChange,
                     </span>
                   )}
                 </div>
+
+                {/* Row 3 — permit number (inline editable) */}
+                <div className="flex items-center gap-2">
+                  {isEditingNum ? (
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editValues[permitNumKey] ?? (event.permit_number || '')}
+                      onChange={e => setEditValues(v => ({ ...v, [permitNumKey]: e.target.value }))}
+                      onBlur={async () => {
+                        const val = editValues[permitNumKey] ?? ''
+                        await onFieldUpdate(event.id, 'permit_number', val)
+                        setEditingField(null)
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') e.target.blur()
+                        if (e.key === 'Escape') setEditingField(null)
+                      }}
+                      placeholder="Permit # (e.g. BP-2025-00123)"
+                      className="text-xs border border-brand-300 rounded px-2 py-1 flex-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-white"
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setEditingField({ eventId: event.id, field: 'permit_number' })}
+                      className="text-xs text-gray-400 hover:text-brand-600 transition-colors flex items-center gap-1"
+                    >
+                      {event.permit_number
+                        ? <span className="text-gray-600 font-mono">#{event.permit_number}</span>
+                        : <span className="italic">+ Add permit number</span>
+                      }
+                      <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15H9v-2.828z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {/* Row 4 — notes (inline editable) */}
+                <div>
+                  {isEditingNotes ? (
+                    <textarea
+                      autoFocus
+                      rows={2}
+                      value={editValues[notesKey] ?? (event.notes || '')}
+                      onChange={e => setEditValues(v => ({ ...v, [notesKey]: e.target.value }))}
+                      onBlur={async () => {
+                        const val = editValues[notesKey] ?? ''
+                        await onFieldUpdate(event.id, 'notes', val)
+                        setEditingField(null)
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Escape') setEditingField(null)
+                      }}
+                      placeholder="Notes — e.g. awaiting structural drawings, inspector requested X..."
+                      className="text-xs border border-brand-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-brand-500 bg-white resize-none"
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setEditingField({ eventId: event.id, field: 'notes' })}
+                      className="text-xs text-gray-400 hover:text-brand-600 transition-colors flex items-start gap-1 w-full text-left"
+                    >
+                      {event.notes
+                        ? <span className="text-gray-500 leading-relaxed">{event.notes}</span>
+                        : <span className="italic">+ Add notes</span>
+                      }
+                      <svg className="w-3 h-3 opacity-50 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15H9v-2.828z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
-              <PermitStageButton
-                event={event}
-                onStageChange={onStageChange}
-                projectType={project.project_type}
-                openId={openDropdownId}
-                setOpenId={setOpenDropdownId}
-              />
-            </div>
-          ))}
+            )
+          })}
           <div className="pt-1">
             <button
               onClick={() => {/* add custom permit — phase 2 */}}
@@ -490,6 +574,29 @@ export default function Dashboard() {
       setLifecycleData(prev => ({ ...prev, [projectId]: updated }))
     } catch (err) {
       console.error('Stage change error:', err)
+    }
+  }
+
+  async function handleFieldUpdate(eventId, field, value) {
+    // Find which project this event belongs to
+    const projectId = Object.keys(lifecycleData).find(pid =>
+      lifecycleData[pid]?.events?.some(e => e.id === eventId)
+    )
+    if (!projectId) return
+    try {
+      await updatePermitField(eventId, field, value)
+      // Optimistically update local state without full reload
+      setLifecycleData(prev => ({
+        ...prev,
+        [projectId]: {
+          ...prev[projectId],
+          events: prev[projectId].events.map(e =>
+            e.id === eventId ? { ...e, [field]: value } : e
+          ),
+        },
+      }))
+    } catch (err) {
+      console.error('Field update error:', err)
     }
   }
 
@@ -743,6 +850,56 @@ export default function Dashboard() {
             ))}
           </div>
 
+          {/* What to do this week — smart prompts from lifecycle data */}
+          {!loadingProjects && projects.some(p => lifecycleData[p.id]) && (() => {
+            const promptItems = projects
+              .filter(p => p.status === 'active' && lifecycleData[p.id])
+              .map(p => getProjectWeeklyPrompt(p, lifecycleData[p.id]))
+              .filter(Boolean)
+              .filter(p => p.urgency !== 'good')
+              .slice(0, 3)
+
+            if (!promptItems.length) return null
+
+            const URGENCY_STYLES = {
+              critical: 'bg-red-50 border-red-100 text-red-800',
+              warning:  'bg-amber-50 border-amber-100 text-amber-800',
+              info:     'bg-blue-50 border-blue-100 text-blue-800',
+            }
+            const URGENCY_ICONS = { critical: '⚠️', warning: '📅', info: 'ℹ️' }
+
+            return (
+              <div className="mb-6">
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">This week</div>
+                <div className="space-y-2">
+                  {promptItems.map((prompt, i) => (
+                    <div key={i} className={`flex items-start gap-3 border rounded-xl px-4 py-3 ${URGENCY_STYLES[prompt.urgency] || 'bg-gray-50 border-gray-100 text-gray-700'}`}>
+                      <span className="flex-shrink-0 mt-0.5">{URGENCY_ICONS[prompt.urgency]}</span>
+                      <div className="flex-1 min-w-0">
+                        {prompt.projectName && (
+                          <div className="text-xs font-semibold mb-0.5 opacity-70">{prompt.projectName}</div>
+                        )}
+                        <div className="text-xs leading-relaxed">{prompt.text}</div>
+                        {prompt.action?.url && (
+                          <a href={prompt.action.url} target="_blank" rel="noreferrer"
+                            className="text-xs font-medium underline mt-1 inline-block opacity-80 hover:opacity-100">
+                            {prompt.action.label} ↗
+                          </a>
+                        )}
+                        {prompt.action?.phone && !prompt.action?.url && (
+                          <a href={`tel:${prompt.action.phone}`}
+                            className="text-xs font-medium underline mt-1 inline-block opacity-80 hover:opacity-100">
+                            {prompt.action.label}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
           {loadingProjects ? (
             <div className="text-center py-12 text-gray-400 text-sm">Loading your projects...</div>
           ) : projects.length === 0 ? (
@@ -864,6 +1021,7 @@ export default function Dashboard() {
                         lifecycle={lifecycle}
                         onStageChange={handleStageChange}
                         onInspectionChange={handleInspectionChange}
+                        onFieldUpdate={handleFieldUpdate}
                         loading={lLoading}
                       />
                     )}
