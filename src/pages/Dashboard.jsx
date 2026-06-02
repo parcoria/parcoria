@@ -42,7 +42,7 @@ const STATUS_STYLES = {
   active:    'bg-green-50 text-green-700 border-green-100',
   planning:  'bg-blue-50 text-blue-700 border-blue-100',
   submitted: 'bg-amber-50 text-amber-700 border-amber-100',
-  complete:  'bg-gray-100 text-gray-600 border-gray-200',
+  complete:  'bg-green-600 text-white border-green-600',
 }
 
 // Permit lifecycle stages — the core "one tap" progression
@@ -55,7 +55,7 @@ const PERMIT_STAGES = [
   { id: 'inspections', label: 'Inspections', color: 'bg-purple-50 text-purple-700' },
   { id: 'on_hold',     label: 'On hold',     color: 'bg-orange-50 text-orange-700' },
   { id: 'rejected',    label: 'Rejected',    color: 'bg-red-50 text-red-700' },
-  { id: 'complete',    label: 'Complete',    color: 'bg-gray-100 text-gray-500' },
+  { id: 'complete',    label: 'Complete ✓',  color: 'bg-green-600 text-white border-green-600' },
 ]
 
 const INSP_STATUS_STYLES = {
