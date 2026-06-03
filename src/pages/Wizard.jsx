@@ -15,7 +15,7 @@ import Concierge from '../components/Concierge'
 import BuildabilityChecker from '../components/BuildabilityChecker'
 import AddressDetector from '../components/AddressDetector'
 import { hasAccess, isContractor } from '../lib/access'
-import { saveProject, getUser, findProjectByAddress, addProjectTypeToExisting } from '../lib/supabase'
+import { saveProject, getUser } from '../lib/supabase'
 import SaveToDashboard from '../components/SaveToDashboard'
 import Paywall from '../components/Paywall'
 import PaywallInline from '../components/PaywallInline'
@@ -82,8 +82,6 @@ export default function Wizard() {
   const navigate = useNavigate()
   useLang() // re-render on language change
   const [step, setStep] = useState(1)
-  const [duplicateModal, setDuplicateModal] = useState(null)
-  // duplicateModal: { type: 'duplicate'|'attach', existingProject, newProj }
   const [state, setState] = useState({
     jurisdiction: '', addr: '', proj: '', projs: [], cost: '',
     historic: false, septic: false, flood: false, corner: false,
@@ -131,36 +129,13 @@ export default function Wizard() {
     return PERMIT_DATA[p] || PERMIT_DATA.sfh
   }
   async function next() {
-    // When moving from step 4 to step 5 and user has access, save project
-    if (step === 3 && hasAccess() && state.proj && state.jurisdiction) {
+    // Auto-save to projects table when moving to step 5
+    // Only for developer tier — contractors use SaveToDashboard → createJob instead
+    // Homeowners don't have a projects dashboard
+    if (step === 3 && hasAccess() && !isContractor() && state.proj && state.jurisdiction) {
       try {
         const user = await getUser()
-        if (user && state.addr && state.jurisdiction) {
-          // Check for existing projects at this address
-          const existing = await findProjectByAddress(state.addr, state.jurisdiction)
-          const currentProj = state.proj
-          const isSolo = ['sfh', 'adu', 'townhouse'].includes(currentProj)
-
-          if (existing.length > 0) {
-            const exactMatch = existing.find(p =>
-              (p.projs || [p.project_type]).includes(currentProj)
-            )
-
-            if (exactMatch) {
-              // Exact duplicate — ask user what to do, pause wizard progression
-              setDuplicateModal({ type: 'duplicate', existingProject: exactMatch, newProj: currentProj })
-              return // don't advance step
-            }
-
-            if (!isSolo) {
-              // Additive type (deck, pool, addition, reno, shed) at existing address — ask to attach
-              const bestExisting = existing[0]
-              setDuplicateModal({ type: 'attach', existingProject: bestExisting, newProj: currentProj })
-              return // don't advance step
-            }
-          }
-
-          // No conflict — save normally
+        if (user) {
           await saveProject({
             name: allProjs.length > 1
               ? `${allProjs.map(p => PROJ_LABELS[p] || p).join(' + ')} - ${state.addr || state.jurisdiction}`
@@ -181,6 +156,7 @@ export default function Wizard() {
           })
         }
       } catch (err) {
+        // Silent fail - don't block the wizard if save fails
         console.error('Project save error:', err.message)
       }
     }
@@ -291,100 +267,8 @@ export default function Wizard() {
   const displayActiveProj = activeProj || allProjs[0] || state.proj
   const cityName = isChapelHill ? 'Chapel Hill' : isDurham ? 'Durham' : isApex ? 'Apex' : isHollySprings ? 'Holly Springs' : isWakeForest ? 'Wake Forest' : isMorrisville ? 'Morrisville' : isGarner ? 'Garner' : isFuquayVarina ? 'Fuquay-Varina' : isCary ? 'Cary' : 'Raleigh'
 
-  // ── Duplicate modal handlers ─────────────────────────────────────────────
-  async function handleDuplicateOpenExisting() {
-    setDuplicateModal(null)
-    navigate('/dashboard')
-  }
-  async function handleDuplicateCreateNew() {
-    setDuplicateModal(null)
-    try {
-      await saveProject({
-        name: `${state.proj === 'sfh' ? 'New Home' : state.proj} - ${state.addr || state.jurisdiction}`,
-        jurisdiction: state.jurisdiction, addr: state.addr,
-        proj: state.proj, projs: state.projs || [state.proj],
-        cost: state.cost, historic: state.historic, septic: state.septic,
-        flood: state.flood, corner: state.corner, status: 'active',
-      })
-    } catch (err) { console.error('Force save error:', err.message) }
-    setStep(s => s + 1)
-  }
-  async function handleAttachToExisting() {
-    const { existingProject, newProj } = duplicateModal
-    setDuplicateModal(null)
-    try {
-      await addProjectTypeToExisting(existingProject.id, newProj, existingProject.projs || [existingProject.project_type])
-    } catch (err) { console.error('Attach error:', err.message) }
-    navigate('/dashboard')
-  }
-  async function handleCreateSeparate() {
-    setDuplicateModal(null)
-    try {
-      await saveProject({
-        name: `${PROJ_LABELS[state.proj] || state.proj} - ${state.addr || state.jurisdiction}`,
-        jurisdiction: state.jurisdiction, addr: state.addr,
-        proj: state.proj, projs: state.projs || [state.proj],
-        cost: state.cost, historic: state.historic, septic: state.septic,
-        flood: state.flood, corner: state.corner, status: 'active',
-      })
-    } catch (err) { console.error('Separate save error:', err.message) }
-    setStep(s => s + 1)
-  }
-
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
-
-      {/* Duplicate / Attach modal */}
-      {duplicateModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
-            {duplicateModal.type === 'duplicate' ? (<>
-              <div className="text-base font-semibold text-gray-900 mb-2">Project already exists</div>
-              <p className="text-sm text-gray-500 leading-relaxed mb-5">
-                You already have a <strong>{PROJ_LABELS[duplicateModal.newProj] || duplicateModal.newProj}</strong> project
-                at <strong>{duplicateModal.existingProject.address}</strong>.
-                Open the existing one, or create a new separate project?
-              </p>
-              <div className="flex flex-col gap-2">
-                <button onClick={handleDuplicateOpenExisting}
-                  className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors">
-                  Open existing project
-                </button>
-                <button onClick={handleDuplicateCreateNew}
-                  className="w-full py-2.5 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:border-gray-300 transition-colors">
-                  Create new separate project
-                </button>
-                <button onClick={() => setDuplicateModal(null)}
-                  className="text-xs text-gray-400 hover:text-gray-600 text-center mt-1">
-                  Cancel
-                </button>
-              </div>
-            </>) : (<>
-              <div className="text-base font-semibold text-gray-900 mb-2">Add to existing project?</div>
-              <p className="text-sm text-gray-500 leading-relaxed mb-5">
-                We found an existing project at <strong>{duplicateModal.existingProject.address}</strong>.
-                Add this <strong>{PROJ_LABELS[duplicateModal.newProj] || duplicateModal.newProj}</strong> to it,
-                or track it as a separate project?
-              </p>
-              <div className="flex flex-col gap-2">
-                <button onClick={handleAttachToExisting}
-                  className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors">
-                  Add to existing project at this address
-                </button>
-                <button onClick={handleCreateSeparate}
-                  className="w-full py-2.5 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:border-gray-300 transition-colors">
-                  Track as a separate project
-                </button>
-                <button onClick={() => setDuplicateModal(null)}
-                  className="text-xs text-gray-400 hover:text-gray-600 text-center mt-1">
-                  Cancel
-                </button>
-              </div>
-            </>)}
-          </div>
-        </div>
-      )}
-
 
       {/* Progress bar */}
       <div className="flex items-center mb-10">
@@ -703,29 +587,7 @@ export default function Wizard() {
                           {pm.portal && isDurham && <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-purple-50 text-purple-700 border border-purple-100">{pm.portal}</span>}
                           <span className="text-xs text-gray-400">⏱ {pm.time}</span>
                         </div>
-                        <div className="flex items-center gap-3 flex-wrap mt-1.5">
-                          {(pm.applyUrl === 'PREFILL') ? (
-                            <a href={`/apply?j=${state.jurisdiction}&p=${state.proj || 'sfh'}&a=${encodeURIComponent(state.addr || '')}&permit=${
-                              (pm.name||'').toLowerCase().includes('electrical') ? 'electrical' :
-                              (pm.name||'').toLowerCase().includes('plumbing') ? 'plumbing' :
-                              (pm.name||'').toLowerCase().includes('mechanical') ? 'mechanical' : 'building'
-                            }`}
-                              className="text-xs font-semibold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-colors">
-                              📋 Pre-fill application
-                            </a>
-                          ) : (
-                            <a href={pm.applyUrl || pm.url || '#'} target="_blank" rel="noreferrer"
-                              className="text-xs text-brand-600 hover:text-brand-700">
-                              Apply ↗
-                            </a>
-                          )}
-                          {pm.detailsUrl && pm.detailsUrl !== (pm.applyUrl || pm.url) && (
-                            <a href={pm.detailsUrl} target="_blank" rel="noreferrer"
-                              className="text-xs text-gray-400 hover:text-gray-600">
-                              View requirements ↗
-                            </a>
-                          )}
-                        </div>
+                        <a href={pm.url} target="_blank" rel="noreferrer" className="text-xs text-brand-600 hover:text-brand-700 mt-1.5 inline-block">Apply / view details ↗</a>
                       </div>
                     </div>
                   ))}
@@ -903,17 +765,17 @@ export default function Wizard() {
             </svg>
             {t('wiz_generate_brief')}
           </button>
-          {['durham', 'raleigh'].includes(state.jurisdiction) && (
+          {state.jurisdiction === 'durham' && (
             allProjs.length > 1 ? (
               <div className="mt-2">
-                <div className="text-xs font-medium text-gray-600 mb-1.5">Pre-fill {state.jurisdiction === 'raleigh' ? 'Raleigh' : 'Durham'} permit applications:</div>
+                <div className="text-xs font-medium text-gray-600 mb-1.5">Pre-fill Durham permit applications:</div>
                 <div className="space-y-1.5">
                   {allProjs.map(projId => (
                     <button key={projId}
                       onClick={() => {
                         const params = new URLSearchParams({
                           a: state.addr || '', p: projId,
-                          s: state.septic ? '1' : '0', j: state.jurisdiction,
+                          s: state.septic ? '1' : '0', j: 'durham',
                         })
                         window.open(`/apply?${params.toString()}`, '_blank')
                       }}
@@ -931,7 +793,7 @@ export default function Wizard() {
                 onClick={() => {
                   const params = new URLSearchParams({
                     a: state.addr || '', p: state.proj || 'sfh',
-                    s: state.septic ? '1' : '0', j: state.jurisdiction,
+                    s: state.septic ? '1' : '0', j: 'durham',
                   })
                   window.open(`/apply?${params.toString()}`, '_blank')
                 }}
@@ -940,7 +802,7 @@ export default function Wizard() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
-                Pre-fill {state.jurisdiction === 'raleigh' ? 'Raleigh' : 'Durham'} permit application
+                Pre-fill Durham permit application
               </button>
             )
           )}
