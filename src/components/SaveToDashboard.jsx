@@ -30,7 +30,7 @@ export default function SaveToDashboard({ state, data, saveStatus, setSaveStatus
 
   // Not logged in — prompt to log in
   if (!user) {
-    const dest = isContractor() ? '/contractors' : '/dashboard'
+    const dest = isContractor() ? '/contractor' : '/dashboard'
     const label = isContractor() ? 'Contractor' : 'Developer'
     return (
       <div className="w-full mt-2 bg-brand-50 border border-brand-100 rounded-lg px-4 py-3 flex items-center justify-between gap-3">
@@ -136,7 +136,7 @@ export default function SaveToDashboard({ state, data, saveStatus, setSaveStatus
           </svg>
           Project saved to your dashboard
         </div>
-        <Link to={isContractor() ? '/contractors' : '/dashboard'}
+        <Link to={isContractor() ? '/contractor' : '/dashboard'}
           className="text-xs text-green-700 font-semibold hover:text-green-800 whitespace-nowrap">
           {isContractor() ? 'View my jobs ↗' : 'View dashboard ↗'}
         </Link>

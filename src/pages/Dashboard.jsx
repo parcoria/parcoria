@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase, sendMagicLink, getUser, signOut, getProjects, deleteProject, saveProject } from '../lib/supabase'
-import { isDeveloper, hasAccess } from '../lib/access'
+import { isDeveloper, hasAccess, isContractor } from '../lib/access'
 import { LogoMark } from '../components/Logo'
 import {
   seedPermitEvents, reseedPermitEvents, seedInspectionLog,
@@ -482,7 +482,14 @@ export default function Dashboard() {
         setUser(session.user)
         setAuthState('authenticated')
         loadProjects(session.user.id)
-        if (event === 'SIGNED_IN') navigate('/dashboard', { replace: true })
+        if (event === 'SIGNED_IN') {
+          // Contractors belong on their jobs page, not the developer dashboard
+          if (isContractor()) {
+            navigate('/contractor', { replace: true })
+          } else {
+            navigate('/dashboard', { replace: true })
+          }
+        }
       } else {
         setAuthState('unauthenticated')
       }
@@ -493,6 +500,11 @@ export default function Dashboard() {
   async function checkAuth() {
     const currentUser = await getUser()
     if (currentUser) {
+      // Contractors should be on /contractors, not /dashboard
+      if (isContractor()) {
+        navigate('/contractor', { replace: true })
+        return
+      }
       setUser(currentUser)
       setAuthState('authenticated')
       loadProjects(currentUser.id)
