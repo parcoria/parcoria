@@ -6,6 +6,12 @@ import { getProfile, saveProfile, getExpiringCredentials, LICENSE_TYPES, JURISDI
 import { getJobs, createJob, updateJob, deleteJob, JOB_STATUSES } from '../lib/client-jobs'
 import { TEMPLATES, fillTemplate } from '../data/client-templates'
 import { hasAccess, isContractor } from '../lib/access'
+import {
+  seedPermitEvents, getProjectLifecycle, updatePermitStage,
+  updateInspectionStatus, updatePermitField, updateDeadlineStatus,
+} from '../lib/lifecycle'
+import LifecyclePanel from '../components/LifecyclePanel'
+import { supabase } from '../lib/supabase'
 
 // ─── Jurisdiction portal ID definitions ─────────────────────────────────────
 // Durham is the only Triangle jurisdiction that issues a separate numeric CID.
@@ -166,6 +172,10 @@ export default function ContractorMode() {
   const [jobForm, setJobForm] = useState(EMPTY_JOB)
   const [savingJob, setSavingJob] = useState(false)
   const [openStatusId, setOpenStatusId] = useState(null) // only one status dropdown open at a time
+  const [expandedJobId, setExpandedJobId] = useState(null)   // job showing lifecycle panel
+  const [lifecycleData, setLifecycleData] = useState({})     // jobId → lifecycle
+  const [lifecycleLoading, setLifecycleLoading] = useState({}) // jobId → bool
+  const [jobProjectMap, setJobProjectMap] = useState({})      // jobId → projectId
 
   // Close status dropdown on outside click
   useEffect(() => {
@@ -347,6 +357,100 @@ export default function ContractorMode() {
     } finally {
       setSavingJob(false)
     }
+  }
+
+  // Open lifecycle panel for a job — creates a linked project if needed
+  async function openLifecycle(job) {
+    const jobId = job.id
+    if (expandedJobId === jobId) { setExpandedJobId(null); return }
+    setExpandedJobId(jobId)
+    if (lifecycleData[jobId]) return
+
+    setLifecycleLoading(prev => ({ ...prev, [jobId]: true }))
+    try {
+      let projectId = jobProjectMap[jobId]
+      if (!projectId) {
+        const { data: jobRow } = await supabase
+          .from('client_jobs').select('project_id').eq('id', jobId).single()
+
+        if (jobRow?.project_id) {
+          projectId = jobRow.project_id
+        } else {
+          const { data: { user } } = await supabase.auth.getUser()
+          const { data: newProject, error } = await supabase
+            .from('projects')
+            .insert({
+              user_id: user?.id,
+              name: job.client_name,
+              address: job.address,
+              jurisdiction: job.jurisdiction,
+              project_type: job.project_type,
+              projs: job.projs || [job.project_type],
+              status: 'active',
+              updated_at: new Date().toISOString(),
+            })
+            .select().single()
+          if (error) throw error
+          projectId = newProject.id
+          await supabase.from('client_jobs').update({ project_id: projectId }).eq('id', jobId)
+        }
+        setJobProjectMap(prev => ({ ...prev, [jobId]: projectId }))
+      }
+
+      let lifecycle = await getProjectLifecycle(projectId)
+      if (lifecycle.events.length === 0) {
+        await seedPermitEvents(projectId, job.jurisdiction, job.projs || [job.project_type])
+        lifecycle = await getProjectLifecycle(projectId)
+      }
+      setLifecycleData(prev => ({ ...prev, [jobId]: { ...lifecycle, projectId } }))
+    } catch (err) {
+      console.error('Open lifecycle error:', err)
+    } finally {
+      setLifecycleLoading(prev => ({ ...prev, [jobId]: false }))
+    }
+  }
+
+  async function handleJobStageChange(eventId, newStage, projectType) {
+    const jobId = Object.keys(lifecycleData).find(jid =>
+      lifecycleData[jid]?.events?.some(e => e.id === eventId)
+    )
+    if (!jobId) return
+    const projectId = lifecycleData[jobId]?.projectId
+    try {
+      await updatePermitStage(eventId, newStage, { project_type: projectType })
+      const updated = await getProjectLifecycle(projectId)
+      setLifecycleData(prev => ({ ...prev, [jobId]: { ...updated, projectId } }))
+    } catch (err) { console.error('Stage change error:', err) }
+  }
+
+  async function handleJobInspectionChange(inspectionId, newStatus) {
+    const jobId = Object.keys(lifecycleData).find(jid =>
+      lifecycleData[jid]?.inspections?.some(i => i.id === inspectionId)
+    )
+    if (!jobId) return
+    const projectId = lifecycleData[jobId]?.projectId
+    try {
+      await updateInspectionStatus(inspectionId, newStatus)
+      const updated = await getProjectLifecycle(projectId)
+      setLifecycleData(prev => ({ ...prev, [jobId]: { ...updated, projectId } }))
+    } catch (err) { console.error('Inspection change error:', err) }
+  }
+
+  async function handleJobFieldUpdate(eventId, field, value) {
+    const jobId = Object.keys(lifecycleData).find(jid =>
+      lifecycleData[jid]?.events?.some(e => e.id === eventId)
+    )
+    if (!jobId) return
+    try {
+      await updatePermitField(eventId, field, value)
+      setLifecycleData(prev => ({
+        ...prev,
+        [jobId]: {
+          ...prev[jobId],
+          events: prev[jobId].events.map(e => e.id === eventId ? { ...e, [field]: value } : e),
+        },
+      }))
+    } catch (err) { console.error('Field update error:', err) }
   }
 
   async function handleStatusChange(jobId, newStatus) {
@@ -637,17 +741,17 @@ export default function ContractorMode() {
                           </svg>
                         </Link>
                       )}
-                      {/* Lifecycle — gated behind active subscription */}
+                      {/* Lifecycle — inline expand */}
                       {hasAccess() ? (
-                        <Link
-                          to={`/dashboard?highlight=${job.id}`}
-                          className="p-2 text-gray-400 hover:text-brand-600 rounded-lg hover:bg-brand-50 transition-colors"
+                        <button
+                          onClick={e => { e.stopPropagation(); openLifecycle(job) }}
+                          className={`p-2 rounded-lg transition-colors ${expandedJobId === job.id ? 'text-brand-600 bg-brand-50' : 'text-gray-400 hover:text-brand-600 hover:bg-brand-50'}`}
                           title="Track permit lifecycle"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                           </svg>
-                        </Link>
+                        </button>
                       ) : (
                         <Link to="/pricing"
                           className="p-2 text-gray-200 rounded-lg cursor-not-allowed"
@@ -694,6 +798,26 @@ export default function ContractorMode() {
                     </div>
                   )}
                   {job.notes && <div className="text-xs text-gray-400 italic mt-1.5">{job.notes}</div>}
+
+                  {/* Inline lifecycle panel */}
+                  {expandedJobId === job.id && (
+                    <div className="mt-3 pt-3 border-t border-gray-100" onClick={e => e.stopPropagation()}>
+                      {lifecycleLoading[job.id] ? (
+                        <div className="animate-pulse text-xs text-gray-400 py-2">Loading permit tracker...</div>
+                      ) : lifecycleData[job.id] ? (
+                        <LifecyclePanel
+                          project={{ ...job, id: lifecycleData[job.id].projectId, project_type: job.project_type }}
+                          lifecycle={lifecycleData[job.id]}
+                          onStageChange={handleJobStageChange}
+                          onInspectionChange={handleJobInspectionChange}
+                          onFieldUpdate={handleJobFieldUpdate}
+                          loading={false}
+                        />
+                      ) : (
+                        <div className="text-xs text-gray-400 py-2">Could not load lifecycle data.</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
