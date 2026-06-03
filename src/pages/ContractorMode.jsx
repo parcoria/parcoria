@@ -392,15 +392,26 @@ export default function ContractorMode() {
             .select().single()
           if (error) throw error
           projectId = newProject.id
-          await supabase.from('client_jobs').update({ project_id: projectId }).eq('id', jobId)
+          // Store project_id back on job — graceful fail if column not yet added
+          try {
+            await supabase.from('client_jobs').update({ project_id: projectId }).eq('id', jobId)
+          } catch (linkErr) {
+            console.warn('Could not link project_id to job (run migration):', linkErr.message)
+          }
         }
         setJobProjectMap(prev => ({ ...prev, [jobId]: projectId }))
       }
 
       let lifecycle = await getProjectLifecycle(projectId)
       if (lifecycle.events.length === 0) {
-        await seedPermitEvents(projectId, job.jurisdiction, job.projs || [job.project_type])
+        // Normalise project type — use short code keys (reno, sfh etc.) not labels
+        const projectTypes = (job.projs?.length > 0 ? job.projs : [job.project_type || 'sfh'])
+          .map(t => t?.toLowerCase().trim())
+          .filter(Boolean)
+        console.log('Seeding permits for:', projectTypes, 'jurisdiction:', job.jurisdiction)
+        await seedPermitEvents(projectId, job.jurisdiction, projectTypes)
         lifecycle = await getProjectLifecycle(projectId)
+        console.log('Seeded events:', lifecycle.events.length)
       }
       setLifecycleData(prev => ({ ...prev, [jobId]: { ...lifecycle, projectId } }))
     } catch (err) {
