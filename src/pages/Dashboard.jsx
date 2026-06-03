@@ -947,7 +947,10 @@ export default function Dashboard() {
                         {!hasIssues && !allComplete && lifecycle && <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" title="In progress" />}
 
                         <h3 className="text-sm font-semibold text-gray-900 truncate">
-                          {project.name || project.address || 'Untitled project'}
+                          {(project.name || project.address || 'Untitled project')
+                            .split(' ')
+                            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                            .join(' ')}
                         </h3>
                         <select
                           value={project.status || 'active'}
@@ -1004,8 +1007,8 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    {/* Row 2 — metadata */}
-                    <div className="flex items-center gap-2 flex-wrap">
+                    {/* Row 2a — jurisdiction + project type tags */}
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${JUR_COLORS[project.jurisdiction] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
                         {JUR_LABELS[project.jurisdiction] || project.jurisdiction}
                       </span>
@@ -1014,10 +1017,14 @@ export default function Dashboard() {
                           {PROJ_LABELS[pt] || pt}
                         </span>
                       ))}
-                      {project.address && <span className="text-xs text-gray-400 truncate max-w-xs">{project.address}</span>}
-                      {project.permit_count && <><span className="text-xs text-gray-300">·</span><span className="text-xs text-gray-400">{project.permit_count} permits</span></>}
-                      {project.timeline && <span className="text-xs text-gray-400">{project.timeline}</span>}
-                      {project.fees && <span className="text-xs text-gray-400">{project.fees}</span>}
+                    </div>
+
+                    {/* Row 2b — address + stats, always on its own line */}
+                    <div className="flex items-center gap-2 flex-wrap text-xs text-gray-400">
+                      {project.address && <span className="font-medium text-gray-500">{project.address}</span>}
+                      {project.permit_count && <><span className="text-gray-200">·</span><span>{project.permit_count} permits</span></>}
+                      {project.timeline && <><span className="text-gray-200">·</span><span>{project.timeline}</span></>}
+                      {project.fees && <><span className="text-gray-200">·</span><span>{project.fees}</span></>}
                         {typePickerProject !== project.id && (
                         <button
                           onClick={e => { e.stopPropagation(); setTypePickerProject(project.id) }}
