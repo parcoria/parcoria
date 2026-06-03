@@ -154,9 +154,7 @@ export default function BuildabilityChecker({ address, jurisdiction, flags, onFl
                 <div className={`text-xs leading-relaxed ${style.sub}`}>
                   {isUnmapped ? 'No flood hazard data found in FEMA National Flood Hazard Layer. Verify at msc.fema.gov before submitting permits.' : cls.desc}
                 </div>
-                {floodResult.matchedAddress && (
-                  <div className="text-xs text-gray-400 mt-1.5">Matched: {floodResult.matchedAddress}</div>
-                )}
+
                 {cls.requiresElevationCert && (
                   <div className="mt-2 text-xs font-semibold text-red-700">⚠️ FEMA elevation certificate required before permits can be issued.</div>
                 )}

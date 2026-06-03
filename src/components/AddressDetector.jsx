@@ -186,16 +186,26 @@ export default function AddressDetector({ onComplete }) {
 
   function handleContinue() {
     if (!detected?.id) return
-    // For user-selected jurisdictions, always use what they typed
-    // to avoid passing a wrong-state geocoded address downstream
+
+    // For user-selected jurisdictions always use what the user typed
     const finalAddr = detected.confidence === 'user_selected'
       ? address.trim()
       : (detected.matchedAddress || address.trim())
 
+    // Scrub matchedAddress from floodResult — if it's a wrong-state geocode
+    // (e.g. Virginia when user selected Durham NC) it confuses the buildability step
+    const cleanFloodResult = detected.floodResult
+      ? {
+          ...detected.floodResult,
+          // Override matchedAddress with the address the user actually typed
+          matchedAddress: finalAddr,
+        }
+      : null
+
     onComplete({
       addr: finalAddr,
       jurisdiction: detected.id,
-      floodResult: detected.floodResult,
+      floodResult: cleanFloodResult,
       historic: flags.historic,
       septic: flags.septic,
       corner: flags.corner,
