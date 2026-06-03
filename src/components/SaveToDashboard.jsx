@@ -53,10 +53,10 @@ export default function SaveToDashboard({ state, data, saveStatus, setSaveStatus
     if (isContractor()) {
       // Contractors save to their jobs list, not the developer dashboard
       await createJob({
-        client_name: `${PROJ_LABELS[state.proj] || state.proj} — ${state.addr || state.jurisdiction}`,
+        clientName: `${PROJ_LABELS[state.proj] || state.proj} — ${state.addr || state.jurisdiction}`,
         address: state.addr,
         jurisdiction: state.jurisdiction,
-        project_type: state.proj,
+        projectType: state.proj,
         projs: state.projs?.length > 0 ? state.projs : [state.proj],
         status: 'active',
         notes: `${permitCount} permits · ${data?.timeline || ''} · ${data?.fees || ''}`,
