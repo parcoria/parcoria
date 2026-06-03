@@ -237,23 +237,41 @@ function getPermitScaffold(jurisdiction, projectType) {
 // ─── PERMIT EVENTS ────────────────────────────────────────────────────────────
 
 // Seed permit events for a newly created project
-export async function seedPermitEvents(projectId, jurisdiction, projectType) {
+export async function seedPermitEvents(projectId, jurisdiction, projectTypes) {
   const user = await getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const scaffold = getPermitScaffold(jurisdiction, projectType)
+  // Accept a single string or an array of project types
+  const types = Array.isArray(projectTypes)
+    ? projectTypes
+    : [projectTypes || 'sfh']
 
-  const rows = scaffold.map(s => ({
-    project_id:     projectId,
-    user_id:        user.id,
-    permit_type:    s.permit_type,
-    permit_name:    s.permit_name,
-    jurisdiction,
-    portal:         s.portal,
-    sequence_order: s.sequence_order,
-    stage:          'not_started',
-    est_days:       s.est_days,
-  }))
+  // Seed permits for ALL project types, deduplicating by permit_type + permit_name
+  // e.g. Pool + Shed both need building permit — only seed it once
+  const seen = new Set()
+  const rows = []
+  let globalOrder = 0
+
+  for (const projType of types) {
+    const scaffold = getPermitScaffold(jurisdiction, projType)
+    for (const s of scaffold) {
+      const key = `${s.permit_type}:${s.permit_name}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      globalOrder++
+      rows.push({
+        project_id:     projectId,
+        user_id:        user.id,
+        permit_type:    s.permit_type,
+        permit_name:    s.permit_name,
+        jurisdiction,
+        portal:         s.portal,
+        sequence_order: globalOrder,
+        stage:          'not_started',
+        est_days:       s.est_days,
+      })
+    }
+  }
 
   const { data, error } = await supabase
     .from('permit_events')
@@ -262,6 +280,21 @@ export async function seedPermitEvents(projectId, jurisdiction, projectType) {
 
   if (error) throw error
   return data
+}
+
+// Re-seed permit events when project types change
+// Clears existing not_started events and re-seeds from the full projs array
+// Events that have been started (applied, in_review etc.) are preserved
+export async function reseedPermitEvents(projectId, jurisdiction, projectTypes) {
+  // Delete only not_started events — preserve any progress already made
+  await supabase
+    .from('permit_events')
+    .delete()
+    .eq('project_id', projectId)
+    .eq('stage', 'not_started')
+
+  // Re-seed from full project types array
+  return seedPermitEvents(projectId, jurisdiction, projectTypes)
 }
 
 // Get all permit events for a project

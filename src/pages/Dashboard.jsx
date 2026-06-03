@@ -4,7 +4,7 @@ import { supabase, sendMagicLink, getUser, signOut, getProjects, deleteProject, 
 import { isDeveloper, hasAccess } from '../lib/access'
 import { LogoMark } from '../components/Logo'
 import {
-  seedPermitEvents, seedInspectionLog,
+  seedPermitEvents, reseedPermitEvents, seedInspectionLog,
   getProjectLifecycle, updatePermitStage, updateInspectionStatus,
   getDocumentExpiry, upsertDocument, updateDeadlineStatus,
   updatePermitField,
@@ -528,7 +528,7 @@ export default function Dashboard() {
 
       // If no permit events yet, seed them automatically
       if (lifecycle.events.length === 0) {
-        await seedPermitEvents(id, project.jurisdiction, project.project_type || 'sfh')
+        await seedPermitEvents(id, project.jurisdiction, project.projs?.length > 0 ? project.projs : [project.project_type || 'sfh'])
         lifecycle = await getProjectLifecycle(id)
       }
 
@@ -644,6 +644,14 @@ export default function Dashboard() {
     setProjects(prev => prev.map(p => p.id === project.id ? updated : p))
     try {
       await supabase.from('projects').update({ projs: next, project_type: next[0], name: newName }).eq('id', project.id)
+
+      // Re-seed permit events to reflect the updated project types
+      // Only re-seeds if lifecycle has been loaded (don't create events for unopened projects)
+      if (lifecycleData[project.id]) {
+        await reseedPermitEvents(project.id, project.jurisdiction, next)
+        const updatedLifecycle = await getProjectLifecycle(project.id)
+        setLifecycleData(prev => ({ ...prev, [project.id]: updatedLifecycle }))
+      }
     } catch (err) {
       console.error('Toggle project type error:', err)
     }
@@ -927,8 +935,8 @@ export default function Dashboard() {
 
                 return (
                   <div key={project.id}
-                    className={`bg-white border rounded-xl p-4 transition-colors cursor-pointer ${isExpanded ? 'border-gray-300 shadow-sm' : 'border-gray-100 hover:border-gray-200'}`}
-                    onClick={() => handleExpandProject(project)}
+                    className={`bg-white border rounded-xl p-4 transition-colors cursor-pointer ${isExpanded ? 'border-gray-300 shadow-sm' : typePickerProject === project.id ? 'border-brand-200' : 'border-gray-100 hover:border-gray-200'}`}
+                    onClick={() => setTypePickerProject(typePickerProject === project.id ? null : project.id)}
                   >
                     {/* Row 1 — title + controls */}
                     <div className="flex items-center justify-between gap-3 mb-2">
@@ -970,7 +978,7 @@ export default function Dashboard() {
                             📋 Pre-fill app
                           </Link>
                         )}
-                        {/* Lifecycle expand/collapse */}
+                        {/* Lifecycle panel toggle — independent from card click */}
                         <button
                           onClick={e => { e.stopPropagation(); handleExpandProject(project) }}
                           className={`text-xs px-3 py-1.5 rounded-lg border transition-colors font-medium ${
@@ -1019,7 +1027,7 @@ export default function Dashboard() {
                         </button>
                       )}
                       <span className="text-xs text-gray-300 ml-auto">
-                        {isExpanded ? '↑ collapse' : '↓ expand'}
+                        {typePickerProject === project.id ? '↑ close' : '↓ add / edit types'}
                       </span>
                     </div>
 
@@ -1028,7 +1036,7 @@ export default function Dashboard() {
                       <div className="mt-3 pt-3 border-t border-gray-100" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between mb-2">
                           <div className="text-xs font-medium text-gray-500">Select all project types for this job site:</div>
-                          <button onClick={() => setTypePickerProject(null)} className="text-xs text-gray-400 hover:text-gray-600">✕ Close</button>
+                          <button onClick={e => { e.stopPropagation(); setTypePickerProject(null) }} className="text-xs text-gray-400 hover:text-gray-600">✕ Close</button>
                         </div>
                         <div className="flex flex-wrap gap-1.5 mb-3">
                           {Object.entries(PROJ_LABELS).map(([id, label]) => {
