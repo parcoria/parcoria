@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase, sendMagicLink, getUser, signOut, getProjects, deleteProject, saveProject } from '../lib/supabase'
-import { isDeveloper, hasAccess, isContractor } from '../lib/access'
+import { isDeveloper, hasAccess, isContractor, getAccessTier } from '../lib/access'
 import { LogoMark } from '../components/Logo'
 import {
   seedPermitEvents, reseedPermitEvents, seedInspectionLog,
@@ -483,9 +483,11 @@ export default function Dashboard() {
         setAuthState('authenticated')
         loadProjects(session.user.id)
         if (event === 'SIGNED_IN') {
-          // Contractors belong on their jobs page, not the developer dashboard
-          if (isContractor()) {
+          const tier = getAccessTier()
+          if (tier === 'contractor') {
             navigate('/contractor', { replace: true })
+          } else if (tier === 'homeowner') {
+            navigate('/wizard', { replace: true })
           } else {
             navigate('/dashboard', { replace: true })
           }
