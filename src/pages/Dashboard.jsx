@@ -931,7 +931,7 @@ export default function Dashboard() {
                     onClick={() => handleExpandProject(project)}
                   >
                     {/* Row 1 — title + controls */}
-                    <div className="flex items-center justify-between gap-3 mb-2" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between gap-3 mb-2">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         {/* Health dot */}
                         {hasIssues && <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" title="Overdue deadlines" />}
@@ -952,7 +952,7 @@ export default function Dashboard() {
                           <option value="complete">Complete</option>
                         </select>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
                         <Link to={getRoadmapUrl(project)}
                           className="text-xs px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:border-gray-300 transition-colors">
                           View roadmap
@@ -997,7 +997,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Row 2 — metadata */}
-                    <div className="flex items-center gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${JUR_COLORS[project.jurisdiction] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
                         {JUR_LABELS[project.jurisdiction] || project.jurisdiction}
                       </span>
