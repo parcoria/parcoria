@@ -132,22 +132,68 @@ export default function AddressDetector({ onComplete }) {
     if (e.key === 'Enter') detectFromAddress()
   }
 
-  function selectJurisdiction(id) {
-    setDetected(prev => ({
-      ...prev,
+  async function selectJurisdiction(id) {
+    const label = getJurisdictionLabel(id)
+
+    // Map jurisdiction id to city name for geocoding context
+    const CITY_NAMES = {
+      raleigh: 'Raleigh', durham: 'Durham', chapelhill: 'Chapel Hill',
+      apex: 'Apex', hollysprings: 'Holly Springs', wakeforest: 'Wake Forest',
+      morrisville: 'Morrisville', garner: 'Garner',
+    }
+    const cityName = CITY_NAMES[id] || ''
+
+    // Use original typed address — not the geocoder's potentially wrong match
+    // Append city + NC for context so flood API geocodes correctly
+    const addressWithContext = address.toLowerCase().includes('nc')
+      ? address
+      : `${address.trim()}, ${cityName}, NC`
+
+    setDetected({
       id,
-      label: getJurisdictionLabel(id),
+      label,
       confidence: 'user_selected',
-      matchedAddress: detected?.matchedAddress || address,
+      matchedAddress: address.trim(), // always show what the user typed
       floodResult: detected?.floodResult || null,
-    }))
+    })
     setShowOverride(false)
+
+    // Re-run flood check with correct city context
+    try {
+      setDetecting(true)
+      const params = new URLSearchParams({ address: addressWithContext })
+      const res = await fetch(`/api/flood?${params}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.status === 'success' || data.matchedAddress) {
+          setDetected(prev => ({
+            ...prev,
+            floodResult: data,
+            // Only update matchedAddress if geocoder found something in the right state
+            matchedAddress: (data.matchedAddress || '').includes('VA') || (data.matchedAddress || '').includes('Virginia')
+              ? address.trim()  // ignore wrong state matches
+              : data.matchedAddress || address.trim(),
+          }))
+        }
+      }
+    } catch (err) {
+      // Flood check failed — keep what we have, not a blocker
+      console.error('Flood recheck error:', err)
+    } finally {
+      setDetecting(false)
+    }
   }
 
   function handleContinue() {
     if (!detected?.id) return
+    // For user-selected jurisdictions, always use what they typed
+    // to avoid passing a wrong-state geocoded address downstream
+    const finalAddr = detected.confidence === 'user_selected'
+      ? address.trim()
+      : (detected.matchedAddress || address.trim())
+
     onComplete({
-      addr: detected.matchedAddress || address,
+      addr: finalAddr,
       jurisdiction: detected.id,
       floodResult: detected.floodResult,
       historic: flags.historic,
