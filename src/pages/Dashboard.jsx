@@ -465,6 +465,7 @@ export default function Dashboard() {
   const [loadingProjects, setLoadingProjects] = useState(false)
   const [error, setError] = useState('')
   const [expandedProject, setExpandedProject] = useState(null)
+  const [typePickerProject, setTypePickerProject] = useState(null) // project id showing type picker
   const [lifecycleData, setLifecycleData] = useState({})   // projectId → lifecycle
   const [lifecycleLoading, setLifecycleLoading] = useState({}) // projectId → bool
   const [activeTab, setActiveTab] = useState('projects')
@@ -1006,13 +1007,64 @@ export default function Dashboard() {
                       {project.permit_count && <><span className="text-xs text-gray-300">·</span><span className="text-xs text-gray-400">{project.permit_count} permits</span></>}
                       {project.timeline && <span className="text-xs text-gray-400">{project.timeline}</span>}
                       {project.fees && <span className="text-xs text-gray-400">{project.fees}</span>}
-                      <button
-                        onClick={() => setExpandedProject(isExpanded ? null : project.id)}
-                        className="text-xs text-brand-500 hover:text-brand-700 font-medium ml-1"
-                      >
-                        {isExpanded ? '' : '+ Add project type'}
-                      </button>
+                      {typePickerProject !== project.id && (
+                        <button
+                          onClick={() => setTypePickerProject(typePickerProject === project.id ? null : project.id)}
+                          className="text-xs text-brand-500 hover:text-brand-700 font-medium ml-1"
+                        >
+                          + Add project type
+                        </button>
+                      )}
                     </div>
+
+                    {/* Project type picker */}
+                    {typePickerProject === project.id && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-xs font-medium text-gray-500">Select all project types for this job site:</div>
+                          <button onClick={() => setTypePickerProject(null)} className="text-xs text-gray-400 hover:text-gray-600">✕ Close</button>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          {Object.entries(PROJ_LABELS).map(([id, label]) => {
+                            const current = project.projs || (project.project_type ? [project.project_type] : [])
+                            const selected = current.includes(id)
+                            const SOLO_TYPES = ['sfh', 'adu', 'townhouse']
+                            const isSolo = SOLO_TYPES.includes(id)
+                            const otherSoloSelected = current.some(p => SOLO_TYPES.includes(p) && p !== id)
+                            const disabled = !selected && otherSoloSelected && !isSolo
+                            return (
+                              <button key={id}
+                                onClick={() => !disabled && handleToggleProjType(project, id)}
+                                disabled={disabled}
+                                className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${
+                                  selected
+                                    ? 'bg-brand-600 text-white border-brand-600'
+                                    : disabled
+                                      ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                                      : 'bg-white text-gray-600 border-gray-200 hover:border-brand-300 hover:text-brand-600'
+                                }`}>
+                                {selected ? '✓ ' : ''}{label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        {/* Pre-fill buttons for Durham/Raleigh multi-type projects */}
+                        {['durham', 'raleigh'].includes(project.jurisdiction) && (project.projs?.length > 1) && (
+                          <div>
+                            <div className="text-xs text-gray-500 mb-1.5">Pre-fill a permit application:</div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {(project.projs || []).map(pt => (
+                                <Link key={pt}
+                                  to={`/apply?a=${encodeURIComponent(project.address || '')}&p=${pt}&s=${project.flags?.septic ? '1' : '0'}&j=${project.jurisdiction}`}
+                                  className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors">
+                                  📋 {PROJ_LABELS[pt] || pt}
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Lifecycle panel */}
                     {isExpanded && (

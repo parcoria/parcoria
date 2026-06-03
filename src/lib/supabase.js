@@ -86,6 +86,34 @@ export async function getProjects() {
 }
 
 // Delete a project
+// Check if a project already exists at this address for this user
+export async function findProjectByAddress(address, jurisdiction) {
+  const user = await getUser()
+  if (!user) return []
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('address', address)
+    .eq('jurisdiction', jurisdiction)
+    .order('created_at', { ascending: false })
+  if (error) return []
+  return data || []
+}
+
+// Add a project type to an existing project (for additive types: deck, pool, addition, reno, shed)
+export async function addProjectTypeToExisting(projectId, newType, currentProjs) {
+  const next = [...new Set([...currentProjs, newType])]
+  const { data, error } = await supabase
+    .from('projects')
+    .update({ projs: next, project_type: next[0], updated_at: new Date().toISOString() })
+    .eq('id', projectId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 export async function deleteProject(projectId) {
   const user = await getUser()
   if (!user) throw new Error('Not authenticated')

@@ -15,7 +15,7 @@ import Concierge from '../components/Concierge'
 import BuildabilityChecker from '../components/BuildabilityChecker'
 import AddressDetector from '../components/AddressDetector'
 import { hasAccess, isContractor } from '../lib/access'
-import { saveProject, getUser } from '../lib/supabase'
+import { saveProject, getUser, findProjectByAddress, addProjectTypeToExisting } from '../lib/supabase'
 import SaveToDashboard from '../components/SaveToDashboard'
 import Paywall from '../components/Paywall'
 import PaywallInline from '../components/PaywallInline'
@@ -82,6 +82,8 @@ export default function Wizard() {
   const navigate = useNavigate()
   useLang() // re-render on language change
   const [step, setStep] = useState(1)
+  const [duplicateModal, setDuplicateModal] = useState(null)
+  // duplicateModal: { type: 'duplicate'|'attach', existingProject, newProj }
   const [state, setState] = useState({
     jurisdiction: '', addr: '', proj: '', projs: [], cost: '',
     historic: false, septic: false, flood: false, corner: false,
@@ -133,7 +135,32 @@ export default function Wizard() {
     if (step === 3 && hasAccess() && state.proj && state.jurisdiction) {
       try {
         const user = await getUser()
-        if (user) {
+        if (user && state.addr && state.jurisdiction) {
+          // Check for existing projects at this address
+          const existing = await findProjectByAddress(state.addr, state.jurisdiction)
+          const currentProj = state.proj
+          const isSolo = ['sfh', 'adu', 'townhouse'].includes(currentProj)
+
+          if (existing.length > 0) {
+            const exactMatch = existing.find(p =>
+              (p.projs || [p.project_type]).includes(currentProj)
+            )
+
+            if (exactMatch) {
+              // Exact duplicate — ask user what to do, pause wizard progression
+              setDuplicateModal({ type: 'duplicate', existingProject: exactMatch, newProj: currentProj })
+              return // don't advance step
+            }
+
+            if (!isSolo) {
+              // Additive type (deck, pool, addition, reno, shed) at existing address — ask to attach
+              const bestExisting = existing[0]
+              setDuplicateModal({ type: 'attach', existingProject: bestExisting, newProj: currentProj })
+              return // don't advance step
+            }
+          }
+
+          // No conflict — save normally
           await saveProject({
             name: allProjs.length > 1
               ? `${allProjs.map(p => PROJ_LABELS[p] || p).join(' + ')} - ${state.addr || state.jurisdiction}`
@@ -154,7 +181,6 @@ export default function Wizard() {
           })
         }
       } catch (err) {
-        // Silent fail - don't block the wizard if save fails
         console.error('Project save error:', err.message)
       }
     }
@@ -265,8 +291,100 @@ export default function Wizard() {
   const displayActiveProj = activeProj || allProjs[0] || state.proj
   const cityName = isChapelHill ? 'Chapel Hill' : isDurham ? 'Durham' : isApex ? 'Apex' : isHollySprings ? 'Holly Springs' : isWakeForest ? 'Wake Forest' : isMorrisville ? 'Morrisville' : isGarner ? 'Garner' : isFuquayVarina ? 'Fuquay-Varina' : isCary ? 'Cary' : 'Raleigh'
 
+  // ── Duplicate modal handlers ─────────────────────────────────────────────
+  async function handleDuplicateOpenExisting() {
+    setDuplicateModal(null)
+    navigate('/dashboard')
+  }
+  async function handleDuplicateCreateNew() {
+    setDuplicateModal(null)
+    try {
+      await saveProject({
+        name: `${state.proj === 'sfh' ? 'New Home' : state.proj} - ${state.addr || state.jurisdiction}`,
+        jurisdiction: state.jurisdiction, addr: state.addr,
+        proj: state.proj, projs: state.projs || [state.proj],
+        cost: state.cost, historic: state.historic, septic: state.septic,
+        flood: state.flood, corner: state.corner, status: 'active',
+      })
+    } catch (err) { console.error('Force save error:', err.message) }
+    setStep(s => s + 1)
+  }
+  async function handleAttachToExisting() {
+    const { existingProject, newProj } = duplicateModal
+    setDuplicateModal(null)
+    try {
+      await addProjectTypeToExisting(existingProject.id, newProj, existingProject.projs || [existingProject.project_type])
+    } catch (err) { console.error('Attach error:', err.message) }
+    navigate('/dashboard')
+  }
+  async function handleCreateSeparate() {
+    setDuplicateModal(null)
+    try {
+      await saveProject({
+        name: `${PROJ_LABELS[state.proj] || state.proj} - ${state.addr || state.jurisdiction}`,
+        jurisdiction: state.jurisdiction, addr: state.addr,
+        proj: state.proj, projs: state.projs || [state.proj],
+        cost: state.cost, historic: state.historic, septic: state.septic,
+        flood: state.flood, corner: state.corner, status: 'active',
+      })
+    } catch (err) { console.error('Separate save error:', err.message) }
+    setStep(s => s + 1)
+  }
+
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+
+      {/* Duplicate / Attach modal */}
+      {duplicateModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
+            {duplicateModal.type === 'duplicate' ? (<>
+              <div className="text-base font-semibold text-gray-900 mb-2">Project already exists</div>
+              <p className="text-sm text-gray-500 leading-relaxed mb-5">
+                You already have a <strong>{PROJ_LABELS[duplicateModal.newProj] || duplicateModal.newProj}</strong> project
+                at <strong>{duplicateModal.existingProject.address}</strong>.
+                Open the existing one, or create a new separate project?
+              </p>
+              <div className="flex flex-col gap-2">
+                <button onClick={handleDuplicateOpenExisting}
+                  className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors">
+                  Open existing project
+                </button>
+                <button onClick={handleDuplicateCreateNew}
+                  className="w-full py-2.5 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:border-gray-300 transition-colors">
+                  Create new separate project
+                </button>
+                <button onClick={() => setDuplicateModal(null)}
+                  className="text-xs text-gray-400 hover:text-gray-600 text-center mt-1">
+                  Cancel
+                </button>
+              </div>
+            </>) : (<>
+              <div className="text-base font-semibold text-gray-900 mb-2">Add to existing project?</div>
+              <p className="text-sm text-gray-500 leading-relaxed mb-5">
+                We found an existing project at <strong>{duplicateModal.existingProject.address}</strong>.
+                Add this <strong>{PROJ_LABELS[duplicateModal.newProj] || duplicateModal.newProj}</strong> to it,
+                or track it as a separate project?
+              </p>
+              <div className="flex flex-col gap-2">
+                <button onClick={handleAttachToExisting}
+                  className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors">
+                  Add to existing project at this address
+                </button>
+                <button onClick={handleCreateSeparate}
+                  className="w-full py-2.5 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:border-gray-300 transition-colors">
+                  Track as a separate project
+                </button>
+                <button onClick={() => setDuplicateModal(null)}
+                  className="text-xs text-gray-400 hover:text-gray-600 text-center mt-1">
+                  Cancel
+                </button>
+              </div>
+            </>)}
+          </div>
+        </div>
+      )}
+
 
       {/* Progress bar */}
       <div className="flex items-center mb-10">
