@@ -926,9 +926,12 @@ export default function Dashboard() {
                   lifecycle?.summary?.complete === lifecycle?.summary?.total
 
                 return (
-                  <div key={project.id} className="bg-white border border-gray-100 rounded-xl p-4 hover:border-gray-200 transition-colors">
+                  <div key={project.id}
+                    className={`bg-white border rounded-xl p-4 transition-colors cursor-pointer ${isExpanded ? 'border-gray-300 shadow-sm' : 'border-gray-100 hover:border-gray-200'}`}
+                    onClick={() => handleExpandProject(project)}
+                  >
                     {/* Row 1 — title + controls */}
-                    <div className="flex items-center justify-between gap-3 mb-2">
+                    <div className="flex items-center justify-between gap-3 mb-2" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         {/* Health dot */}
                         {hasIssues && <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" title="Overdue deadlines" />}
@@ -969,7 +972,7 @@ export default function Dashboard() {
                         )}
                         {/* Lifecycle expand/collapse */}
                         <button
-                          onClick={() => handleExpandProject(project)}
+                          onClick={e => { e.stopPropagation(); handleExpandProject(project) }}
                           className={`text-xs px-3 py-1.5 rounded-lg border transition-colors font-medium ${
                             isExpanded
                               ? 'bg-gray-900 text-white border-gray-900'
@@ -994,7 +997,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Row 2 — metadata */}
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
                       <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${JUR_COLORS[project.jurisdiction] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
                         {JUR_LABELS[project.jurisdiction] || project.jurisdiction}
                       </span>
@@ -1007,34 +1010,38 @@ export default function Dashboard() {
                       {project.permit_count && <><span className="text-xs text-gray-300">·</span><span className="text-xs text-gray-400">{project.permit_count} permits</span></>}
                       {project.timeline && <span className="text-xs text-gray-400">{project.timeline}</span>}
                       {project.fees && <span className="text-xs text-gray-400">{project.fees}</span>}
-                      {typePickerProject !== project.id && (
+                        {typePickerProject !== project.id && (
                         <button
-                          onClick={() => setTypePickerProject(typePickerProject === project.id ? null : project.id)}
+                          onClick={e => { e.stopPropagation(); setTypePickerProject(project.id) }}
                           className="text-xs text-brand-500 hover:text-brand-700 font-medium ml-1"
                         >
                           + Add project type
                         </button>
                       )}
+                      <span className="text-xs text-gray-300 ml-auto">
+                        {isExpanded ? '↑ collapse' : '↓ expand'}
+                      </span>
                     </div>
 
                     {/* Project type picker */}
                     {typePickerProject === project.id && (
-                      <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="mt-3 pt-3 border-t border-gray-100" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between mb-2">
                           <div className="text-xs font-medium text-gray-500">Select all project types for this job site:</div>
                           <button onClick={() => setTypePickerProject(null)} className="text-xs text-gray-400 hover:text-gray-600">✕ Close</button>
                         </div>
                         <div className="flex flex-wrap gap-1.5 mb-3">
                           {Object.entries(PROJ_LABELS).map(([id, label]) => {
-                            const current = project.projs || (project.project_type ? [project.project_type] : [])
+                            // Read from live projects state so selections update immediately
+                            const liveProject = projects.find(p => p.id === project.id) || project
+                            const current = liveProject.projs || (liveProject.project_type ? [liveProject.project_type] : [])
                             const selected = current.includes(id)
-                            const SOLO_TYPES = ['sfh', 'adu', 'townhouse']
-                            const isSolo = SOLO_TYPES.includes(id)
-                            const otherSoloSelected = current.some(p => SOLO_TYPES.includes(p) && p !== id)
+                            const isSolo = ['sfh', 'adu', 'townhouse'].includes(id)
+                            const otherSoloSelected = current.some(p => ['sfh', 'adu', 'townhouse'].includes(p) && p !== id)
                             const disabled = !selected && otherSoloSelected && !isSolo
                             return (
                               <button key={id}
-                                onClick={() => !disabled && handleToggleProjType(project, id)}
+                                onClick={() => !disabled && handleToggleProjType(liveProject, id)}
                                 disabled={disabled}
                                 className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${
                                   selected
@@ -1049,25 +1056,29 @@ export default function Dashboard() {
                           })}
                         </div>
                         {/* Pre-fill buttons for Durham/Raleigh multi-type projects */}
-                        {['durham', 'raleigh'].includes(project.jurisdiction) && (project.projs?.length > 1) && (
-                          <div>
-                            <div className="text-xs text-gray-500 mb-1.5">Pre-fill a permit application:</div>
-                            <div className="flex flex-wrap gap-1.5">
-                              {(project.projs || []).map(pt => (
-                                <Link key={pt}
-                                  to={`/apply?a=${encodeURIComponent(project.address || '')}&p=${pt}&s=${project.flags?.septic ? '1' : '0'}&j=${project.jurisdiction}`}
-                                  className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors">
-                                  📋 {PROJ_LABELS[pt] || pt}
-                                </Link>
-                              ))}
+                        {(() => {
+                          const lp = projects.find(p => p.id === project.id) || project
+                          return ['durham', 'raleigh'].includes(lp.jurisdiction) && (lp.projs?.length > 1) && (
+                            <div>
+                              <div className="text-xs text-gray-500 mb-1.5">Pre-fill a permit application:</div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {(lp.projs || []).map(pt => (
+                                  <Link key={pt}
+                                    to={`/apply?a=${encodeURIComponent(lp.address || '')}&p=${pt}&s=${lp.flags?.septic ? '1' : '0'}&j=${lp.jurisdiction}`}
+                                    className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors">
+                                    📋 {PROJ_LABELS[pt] || pt}
+                                  </Link>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )
+                        })()}
                       </div>
                     )}
 
                     {/* Lifecycle panel */}
                     {isExpanded && (
+                      <div onClick={e => e.stopPropagation()}>
                       <LifecyclePanel
                         project={project}
                         lifecycle={lifecycle}
@@ -1076,6 +1087,7 @@ export default function Dashboard() {
                         onFieldUpdate={handleFieldUpdate}
                         loading={lLoading}
                       />
+                      </div>
                     )}
                   </div>
                 )
