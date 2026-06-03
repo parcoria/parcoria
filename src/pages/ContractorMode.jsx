@@ -128,6 +128,14 @@ const PROJ_COLORS = {
   townhouse: 'bg-rose-50 text-rose-700 border-rose-200',
 }
 
+const JOB_STATUS_STYLES = {
+  active:     'bg-green-50 text-green-700 border-green-100',
+  permitting: 'bg-blue-50 text-blue-700 border-blue-100',
+  inspection: 'bg-purple-50 text-purple-700 border-purple-100',
+  complete:   'bg-gray-100 text-gray-500 border-gray-200',
+  on_hold:    'bg-orange-50 text-orange-700 border-orange-100',
+}
+
 const JUR_LABELS = {
   raleigh: 'Raleigh', durham: 'Durham', chapelhill: 'Chapel Hill',
   apex: 'Apex', hollysprings: 'Holly Springs', wakeforest: 'Wake Forest',
@@ -157,6 +165,17 @@ export default function ContractorMode() {
   const [editingJob, setEditingJob] = useState(null)
   const [jobForm, setJobForm] = useState(EMPTY_JOB)
   const [savingJob, setSavingJob] = useState(false)
+  const [openStatusId, setOpenStatusId] = useState(null) // only one status dropdown open at a time
+
+  // Close status dropdown on outside click
+  useEffect(() => {
+    if (!openStatusId) return
+    function handleOutside(e) {
+      if (!e.target.closest('[data-status-dropdown]')) setOpenStatusId(null)
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [openStatusId])
 
   // Profile state
   const [profile, setProfile] = useState(null)
@@ -569,10 +588,36 @@ export default function ContractorMode() {
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <div className="text-sm font-semibold text-gray-900 truncate">{job.client_name}</div>
-                      <select value={job.status} onChange={e => handleStatusChange(job.id, e.target.value)}
-                        className="flex-shrink-0 text-xs px-2 py-0.5 rounded-full border font-medium cursor-pointer focus:outline-none bg-gray-50 text-gray-600 border-gray-200">
-                        {Object.entries(JOB_STATUSES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                      </select>
+                      <div className="relative flex-shrink-0" data-status-dropdown="true">
+                        <button
+                          onClick={e => { e.stopPropagation(); setOpenStatusId(openStatusId === job.id ? null : job.id) }}
+                          className={`text-xs px-2.5 py-1 rounded-full border font-medium flex items-center gap-1 ${JOB_STATUS_STYLES[job.status] || 'bg-gray-50 text-gray-600 border-gray-200'}`}
+                        >
+                          {JOB_STATUSES[job.status] || job.status}
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {openStatusId === job.id && (
+                          <div className="absolute top-full left-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-20 min-w-[160px] py-1">
+                            {Object.entries(JOB_STATUSES).map(([k, v]) => (
+                              <button key={k}
+                                onClick={e => { e.stopPropagation(); handleStatusChange(job.id, k); setOpenStatusId(null) }}
+                                className={`w-full text-left text-xs px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 ${k === job.status ? 'font-semibold text-brand-600' : 'text-gray-700'}`}
+                              >
+                                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                  k === 'active' ? 'bg-green-500' :
+                                  k === 'permitting' ? 'bg-blue-500' :
+                                  k === 'inspection' ? 'bg-purple-500' :
+                                  k === 'complete' ? 'bg-gray-400' :
+                                  'bg-orange-500'
+                                }`} />
+                                {v}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button onClick={() => { setTab(t('templates_title')); setTemplateVars(v => ({ ...v, client_name: job.client_name, address: job.address, jurisdiction: JUR_LABELS[job.jurisdiction] || job.jurisdiction, project_type: PROJ_LABELS[job.project_type] || job.project_type })) }}
