@@ -104,6 +104,30 @@ const JURISDICTION_PORTAL_IDS = [
   },
 ]
 
+const JUR_COLORS = {
+  raleigh:      'bg-brand-50 text-brand-700 border-brand-100',
+  durham:       'bg-amber-50 text-amber-700 border-amber-100',
+  chapelhill:   'bg-blue-50 text-blue-700 border-blue-100',
+  apex:         'bg-green-50 text-green-700 border-green-100',
+  hollysprings: 'bg-purple-50 text-purple-700 border-purple-100',
+  wakeforest:   'bg-teal-50 text-teal-700 border-teal-100',
+  morrisville:  'bg-cyan-50 text-cyan-700 border-cyan-100',
+  garner:       'bg-orange-50 text-orange-700 border-orange-100',
+  fuquayvarina: 'bg-rose-50 text-rose-700 border-rose-100',
+  cary:         'bg-indigo-50 text-indigo-700 border-indigo-100',
+}
+
+const PROJ_COLORS = {
+  sfh:       'bg-brand-50 text-brand-700 border-brand-200',
+  adu:       'bg-purple-50 text-purple-700 border-purple-200',
+  addition:  'bg-blue-50 text-blue-700 border-blue-200',
+  deck:      'bg-teal-50 text-teal-700 border-teal-200',
+  reno:      'bg-orange-50 text-orange-700 border-orange-200',
+  pool:      'bg-cyan-50 text-cyan-700 border-cyan-200',
+  shed:      'bg-lime-50 text-lime-700 border-lime-200',
+  townhouse: 'bg-rose-50 text-rose-700 border-rose-200',
+}
+
 const JUR_LABELS = {
   raleigh: 'Raleigh', durham: 'Durham', chapelhill: 'Chapel Hill',
   apex: 'Apex', hollysprings: 'Holly Springs', wakeforest: 'Wake Forest',
@@ -259,6 +283,7 @@ export default function ContractorMode() {
       address: job.address || '',
       jurisdiction: job.jurisdiction || 'raleigh',
       projectType: job.project_type || 'sfh',
+      projs: job.projs || (job.project_type ? [job.project_type] : ['sfh']),
       status: job.status || 'active',
       notes: job.notes || '',
       nextAction: job.next_action || '',
@@ -280,6 +305,7 @@ export default function ContractorMode() {
           address: jobForm.address,
           jurisdiction: jobForm.jurisdiction,
           project_type: jobForm.projectType,
+          projs: jobForm.projs?.length > 0 ? jobForm.projs : [jobForm.projectType],
           status: jobForm.status,
           notes: jobForm.notes,
           next_action: jobForm.nextAction,
@@ -566,6 +592,27 @@ export default function ContractorMode() {
                           </svg>
                         </Link>
                       )}
+                      {/* Lifecycle — gated behind active subscription */}
+                      {hasAccess() ? (
+                        <Link
+                          to={`/dashboard?highlight=${job.id}`}
+                          className="p-2 text-gray-400 hover:text-brand-600 rounded-lg hover:bg-brand-50 transition-colors"
+                          title="Track permit lifecycle"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </Link>
+                      ) : (
+                        <Link to="/pricing"
+                          className="p-2 text-gray-200 rounded-lg cursor-not-allowed"
+                          title="Upgrade to track permit lifecycle"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </Link>
+                      )}
                       <button onClick={() => startEditJob(job)}
                         className="p-2 text-gray-400 hover:text-brand-600 rounded-lg hover:bg-brand-50 transition-colors" title="Edit">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -580,13 +627,21 @@ export default function ContractorMode() {
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap text-xs text-gray-400">
-                    <span>{JUR_LABELS[job.jurisdiction] || job.jurisdiction}</span>
-                    <span className="text-gray-200">·</span>
-                    <span>{PROJ_LABELS[job.project_type] || job.project_type}</span>
-                    <span className="text-gray-200">·</span>
-                    <span className="truncate max-w-xs">{job.address}</span>
+                  {/* Pills row */}
+                  <div className="flex items-center gap-1.5 flex-wrap mt-1 mb-1">
+                    <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${JUR_COLORS[job.jurisdiction] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                      {JUR_LABELS[job.jurisdiction] || job.jurisdiction}
+                    </span>
+                    {(job.projs?.length > 0 ? job.projs : job.project_type ? [job.project_type] : []).map(pt => (
+                      <span key={pt} className={`text-xs px-2 py-0.5 rounded-full border font-medium ${PROJ_COLORS[pt] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                        {PROJ_LABELS[pt] || pt}
+                      </span>
+                    ))}
                   </div>
+                  {/* Address row */}
+                  {job.address && (
+                    <div className="text-xs text-gray-500 font-medium">{job.address}</div>
+                  )}
                   {job.next_action && (
                     <div className="mt-2 flex items-center gap-2">
                       <span className="text-xs px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-full font-medium">Next:</span>
