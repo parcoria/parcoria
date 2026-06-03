@@ -587,7 +587,29 @@ export default function Wizard() {
                           {pm.portal && isDurham && <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-purple-50 text-purple-700 border border-purple-100">{pm.portal}</span>}
                           <span className="text-xs text-gray-400">⏱ {pm.time}</span>
                         </div>
-                        <a href={pm.url} target="_blank" rel="noreferrer" className="text-xs text-brand-600 hover:text-brand-700 mt-1.5 inline-block">Apply / view details ↗</a>
+                        <div className="flex items-center gap-3 flex-wrap mt-1.5">
+                          {(pm.applyUrl === 'PREFILL') ? (
+                            <a href={`/apply?j=${state.jurisdiction}&p=${state.proj || 'sfh'}&a=${encodeURIComponent(state.addr || '')}&permit=${
+                              (pm.name||'').toLowerCase().includes('electrical') ? 'electrical' :
+                              (pm.name||'').toLowerCase().includes('plumbing') ? 'plumbing' :
+                              (pm.name||'').toLowerCase().includes('mechanical') ? 'mechanical' : 'building'
+                            }`}
+                              className="text-xs font-semibold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-colors">
+                              📋 Pre-fill application
+                            </a>
+                          ) : (pm.applyUrl || pm.url) ? (
+                            <a href={pm.applyUrl || pm.url} target="_blank" rel="noreferrer"
+                              className="text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-2.5 py-1 rounded-md transition-colors">
+                              Apply ↗
+                            </a>
+                          ) : null}
+                          {pm.detailsUrl && pm.detailsUrl !== (pm.applyUrl || pm.url) && (
+                            <a href={pm.detailsUrl} target="_blank" rel="noreferrer"
+                              className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+                              View requirements ↗
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
