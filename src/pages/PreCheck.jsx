@@ -254,7 +254,7 @@ Provide a thorough plan review report as described in your instructions.`
           'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 4096,
           system: STAGE2_SYSTEM,
           messages: [{
@@ -454,7 +454,7 @@ function Questionnaire() {
           'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 2048,
           system: STAGE1_SYSTEM,
           messages: [{ role: 'user', content: prompt }],
