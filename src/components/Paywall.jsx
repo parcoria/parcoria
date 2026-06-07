@@ -100,7 +100,7 @@ export default function Paywall({ jurisdiction, proj, addr }) {
             </div>
             <div className={`text-xs mb-2 ${selectedTier === 'homeowner' ? 'text-brand-500' : 'text-gray-400'}`}>One project</div>
             <div className={`text-xl font-semibold ${selectedTier === 'homeowner' ? 'text-brand-700' : 'text-gray-900'}`}>
-              $79 <span className={`text-xs font-normal ${selectedTier === 'homeowner' ? 'text-brand-500' : 'text-gray-400'}`}>one-time</span>
+              $149 <span className={`text-xs font-normal ${selectedTier === 'homeowner' ? 'text-brand-500' : 'text-gray-400'}`}>one-time</span>
             </div>
           </button>
 
@@ -174,7 +174,7 @@ export default function Paywall({ jurisdiction, proj, addr }) {
             ? 'Redirecting to checkout...'
             : isDev
               ? `Start Developer — ${billing === 'annual' ? '$2,990/yr' : '$299/mo'} ↗`
-              : 'Get Homeowner access — $79 ↗'
+              : 'Get Homeowner access — $149 ↗'
           }
         </button>
 

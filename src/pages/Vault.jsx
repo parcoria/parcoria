@@ -5,7 +5,7 @@ import {
   uploadDocument, getDocuments, downloadDocument, deleteDocument,
   formatFileSize, DOCUMENT_TYPES, MILESTONE_TAGS
 } from '../lib/vault'
-import { isDeveloper } from '../lib/access'
+import { isDeveloper, isContractor } from '../lib/access'
 
 const TYPE_ICONS = {
   survey: '🗺️', permit_application: '📋', permit_approval: '✅',
@@ -50,7 +50,7 @@ export default function Vault() {
   const [showUploadForm, setShowUploadForm] = useState(false)
 
   useEffect(() => {
-    if (!isDeveloper()) {
+    if (!isDeveloper() && !isContractor()) {
       navigate('/pricing')
       return
     }

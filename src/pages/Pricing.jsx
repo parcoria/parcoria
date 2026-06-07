@@ -8,27 +8,38 @@ const FEATURES_HOMEOWNER = [
   'Full permit wizard — one project',
   'Buildability check + live FEMA flood data',
   'AI Concierge — 30 days access',
-  'Plan Pre-Check — one submission',
+  'Plan Pre-Check questionnaire',
   'Shareable roadmap URL',
   'Week-by-week action plan',
   'Email support',
 ]
 
-const FEATURES_DEVELOPER = [
-  'Everything in Homeowner',
-  'Unlimited projects — all 5 jurisdictions',
-  'Multi-project dashboard',
+const FEATURES_CONTRACTOR = [
+  'Contractor profile — license, insurance, bond saved once',
+  'Client job tracker — all permits across all jobs',
+  'Lifecycle tracker — stage every permit through to CO',
+  '6 client communication templates',
+  'Full permit wizard — unlimited jobs',
   'AI Concierge — permanent access',
-  'Plan Pre-Check — unlimited submissions',
+  'Plan Pre-Check — unlimited (Stage 1 + PDF review)',
+  'Evidence vault — document storage per project',
+]
+
+const FEATURES_DEVELOPER = [
+  'Everything in Contractor',
+  'Multi-project portfolio dashboard',
+  'Contractor network — build and manage your sub list',
+  'Plan Pre-Check — unlimited (Stage 1 + PDF review)',
   'Project history vault — permanent',
+  'Weekly permit digest email',
   'Priority support — 24hr response',
 ]
 
-async function startContractorCheckout(email) {
+async function startContractorCheckout(email, billing = 'monthly') {
   const res = await fetch('/api/create-contractor-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, billing }),
   })
   const data = await res.json()
   if (data.error) throw new Error(data.error)
@@ -48,57 +59,76 @@ async function startDeveloperCheckout(email, billing = 'monthly') {
   window.location.href = data.url
 }
 
+function CheckIcon({ brand = false }) {
+  return (
+    <svg className={`w-4 h-4 flex-shrink-0 mt-0.5 ${brand ? 'text-brand-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+    </svg>
+  )
+}
+
+function BillingToggle({ billing, setBilling, monthlySavings }) {
+  return (
+    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 mb-4 w-fit">
+      <button
+        onClick={() => setBilling('monthly')}
+        className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${billing === 'monthly' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+      >
+        Monthly
+      </button>
+      <button
+        onClick={() => setBilling('annual')}
+        className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 ${billing === 'annual' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+      >
+        Annual
+        <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-semibold">Save ${monthlySavings}</span>
+      </button>
+    </div>
+  )
+}
+
 export default function Pricing() {
-  useLang() // re-render on language change
+  useLang()
   const [homeownerLoading, setHomeownerLoading] = useState(false)
   const [contractorLoading, setContractorLoading] = useState(false)
   const [developerLoading, setDeveloperLoading] = useState(false)
   const [homeownerEmail, setHomeownerEmail] = useState('')
   const [contractorEmail, setContractorEmail] = useState('')
   const [developerEmail, setDeveloperEmail] = useState('')
-  const [billing, setBilling] = useState('monthly') // monthly | annual
+  const [contractorBilling, setContractorBilling] = useState('monthly')
+  const [developerBilling, setDeveloperBilling] = useState('monthly')
   const [error, setError] = useState('')
 
+  // Contractor: $149/mo × 12 = $1,788 vs $1,499/yr → save $289
+  // Developer:  $299/mo × 12 = $3,588 vs $2,999/yr → save $589
+  const contractorAnnualSavings = (149 * 12) - 1499   // 289
+  const developerAnnualSavings  = (299 * 12) - 2999   // 589
+
   async function handleHomeowner() {
-    setHomeownerLoading(true)
-    setError('')
-    try {
-      await startCheckout({ email: homeownerEmail })
-    } catch {
-      setError('Something went wrong. Please try again.')
-      setHomeownerLoading(false)
-    }
+    setHomeownerLoading(true); setError('')
+    try { await startCheckout({ email: homeownerEmail }) }
+    catch { setError('Something went wrong. Please try again.'); setHomeownerLoading(false) }
   }
 
   async function handleContractor() {
-    setContractorLoading(true)
-    setError('')
-    try {
-      await startContractorCheckout(contractorEmail)
-    } catch {
-      setError('Something went wrong. Please try again.')
-      setContractorLoading(false)
-    }
+    setContractorLoading(true); setError('')
+    try { await startContractorCheckout(contractorEmail, contractorBilling) }
+    catch { setError('Something went wrong. Please try again.'); setContractorLoading(false) }
   }
 
   async function handleDeveloper() {
-    setDeveloperLoading(true)
-    setError('')
-    try {
-      await startDeveloperCheckout(developerEmail, billing)
-    } catch {
-      setError('Something went wrong. Please try again.')
-      setDeveloperLoading(false)
-    }
+    setDeveloperLoading(true); setError('')
+    try { await startDeveloperCheckout(developerEmail, developerBilling) }
+    catch { setError('Something went wrong. Please try again.'); setDeveloperLoading(false) }
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16">
 
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-3">Simple, honest pricing</h1>
+        <h1 className="text-3xl font-semibold text-gray-900 mb-3">Pay per project or go unlimited</h1>
         <p className="text-gray-500 text-base max-w-lg mx-auto">
-          Start with a single project. Upgrade when you're ready to scale.
+          One roadmap for a single build, or a full platform for every permit you pull.
         </p>
       </div>
 
@@ -127,12 +157,12 @@ export default function Pricing() {
         {/* Homeowner */}
         <div className="bg-white border border-gray-200 rounded-2xl p-7">
           <div className="mb-5">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">{t("price_homeowner")}</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">{t('price_homeowner')}</h2>
             <p className="text-sm text-gray-500 leading-relaxed">First-time builders and owner-builders navigating permits for a single project.</p>
           </div>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-4xl font-semibold text-gray-900">$79</span>
-            <span className="text-gray-400 text-sm">{t("price_one_time")} · per project</span>
+            <span className="text-4xl font-semibold text-gray-900">$149</span>
+            <span className="text-gray-400 text-sm">{t('price_one_time')} · per project</span>
           </div>
           <p className="text-xs text-gray-400 mb-6">No subscription. No renewal. Pay once.</p>
 
@@ -143,15 +173,13 @@ export default function Pricing() {
 
           <button onClick={handleHomeowner} disabled={homeownerLoading}
             className="w-full py-3 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 mb-4">
-            {homeownerLoading ? 'Redirecting...' : t('price_get_started') + ' — $79 ↗'}
+            {homeownerLoading ? 'Redirecting...' : t('price_get_started') + ' — $149 ↗'}
           </button>
 
-          <div className="border-t border-gray-100 pt-4">
+          <div className="border-t border-gray-100 pt-4 space-y-2.5">
             {FEATURES_HOMEOWNER.map((f, i) => (
-              <div key={i} className="flex items-start gap-2.5 mb-2.5">
-                <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
+              <div key={i} className="flex items-start gap-2.5">
+                <CheckIcon />
                 <span className="text-sm text-gray-600">{f}</span>
               </div>
             ))}
@@ -159,16 +187,32 @@ export default function Pricing() {
         </div>
 
         {/* Contractor */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6">
+        <div className="bg-white border border-gray-200 rounded-2xl p-7">
           <div className="mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">{t("price_contractor")}</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">{t('price_contractor')}</h2>
             <p className="text-sm text-gray-500 leading-relaxed">Licensed NC contractors managing permits across multiple client jobs.</p>
           </div>
+
+          <BillingToggle billing={contractorBilling} setBilling={setContractorBilling} monthlySavings={contractorAnnualSavings} />
+
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-3xl font-semibold text-gray-900">$149</span>
-            <span className="text-gray-400 text-sm">{t("price_month")}</span>
+            {contractorBilling === 'monthly' ? (
+              <>
+                <span className="text-4xl font-semibold text-gray-900">$149</span>
+                <span className="text-gray-400 text-sm">{t('price_month')}</span>
+              </>
+            ) : (
+              <>
+                <span className="text-4xl font-semibold text-gray-900">$1,499</span>
+                <span className="text-gray-400 text-sm">/year</span>
+              </>
+            )}
           </div>
-          <p className="text-xs text-gray-400 mb-5">{t("price_cancel")}</p>
+          <p className="text-xs text-gray-400 mb-5">
+            {contractorBilling === 'monthly'
+              ? 'Cancel anytime · switch to annual to save $289/year'
+              : 'Equivalent to $125/month · save 2 months · cancel anytime'}
+          </p>
 
           <label className="text-xs font-medium text-gray-600 block mb-1.5">Your email</label>
           <input type="email" value={contractorEmail} onChange={e => setContractorEmail(e.target.value)}
@@ -177,15 +221,13 @@ export default function Pricing() {
 
           <button onClick={handleContractor} disabled={contractorLoading}
             className="w-full py-2.5 bg-gray-800 text-white text-sm font-semibold rounded-xl hover:bg-gray-900 transition-colors disabled:opacity-50 mb-4">
-            {contractorLoading ? 'Redirecting...' : t('price_get_started') + ' — $149/mo ↗'}
+            {contractorLoading ? 'Redirecting...' : contractorBilling === 'annual' ? 'Start Contractor — $1,499/yr ↗' : 'Start Contractor — $149/mo ↗'}
           </button>
 
-          <div className="border-t border-gray-100 pt-3">
-            {['Contractor profile — license, insurance, bond saved once', 'Client job tracker — all permits across all jobs', '6 client communication templates', 'Full permit wizard — unlimited jobs', 'AI Concierge — permanent access', 'Plan Pre-Check — unlimited'].map((f, i) => (
-              <div key={i} className="flex items-start gap-2 mb-2">
-                <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
+          <div className="border-t border-gray-100 pt-4 space-y-2">
+            {FEATURES_CONTRACTOR.map((f, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <CheckIcon />
                 <span className="text-xs text-gray-600">{f}</span>
               </div>
             ))}
@@ -197,42 +239,30 @@ export default function Pricing() {
           <div className="absolute -top-3 left-6">
             <span className="bg-brand-600 text-white text-xs font-semibold px-3 py-1 rounded-full">Most popular</span>
           </div>
-          <div className="mb-5">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">{t("price_developer")}</h2>
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">{t('price_developer')}</h2>
             <p className="text-sm text-gray-500 leading-relaxed">Small residential developers building 3–15 homes/year across the Triangle.</p>
           </div>
-          {/* Billing toggle */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 mb-4 w-fit">
-            <button
-              onClick={() => setBilling('monthly')}
-              className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${billing === 'monthly' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBilling('annual')}
-              className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 ${billing === 'annual' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              Annual
-              <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-semibold">Save $598</span>
-            </button>
-          </div>
+
+          <BillingToggle billing={developerBilling} setBilling={setDeveloperBilling} monthlySavings={developerAnnualSavings} />
 
           <div className="flex items-baseline gap-2 mb-1">
-            {billing === 'monthly' ? (
+            {developerBilling === 'monthly' ? (
               <>
                 <span className="text-4xl font-semibold text-gray-900">$299</span>
-                <span className="text-gray-400 text-sm">{t("price_month")}</span>
+                <span className="text-gray-400 text-sm">{t('price_month')}</span>
               </>
             ) : (
               <>
-                <span className="text-4xl font-semibold text-gray-900">$2,990</span>
+                <span className="text-4xl font-semibold text-gray-900">$2,999</span>
                 <span className="text-gray-400 text-sm">/year</span>
               </>
             )}
           </div>
           <p className="text-xs text-gray-400 mb-4">
-            {billing === 'monthly' ? 'Cancel anytime · switch to annual to save $598/year' : 'Equivalent to $249/month · save 2 months · cancel anytime'}
+            {developerBilling === 'monthly'
+              ? 'Cancel anytime · switch to annual to save $589/year'
+              : 'Equivalent to $250/month · save 2 months · cancel anytime'}
           </p>
 
           <label className="text-xs font-medium text-gray-600 block mb-1.5">Your email</label>
@@ -242,15 +272,13 @@ export default function Pricing() {
 
           <button onClick={handleDeveloper} disabled={developerLoading}
             className="w-full py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50 mb-4">
-            {developerLoading ? 'Redirecting...' : billing === 'annual' ? 'Start Developer — $2,990/yr ↗' : 'Start Developer — $299/mo ↗'}
+            {developerLoading ? 'Redirecting...' : developerBilling === 'annual' ? 'Start Developer — $2,999/yr ↗' : 'Start Developer — $299/mo ↗'}
           </button>
 
-          <div className="border-t border-gray-100 pt-4">
+          <div className="border-t border-gray-100 pt-4 space-y-2.5">
             {FEATURES_DEVELOPER.map((f, i) => (
-              <div key={i} className="flex items-start gap-2.5 mb-2.5">
-                <svg className="w-4 h-4 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
+              <div key={i} className="flex items-start gap-2.5">
+                <CheckIcon brand />
                 <span className="text-sm text-gray-600">{f}</span>
               </div>
             ))}
@@ -282,11 +310,12 @@ export default function Pricing() {
         <h3 className="text-base font-semibold text-gray-900 mb-4 text-center">Common questions</h3>
         {[
           { q: 'What counts as one project?', a: 'One property address and one structure type. An ADU on the same property is a separate project.' },
-          { q: 'What jurisdictions are covered?', a: 'Raleigh, Durham, Chapel Hill, Apex, and Holly Springs — the full Research Triangle plus the fastest-growing Wake County municipalities.' },
-          { q: 'Can I cancel my Developer subscription?', a: 'Yes — cancel anytime from your Stripe billing portal. You retain access until the end of your current billing period.' },
-          { q: 'What happens to my projects if I cancel Developer?', a: 'Your project data is retained for 90 days after cancellation. You can export or reactivate within that window.' },
-          { q: 'Does the Homeowner AI Concierge really expire after 30 days?', a: 'Yes. Most permit processes resolve within 30 days. If you need longer, purchase a second project or upgrade to Developer.' },
-          { q: 'Can I get a refund?', a: 'Homeowner: yes within 7 days if unused. Developer: prorated refund within 7 days of first charge. Contact support@parcoria.com.' },
+          { q: 'What jurisdictions are covered?', a: 'All 10 Research Triangle jurisdictions: Raleigh, Durham, Chapel Hill, Cary, Apex, Holly Springs, Wake Forest, Morrisville, Garner, and Fuquay-Varina.' },
+          { q: 'Can I cancel my subscription?', a: 'Yes — cancel anytime from your Stripe billing portal. You retain access until the end of your current billing period.' },
+          { q: 'What happens to my projects if I cancel?', a: 'Your project data is retained for 90 days after cancellation. You can export or reactivate within that window.' },
+          { q: 'Does the Homeowner AI Concierge really expire after 30 days?', a: 'Yes. Most permit processes resolve within 30 days. If you need longer, purchase a second project or upgrade to Contractor.' },
+          { q: 'What\'s the difference between Contractor and Developer?', a: 'Contractor is built for pulling permits on client jobs. Developer adds portfolio-level tracking across your own projects, a managed contractor network, and weekly digest emails.' },
+          { q: 'Can I get a refund?', a: 'Homeowner: yes within 7 days if unused. Contractor/Developer: prorated refund within 7 days of first charge. Contact support@parcoria.com.' },
         ].map((item, i) => (
           <div key={i} className="border-b border-gray-100 py-4">
             <div className="text-sm font-medium text-gray-900 mb-1.5">{item.q}</div>

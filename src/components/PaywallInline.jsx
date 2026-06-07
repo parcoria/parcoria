@@ -1,6 +1,6 @@
 // PaywallInline.jsx
 // Compact paywall shown inline over the blurred permit preview
-// No tier selection — just email + buy button for homeowner $79
+// No tier selection — just email + buy button for homeowner $149
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -37,7 +37,7 @@ export default function PaywallInline({ jurisdiction, proj, addr }) {
         disabled={loading}
         className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50"
       >
-        {loading ? 'Redirecting...' : 'Unlock full roadmap — $79 ↗'}
+        {loading ? 'Redirecting...' : 'Unlock full roadmap — $149 ↗'}
       </button>
       {error && <p className="text-xs text-red-500 text-center mt-1.5">{error}</p>}
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">

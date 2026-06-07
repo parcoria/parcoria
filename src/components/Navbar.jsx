@@ -78,7 +78,7 @@ export default function Navbar() {
           ) : (
             <Link to="/pricing"
               className="text-sm bg-brand-600 text-white px-4 py-1.5 rounded-lg hover:bg-brand-700 transition-colors font-medium">
-              Get started - $79
+              Get started - $149
             </Link>
           )}
         </div>
@@ -122,7 +122,7 @@ export default function Navbar() {
             </Link>
           ) : (
             <Link to="/pricing" className="text-sm bg-brand-600 text-white px-4 py-2 rounded-lg text-center font-medium" onClick={() => setOpen(false)}>
-              Get started - $79
+              Get started - $149
             </Link>
           )}
         </div>

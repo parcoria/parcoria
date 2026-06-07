@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
-import { hasAccess, isDeveloper } from '../lib/access'
+import { hasAccess, isDeveloper, isContractor } from '../lib/access'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -166,7 +166,7 @@ function Stage2Paywall() {
         ))}
       </div>
       <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-full px-4 py-2 text-xs text-amber-700 font-medium mb-5">
-        Developer plan required — $299/month
+        Available on Contractor ($149/mo) and Developer ($299/mo) plans
       </div>
       <div>
         <a href="/pricing" className="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors">
@@ -558,7 +558,7 @@ function Questionnaire() {
             className="flex-1 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
             Continue - {STEPS[step + 1].label}
           </button>
-        ) : (
+        ) : hasAccess() ? (
           <button onClick={generateReport} disabled={loading}
             className="flex-1 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50">
             {loading ? (
@@ -571,6 +571,11 @@ function Questionnaire() {
               </span>
             ) : 'Generate pre-check report ↗'}
           </button>
+        ) : (
+          <a href="/pricing"
+            className="flex-1 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors text-center">
+            Sign up to generate your report ↗
+          </a>
         )}
       </div>
       {error && <p className="text-xs text-red-500 mt-3 text-center">{error}</p>}
@@ -582,8 +587,6 @@ function Questionnaire() {
 
 export default function PreCheck() {
   const [activeTab, setActiveTab] = useState('stage1')
-
-  if (!hasAccess()) return <Stage1Paywall />
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
@@ -609,13 +612,13 @@ export default function PreCheck() {
         <button onClick={() => setActiveTab('stage2')}
           className={`flex-1 flex items-center justify-center gap-2 text-sm px-4 py-2 rounded-md font-medium transition-all ${activeTab === 'stage2' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
           <span>🔍</span> Stage 2 — PDF Review
-          {!isDeveloper() && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full ml-1">Dev</span>}
+          {!isDeveloper() && !isContractor() && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full ml-1">Pro</span>}
         </button>
       </div>
 
       {activeTab === 'stage1' && <Questionnaire />}
       {activeTab === 'stage2' && (
-        isDeveloper() ? <PdfReview /> : <Stage2Paywall />
+        (isDeveloper() || isContractor()) ? <PdfReview /> : <Stage2Paywall />
       )}
     </div>
   )

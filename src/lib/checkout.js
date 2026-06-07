@@ -1,5 +1,5 @@
 // src/lib/checkout.js
-// Initiates Stripe Checkout for Parcoria Homeowner Access ($79 one-time)
+// Initiates Stripe Checkout for Parcoria Homeowner Access ($149 one-time)
 
 export async function startCheckout({ jurisdiction, proj, addr, email }) {
   try {

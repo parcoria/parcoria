@@ -1,5 +1,6 @@
 // api/create-contractor-checkout.js
-// Stripe Checkout for Contractor Mode — $149/month recurring
+// Stripe Checkout for Contractor Mode
+// Supports both monthly ($149) and annual ($1,499) billing
 
 import Stripe from 'stripe'
 
@@ -11,16 +12,21 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const stripeKey = process.env.STRIPE_SECRET_KEY
-  const priceId = process.env.STRIPE_CONTRACTOR_PRICE_ID
+  const monthlyPriceId = process.env.STRIPE_CONTRACTOR_PRICE_ID
+  const annualPriceId = process.env.STRIPE_CONTRACTOR_ANNUAL_PRICE_ID
 
   if (!stripeKey) return res.status(500).json({ error: 'Stripe not configured' })
-  if (!priceId) return res.status(500).json({ error: 'Contractor price not configured — add STRIPE_CONTRACTOR_PRICE_ID to environment variables' })
+  if (!monthlyPriceId) return res.status(500).json({ error: 'Contractor price not configured — add STRIPE_CONTRACTOR_PRICE_ID to environment variables' })
 
   let body = req.body
   if (typeof body === 'string') {
     try { body = JSON.parse(body) } catch { body = {} }
   }
-  const { email } = body || {}
+
+  const { email, billing = 'monthly' } = body || {}
+
+  // Use annual price if requested and configured, else fall back to monthly
+  const priceId = billing === 'annual' && annualPriceId ? annualPriceId : monthlyPriceId
 
   try {
     const stripe = new Stripe(stripeKey, { apiVersion: '2024-04-10' })
@@ -30,8 +36,8 @@ export default async function handler(req, res) {
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       customer_email: email || undefined,
-      metadata: { tier: 'contractor' },
-      success_url: `${req.headers.origin}/success?tier=contractor&session_id={CHECKOUT_SESSION_ID}`,
+      metadata: { tier: 'contractor', billing },
+      success_url: `${req.headers.origin}/success?tier=contractor&billing=${billing}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.origin}/pricing`,
       allow_promotion_codes: true,
     })

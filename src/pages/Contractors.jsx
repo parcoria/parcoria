@@ -5,7 +5,7 @@ import {
   addContractor, getMyContractors, updateContractor, deleteContractor,
   TRADE_TYPES, getLicenseVerifyUrl, getLicenseBoardName
 } from '../lib/contractors'
-import { isDeveloper } from '../lib/access'
+import { isDeveloper, isContractor } from '../lib/access'
 
 const JURISDICTION_OPTIONS = [
   'raleigh', 'durham', 'chapelhill', 'apex', 'hollysprings',
@@ -102,7 +102,7 @@ export default function Contractors() {
   const [filterTrade, setFilterTrade] = useState('all')
 
   useEffect(() => {
-    if (!isDeveloper()) { navigate('/pricing'); return }
+    if (!isDeveloper() && !isContractor()) { navigate('/pricing'); return }
     loadAll()
   }, [])
 
