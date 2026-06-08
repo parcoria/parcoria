@@ -93,12 +93,14 @@ export default function SaveToDashboard({ state, data, saveStatus, setSaveStatus
       if (isContractor()) {
         await doSave()
         setSaveStatus('saved')
+        try { sessionStorage.removeItem('parcoria_wizard_state') } catch {}
         return
       }
 
       if (!state.addr || !state.jurisdiction || !state.proj) {
         await doSave()
         setSaveStatus('saved')
+        try { sessionStorage.removeItem('parcoria_wizard_state') } catch {}
         return
       }
 

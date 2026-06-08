@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { t, useLang } from '../lib/i18n'
 import { PROJECT_TYPES, PERMIT_DATA, PROFESSIONALS, INSPECTIONS } from '../data/raleigh'
@@ -82,12 +82,24 @@ export default function Wizard() {
   const navigate = useNavigate()
   useLang() // re-render on language change
   const [step, setStep] = useState(1)
-  const [state, setState] = useState({
-    jurisdiction: '', addr: '', proj: '', projs: [], cost: '',
-    historic: false, septic: false, flood: false, corner: false,
+  const [state, setState] = useState(() => {
+    // Restore from sessionStorage if returning from login
+    try {
+      const saved = sessionStorage.getItem('parcoria_wizard_state')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return {
+      jurisdiction: '', addr: '', proj: '', projs: [], cost: '',
+      historic: false, septic: false, flood: false, corner: false,
+    }
   })
-  const [activeProj, setActiveProj] = useState(null) // which tab is active in multi-project roadmap
-  const [saveStatus, setSaveStatus] = useState('idle') // idle | saving | saved | error
+  const [activeProj, setActiveProj] = useState(null)
+  const [saveStatus, setSaveStatus] = useState('idle')
+
+  // Persist wizard state to sessionStorage on every change so it survives navigation to /contractor login
+  useEffect(() => {
+    try { sessionStorage.setItem('parcoria_wizard_state', JSON.stringify(state)) } catch {}
+  }, [state])
 
   function update(key, val) { setState(s => ({ ...s, [key]: val })) }
 
@@ -154,6 +166,7 @@ export default function Wizard() {
               notes: '',
             })
             setSaveStatus('saved')
+            try { sessionStorage.removeItem('parcoria_wizard_state') } catch {}
           }
           // If no user session yet, silently skip — SaveToDashboard button will prompt them
         } catch (err) {

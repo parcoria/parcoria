@@ -384,7 +384,10 @@ export default function Dashboard() {
           </div>
           <h1 className="text-xl font-semibold text-gray-900 mb-2">One more step</h1>
           <p className="text-sm text-gray-500 leading-relaxed">
-            Enter the email you used when you signed up for Parcoria. We'll send you a secure login link — no password needed.
+            {isDeveloper()
+              ? 'Your Developer access is confirmed. Enter your email below to log in — your projects will load automatically.'
+              : 'Enter the email you used when you signed up for Parcoria. We\'ll send you a secure login link — no password needed.'
+            }
           </p>
         </div>
         {!magicLinkSent ? (
