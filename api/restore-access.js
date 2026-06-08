@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     if (customers.data.length > 0) {
       for (const customer of customers.data) {
 
-        // Step 2 — check for active Developer subscription first (highest tier)
+        // Step 2 — check active subscriptions — developer first (highest tier), then contractor
         const subs = await stripe.subscriptions.list({
           customer: customer.id,
           status: 'active',
@@ -42,6 +42,8 @@ export default async function handler(req, res) {
         })
         const devPriceId = process.env.STRIPE_DEVELOPER_PRICE_ID
         const devAnnualPriceId = process.env.STRIPE_DEVELOPER_ANNUAL_PRICE_ID
+        const contractorPriceId = process.env.STRIPE_CONTRACTOR_PRICE_ID
+        const contractorAnnualPriceId = process.env.STRIPE_CONTRACTOR_ANNUAL_PRICE_ID
 
         const devSub = subs.data.find(s =>
           s.items.data.some(i =>
@@ -54,6 +56,20 @@ export default async function handler(req, res) {
             success: true,
             tier: 'developer',
             message: 'Active Developer subscription confirmed — access restored',
+          })
+        }
+
+        const contractorSub = subs.data.find(s =>
+          s.items.data.some(i =>
+            i.price.id === contractorPriceId || i.price.id === contractorAnnualPriceId
+          )
+        )
+
+        if (contractorSub) {
+          return res.status(200).json({
+            success: true,
+            tier: 'contractor',
+            message: 'Active Contractor subscription confirmed — access restored',
           })
         }
 
@@ -88,7 +104,8 @@ export default async function handler(req, res) {
     )
 
     if (matchByEmail) {
-      const tier = matchByEmail.metadata?.tier === 'developer' ? 'developer' : 'homeowner'
+      const meta = matchByEmail.metadata?.tier
+      const tier = meta === 'developer' ? 'developer' : meta === 'contractor' ? 'contractor' : 'homeowner'
       return res.status(200).json({
         success: true,
         tier,

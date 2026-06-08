@@ -32,12 +32,13 @@ export default function SaveToDashboard({ state, data, saveStatus, setSaveStatus
   if (!user) {
     const dest = isContractor() ? '/contractor' : '/dashboard'
     const label = isContractor() ? 'Contractor' : 'Developer'
+    const action = isContractor() ? 'Log in via Contractor Mode to save jobs' : 'Log in to save this project'
     return (
-      <div className="w-full mt-2 bg-brand-50 border border-brand-100 rounded-lg px-4 py-3 flex items-center justify-between gap-3">
-        <div className="text-xs text-brand-700">
-          <strong>{label}:</strong> Log in to save this project
+      <div className="w-full mt-2 bg-amber-50 border border-amber-100 rounded-lg px-4 py-3 flex items-center justify-between gap-3">
+        <div className="text-xs text-amber-800">
+          <strong>{label}:</strong> {action}
         </div>
-        <Link to={dest} className="text-xs text-brand-600 font-semibold hover:text-brand-700 whitespace-nowrap">
+        <Link to={dest} className="text-xs text-amber-700 font-semibold hover:text-amber-900 whitespace-nowrap">
           Log in ↗
         </Link>
       </div>
@@ -137,7 +138,7 @@ export default function SaveToDashboard({ state, data, saveStatus, setSaveStatus
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
-          Project saved to your dashboard
+          {isContractor() ? 'Job saved to your jobs list' : 'Project saved to your dashboard'}
         </div>
         <Link to={isContractor() ? '/contractor' : '/dashboard'}
           className="text-xs text-green-700 font-semibold hover:text-green-800 whitespace-nowrap">

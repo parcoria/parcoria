@@ -129,35 +129,63 @@ export default function Wizard() {
     return PERMIT_DATA[p] || PERMIT_DATA.sfh
   }
   async function next() {
-    // Auto-save to projects table when moving to step 5
-    // Only for developer tier — contractors use SaveToDashboard → createJob instead
-    // Homeowners don't have a projects dashboard
-    if (step === 3 && hasAccess() && !isContractor() && state.proj && state.jurisdiction) {
-      try {
-        const user = await getUser()
-        if (user) {
-          await saveProject({
-            name: allProjs.length > 1
-              ? `${allProjs.map(p => PROJ_LABELS[p] || p).join(' + ')} - ${state.addr || state.jurisdiction}`
-              : `${state.proj === 'sfh' ? 'New Home' : state.proj} - ${state.addr || state.jurisdiction}`,
-            jurisdiction: state.jurisdiction,
-            addr: state.addr,
-            proj: state.proj,
-            projs: state.projs || [state.proj],
-            cost: state.cost,
-            historic: state.historic,
-            septic: state.septic,
-            flood: state.flood,
-            corner: state.corner,
-            permitCount: totalPermitCount,
-            timeline: allProjs.length > 1 ? maxTimeline : data?.timeline,
-            fees: allProjs.length > 1 ? combinedFees : data?.fees,
-            status: 'active',
-          })
+    // Auto-save when moving to step 4 (Permits → Professionals)
+    // Developers → projects table, Contractors → client_jobs table
+    // Homeowners have no dashboard, so no auto-save
+    if (step === 3 && state.proj && state.jurisdiction) {
+      const projs = state.projs?.length > 0 ? state.projs : [state.proj].filter(Boolean)
+      const primaryType = state.proj || projs[0] || 'sfh'
+      const jobAddress = state.addr || state.jurisdiction
+
+      if (isContractor()) {
+        try {
+          const user = await getUser()
+          if (user) {
+            const { createJob } = await import('../lib/client-jobs')
+            await createJob({
+              clientName: projs.length > 1
+                ? `${projs.map(p => PROJ_LABELS[p] || p).join(' + ')} — ${jobAddress}`
+                : `${PROJ_LABELS[primaryType] || primaryType} — ${jobAddress}`,
+              address: jobAddress,
+              jurisdiction: state.jurisdiction,
+              projectType: primaryType,
+              projs,
+              status: 'active',
+              notes: '',
+            })
+            setSaveStatus('saved')
+          }
+          // If no user session yet, silently skip — SaveToDashboard button will prompt them
+        } catch (err) {
+          console.error('Contractor auto-save error:', err.message)
+          // Silent fail — don't block the wizard
         }
-      } catch (err) {
-        // Silent fail - don't block the wizard if save fails
-        console.error('Project save error:', err.message)
+      } else if (hasAccess()) {
+        try {
+          const user = await getUser()
+          if (user) {
+            await saveProject({
+              name: allProjs.length > 1
+                ? `${allProjs.map(p => PROJ_LABELS[p] || p).join(' + ')} - ${jobAddress}`
+                : `${primaryType === 'sfh' ? 'New Home' : primaryType} - ${jobAddress}`,
+              jurisdiction: state.jurisdiction,
+              addr: state.addr,
+              proj: primaryType,
+              projs,
+              cost: state.cost,
+              historic: state.historic,
+              septic: state.septic,
+              flood: state.flood,
+              corner: state.corner,
+              permitCount: totalPermitCount,
+              timeline: allProjs.length > 1 ? maxTimeline : data?.timeline,
+              fees: allProjs.length > 1 ? combinedFees : data?.fees,
+              status: 'active',
+            })
+          }
+        } catch (err) {
+          console.error('Project save error:', err.message)
+        }
       }
     }
     setStep(s => s + 1)
@@ -509,7 +537,7 @@ export default function Wizard() {
                             +{lockedCount} more permit{lockedCount !== 1 ? 's' : ''}
                           </div>
                           <div className="text-xs text-gray-500 mb-4 leading-relaxed">
-                            Unlock the full roadmap, AI Concierge, licensed professionals guide, and Plan Pre-Check for $79.
+                            Unlock the full roadmap, AI Concierge, licensed professionals guide, and Plan Pre-Check for $149.
                           </div>
                           <PaywallInline jurisdiction={state.jurisdiction} proj={state.proj} addr={state.addr} />
                         </div>

@@ -30,8 +30,16 @@ export default function Restore() {
       if (data.success) {
         grantAccess(data.tier || 'homeowner')
         setStatus('success')
-        setMessage(data.tier === 'developer' ? 'Developer access restored — redirecting to dashboard...' : 'Access restored successfully.')
-        setTimeout(() => navigate(data.tier === 'developer' ? '/dashboard' : '/wizard'), 2000)
+        if (data.tier === 'developer') {
+          setMessage('Developer access restored — redirecting to dashboard...')
+          setTimeout(() => navigate('/dashboard'), 2000)
+        } else if (data.tier === 'contractor') {
+          setMessage('Contractor access restored — redirecting to your jobs...')
+          setTimeout(() => navigate('/contractor'), 2000)
+        } else {
+          setMessage('Homeowner access restored — redirecting...')
+          setTimeout(() => navigate('/wizard'), 2000)
+        }
       } else {
         setStatus('notfound')
         setMessage(data.message || 'No payment found for this email.')
