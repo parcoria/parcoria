@@ -52,12 +52,16 @@ export default function SaveToDashboard({ state, data, saveStatus, setSaveStatus
 
     if (isContractor()) {
       // Contractors save to their jobs list, not the developer dashboard
+      const projs = state.projs?.length > 0 ? state.projs : [state.proj].filter(Boolean)
+      const primaryType = state.proj || projs[0] || 'sfh'
+      const jobAddress = state.addr || state.jurisdiction || 'Unknown address'
+
       await createJob({
-        clientName: `${PROJ_LABELS[state.proj] || state.proj} — ${state.addr || state.jurisdiction}`,
-        address: state.addr,
+        clientName: `${PROJ_LABELS[primaryType] || primaryType} — ${jobAddress}`,
+        address: jobAddress,
         jurisdiction: state.jurisdiction,
-        projectType: state.proj,
-        projs: state.projs?.length > 0 ? state.projs : [state.proj],
+        projectType: primaryType,
+        projs,
         status: 'active',
         notes: `${permitCount} permits · ${data?.timeline || ''} · ${data?.fees || ''}`,
       })
@@ -82,17 +86,16 @@ export default function SaveToDashboard({ state, data, saveStatus, setSaveStatus
   }
 
   async function handleSave() {
-    if (!state.addr || !state.jurisdiction || !state.proj) {
-      setSaveStatus('saving')
-      try { await doSave(); setSaveStatus('saved') }
-      catch (err) { console.error('Save error:', err); setSaveStatus('error') }
-      return
-    }
-
     setSaveStatus('saving')
     try {
       // Contractors go straight to save — no duplicate check against projects table
       if (isContractor()) {
+        await doSave()
+        setSaveStatus('saved')
+        return
+      }
+
+      if (!state.addr || !state.jurisdiction || !state.proj) {
         await doSave()
         setSaveStatus('saved')
         return
