@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { startCheckout } from '../lib/checkout'
+import { startCheckout, startContractorCheckout, startDeveloperCheckout } from '../lib/checkout'
 import { isDeveloper, hasAccess, isContractor } from '../lib/access'
 import { t, useLang } from '../lib/i18n'
 
@@ -34,30 +34,6 @@ const FEATURES_DEVELOPER = [
   'Weekly permit digest email',
   'Priority support — 24hr response',
 ]
-
-async function startContractorCheckout(email, billing = 'monthly') {
-  const res = await fetch('/api/create-contractor-checkout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, billing }),
-  })
-  const data = await res.json()
-  if (data.error) throw new Error(data.error)
-  if (!data.url) throw new Error('No checkout URL')
-  window.location.href = data.url
-}
-
-async function startDeveloperCheckout(email, billing = 'monthly') {
-  const res = await fetch('/api/create-developer-checkout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, billing }),
-  })
-  const data = await res.json()
-  if (data.error) throw new Error(data.error)
-  if (!data.url) throw new Error('No checkout URL')
-  window.location.href = data.url
-}
 
 function CheckIcon({ brand = false }) {
   return (
