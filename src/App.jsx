@@ -21,6 +21,7 @@ import ProjectBrief from './pages/ProjectBrief'
 import ApplicationPrefill from './pages/ApplicationPrefill'
 import Guide from './pages/Guide'
 import Waitlist from './pages/Waitlist'
+import PermitHistoryPage from './pages/PermitHistoryPage'
 
 export default function App() {
   return (
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/sample" element={<SampleRoadmap />} />
             <Route path="/brief" element={<ProjectBrief />} />
             <Route path="/apply" element={<ApplicationPrefill />} />
+            <Route path="/permit-history" element={<PermitHistoryPage />} />
             <Route path="/learn/:slug" element={<Guide />} />
             <Route path="/waitlist" element={<Waitlist />} />
           </Routes>

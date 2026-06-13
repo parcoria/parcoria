@@ -8,6 +8,7 @@ import { LogoMark } from './Logo'
 const NAV_LINKS = [
   { to: '/', label: 'Home' },
   { to: '/wizard', label: 'Permit Wizard' },
+  { to: '/permit-history', label: 'Permit History' },
   { to: '/learn', label: 'Learn' },
   { to: '/directory', label: 'Contractors' },
   { to: '/pricing', label: 'Pricing' },

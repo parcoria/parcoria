@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { detectJurisdictionFromAddress, detectJurisdictionFromZip, getJurisdictionLabel, JURISDICTION_LABELS } from '../lib/detectJurisdiction'
+import PermitHistory from './PermitHistory'
 
 const ALL_JURISDICTIONS = [
   { id: 'raleigh', name: 'Raleigh', county: 'Wake County' },
@@ -16,7 +17,7 @@ const ALL_JURISDICTIONS = [
   { id: 'garner', name: 'Garner', county: 'Wake County' },
 ]
 
-export default function AddressDetector({ onComplete }) {
+export default function AddressDetector({ onComplete, lookupOnly = false }) {
   const [address, setAddress] = useState('')
   const [detecting, setDetecting] = useState(false)
   const [detected, setDetected] = useState(null) // { id, label, confidence, matchedAddress, floodResult }
@@ -302,6 +303,13 @@ export default function AddressDetector({ onComplete }) {
               )}
             </div>
           )}
+
+          {/* Permit history inline lookup */}
+          <PermitHistory
+            address={detected.matchedAddress || address}
+            jurisdiction={detected.id}
+            compact
+          />
         </div>
       )}
 
@@ -340,8 +348,8 @@ export default function AddressDetector({ onComplete }) {
         </div>
       )}
 
-      {/* Parcel flags */}
-      {detected?.id && (
+      {/* Parcel flags — only in wizard mode */}
+      {detected?.id && !lookupOnly && (
         <div className="mb-5">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Parcel conditions</p>
           {[
@@ -368,13 +376,15 @@ export default function AddressDetector({ onComplete }) {
         </div>
       )}
 
-      <button
-        onClick={handleContinue}
-        disabled={!canContinue}
-        className="w-full py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-      >
-        Continue to project type →
-      </button>
+      {!lookupOnly && (
+        <button
+          onClick={handleContinue}
+          disabled={!canContinue}
+          className="w-full py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          Continue to project type →
+        </button>
+      )}
     </div>
   )
 }

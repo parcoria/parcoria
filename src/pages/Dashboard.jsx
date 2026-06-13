@@ -90,6 +90,57 @@ const PORTAL_URLS = {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+// ─── DigestToggle ─────────────────────────────────────────────────────────────
+
+function DigestToggle({ userId }) {
+  const [enabled, setEnabled] = useState(true)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (!userId) return
+    supabase
+      .from('digest_preferences')
+      .select('digest_enabled')
+      .eq('user_id', userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setEnabled(data.digest_enabled !== false)
+        setLoading(false)
+      })
+  }, [userId])
+
+  async function toggle() {
+    const next = !enabled
+    setSaving(true)
+    setEnabled(next)
+    await supabase
+      .from('digest_preferences')
+      .upsert({ user_id: userId, digest_enabled: next, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+    setSaving(false)
+  }
+
+  if (loading) return <div className="text-xs text-gray-400">Loading preferences...</div>
+
+  return (
+    <div className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
+      <div>
+        <div className="text-sm font-medium text-gray-900">Weekly digest email</div>
+        <div className="text-xs text-gray-400 mt-0.5">{enabled ? 'Sending every Monday at 8 AM' : 'Paused — you won\'t receive digest emails'}</div>
+      </div>
+      <button
+        onClick={toggle}
+        disabled={saving}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${enabled ? 'bg-brand-600' : 'bg-gray-200'}`}
+      >
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+      </button>
+    </div>
+  )
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function Dashboard() {
   const navigate = useNavigate()
   const [authState, setAuthState] = useState('loading')
@@ -865,6 +916,13 @@ export default function Dashboard() {
               className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50 mt-2">
               {savingProfile ? 'Saving...' : profileSaved ? '✓ Profile saved' : 'Save profile'}
             </button>
+          </div>
+
+          {/* Email preferences */}
+          <div className="mt-8 pt-6 border-t border-gray-100">
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Email preferences</h3>
+            <p className="text-xs text-gray-400 mb-4">Sent every Monday morning with permit status across all active projects.</p>
+            <DigestToggle userId={user?.id} />
           </div>
         </div>
       )}
