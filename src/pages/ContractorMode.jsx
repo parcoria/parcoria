@@ -6,6 +6,7 @@ import { getProfile, saveProfile, getExpiringCredentials, LICENSE_TYPES, JURISDI
 import { getJobs, createJob, updateJob, deleteJob, JOB_STATUSES } from '../lib/client-jobs'
 import { TEMPLATES, fillTemplate } from '../data/client-templates'
 import { hasAccess, isContractor } from '../lib/access'
+import { isDemo, DEMO_CONTRACTOR_JOBS } from '../lib/demo'
 import {
   seedPermitEvents, getProjectLifecycle, updatePermitStage,
   updateInspectionStatus, updatePermitField, updateDeadlineStatus,
@@ -271,6 +272,13 @@ export default function ContractorMode() {
   async function loadAll() {
     setLoading(true)
     try {
+      // ── Demo mode — skip Supabase entirely, use pre-seeded fake data ──
+      if (isDemo()) {
+        setJobs(DEMO_CONTRACTOR_JOBS)
+        setLoading(false)
+        return
+      }
+
       const currentUser = await getUser()
       setUser(currentUser)
 
@@ -615,7 +623,7 @@ export default function ContractorMode() {
         </div>
       )}
 
-      {needsAuth && (
+      {needsAuth && !isDemo() && (
         <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 mb-5">
           <div className="text-sm font-semibold text-brand-900 mb-1">One more step — verify your email</div>
           <div className="text-xs text-brand-700 mb-3 leading-relaxed">

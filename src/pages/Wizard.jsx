@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { t, useLang } from '../lib/i18n'
 import { PROJECT_TYPES, PERMIT_DATA, PROFESSIONALS, INSPECTIONS } from '../data/raleigh'
 import { DURHAM_PERMIT_DATA, DURHAM_PROFESSIONALS, DURHAM_INSPECTIONS } from '../data/durham'
@@ -80,7 +80,16 @@ function getRaleighBuildabilityChecks(flags) {
 
 export default function Wizard() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   useLang() // re-render on language change
+
+  // Redirect legacy /wizard?demo=contractor → /demo?tier=contractor
+  useEffect(() => {
+    const demoParam = searchParams.get('demo')
+    if (demoParam) {
+      navigate(`/demo?tier=${demoParam}`, { replace: true })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const [step, setStep] = useState(1)
   const [state, setState] = useState(() => {
     // Restore from sessionStorage if returning from login

@@ -1,6 +1,12 @@
 // src/lib/access.js
 // Lightweight payment gating using localStorage
 // Supports two tiers: homeowner (30-day) and developer (monthly subscription)
+// Demo override: sessionStorage 'demo_tier' grants access without payment
+
+// ─── Demo helpers (internal) ──────────────────────────────────────────────────
+function _demoTier() {
+  try { return sessionStorage.getItem('demo_tier') || null } catch { return null }
+}
 
 const ACCESS_KEY = 'parcoria_access'
 const ACCESS_VERSION = 'v3' // Bumped to invalidate all old tokens
@@ -23,6 +29,8 @@ export function grantAccess(tier = 'homeowner') {
 }
 
 export function hasAccess() {
+  // Demo override — any active demo tier grants access
+  if (_demoTier()) return true
   try {
     const raw = localStorage.getItem(ACCESS_KEY)
     if (!raw) return false
@@ -43,6 +51,8 @@ export function hasAccess() {
 }
 
 export function isDeveloper() {
+  // Demo override — developer demo tier only
+  if (_demoTier() === 'developer') return true
   try {
     const raw = localStorage.getItem(ACCESS_KEY)
     if (!raw) return false
@@ -56,6 +66,9 @@ export function isDeveloper() {
 }
 
 export function isContractor() {
+  // Demo override — contractor and developer demo tiers both pass
+  const demo = _demoTier()
+  if (demo === 'contractor' || demo === 'developer') return true
   try {
     const raw = localStorage.getItem(ACCESS_KEY)
     if (!raw) return false
@@ -69,6 +82,9 @@ export function isContractor() {
 }
 
 export function getAccessTier() {
+  // Demo override — return the demo tier string
+  const demo = _demoTier()
+  if (demo) return demo
   try {
     const raw = localStorage.getItem(ACCESS_KEY)
     if (!raw) return null

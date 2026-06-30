@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import DemoBanner from './components/DemoBanner'
+import DemoLanding from './pages/DemoLanding'
 import Home from './pages/Home'
 import Wizard from './pages/Wizard'
 import ActionPlan from './pages/ActionPlan'
@@ -28,6 +30,7 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen flex flex-col">
         <ScrollToTop />
+        <DemoBanner />
         <Navbar />
         <main className="flex-1">
           <Routes>
@@ -51,6 +54,7 @@ export default function App() {
             <Route path="/permit-history" element={<PermitHistoryPage />} />
             <Route path="/learn/:slug" element={<Guide />} />
             <Route path="/waitlist" element={<Waitlist />} />
+            <Route path="/demo" element={<DemoLanding />} />
           </Routes>
         </main>
         <Footer />

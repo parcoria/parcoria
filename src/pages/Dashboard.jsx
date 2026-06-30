@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase, sendMagicLink, getUser, signOut, getProjects, deleteProject, saveProject } from '../lib/supabase'
 import { isDeveloper, hasAccess, isContractor, getAccessTier } from '../lib/access'
+import { isDemo, DEMO_DEVELOPER_PROJECTS } from '../lib/demo'
 import { LogoMark } from '../components/Logo'
 import {
   seedPermitEvents, reseedPermitEvents, seedInspectionLog,
@@ -187,6 +188,14 @@ export default function Dashboard() {
   }, [])
 
   async function checkAuth() {
+    // ── Demo mode — skip Supabase entirely, go straight to authenticated state ──
+    if (isDemo()) {
+      setProjects(DEMO_DEVELOPER_PROJECTS)
+      setAuthState('authenticated')
+      setLoading(false)
+      return
+    }
+
     const currentUser = await getUser()
     if (currentUser) {
       // Contractors should be on /contractors, not /dashboard
@@ -203,6 +212,8 @@ export default function Dashboard() {
   }
 
   async function loadProjects(userId) {
+    // In demo mode, projects are already set in checkAuth — nothing to load
+    if (isDemo()) return
     setLoadingProjects(true)
     try {
       const data = await getProjects()
@@ -426,7 +437,7 @@ export default function Dashboard() {
   }
 
   // ── Unauthenticated ──────────────────────────────────────────────────────
-  if (authState === 'unauthenticated') {
+  if (authState === 'unauthenticated' && !isDemo()) {
     return (
       <div className="max-w-md mx-auto px-4 sm:px-6 py-20">
         <div className="text-center mb-8">
